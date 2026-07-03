@@ -1,0 +1,151 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../services/auth_service.dart';
+
+class ForgotPasswordCodeScreen extends StatefulWidget {
+  final String email;
+  final String maskedEmail;
+
+  const ForgotPasswordCodeScreen({
+    super.key,
+    required this.email,
+    required this.maskedEmail,
+  });
+
+  @override
+  State<ForgotPasswordCodeScreen> createState() =>
+      _ForgotPasswordCodeScreenState();
+}
+
+class _ForgotPasswordCodeScreenState extends State<ForgotPasswordCodeScreen> {
+  final _codeController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmController = TextEditingController();
+  final _auth = AuthService.instance;
+
+  bool _loading = false;
+  bool _resending = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _codeController.dispose();
+    _passwordController.dispose();
+    _confirmController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _resendCode() async {
+    setState(() {
+      _resending = true;
+      _error = null;
+    });
+
+    try {
+      await _auth.sendPasswordResetCode(widget.email);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('A new code was sent to ${widget.maskedEmail}.')),
+      );
+    } catch (e) {
+      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _resending = false);
+    }
+  }
+
+  Future<void> _reset() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      if (_codeController.text.trim().isEmpty) {
+        throw Exception('Enter the reset code from your email.');
+      }
+
+      if (_passwordController.text.length < 8) {
+        throw Exception('Password must be at least 8 characters.');
+      }
+
+      if (_passwordController.text != _confirmController.text) {
+        throw Exception('Passwords do not match.');
+      }
+
+      await _auth.completePasswordResetWithCode(
+        email: widget.email,
+        code: _codeController.text,
+        newPassword: _passwordController.text,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password updated. You can sign in now.')),
+      );
+      context.go('/login');
+    } catch (e) {
+      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Enter reset code')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'We sent a reset code to ${widget.maskedEmail}. Enter it below with your new password.',
+            ),
+            const SizedBox(height: 24),
+            TextField(
+              controller: _codeController,
+              decoration: const InputDecoration(
+                labelText: 'Reset code',
+                hintText: '6-digit code',
+              ),
+              keyboardType: TextInputType.number,
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _passwordController,
+              decoration: const InputDecoration(labelText: 'New password'),
+              obscureText: true,
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _confirmController,
+              decoration: const InputDecoration(labelText: 'Confirm password'),
+              obscureText: true,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _reset(),
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: 12),
+              Text(_error!, style: const TextStyle(color: Colors.red)),
+            ],
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: _loading ? null : _reset,
+              child: Text(_loading ? 'Updating…' : 'Update password'),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: _resending || _loading ? null : _resendCode,
+              child: Text(_resending ? 'Sending…' : 'Resend code'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

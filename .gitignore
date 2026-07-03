@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.*
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+backend/supabase/.env
+apps/mobile/.env
+!**/.env.example
+
+# Next.js
+apps/web/.next/
+apps/web/out/
+
+# Flutter / mobile builds
+apps/mobile/build/
+apps/mobile/.dart_tool/
+apps/mobile/.packages
+apps/mobile/.flutter-plugins
+apps/mobile/.flutter-plugins-dependencies
+
+# Release binaries
+flutterapk/*.apk
+
+# Vercel
+.vercel/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+*.log
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Supabase local
+backend/supabase/.branches/
+backend/supabase/.temp/
