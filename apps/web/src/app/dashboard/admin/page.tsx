@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { EventApprovalPanel } from "@/components/EventApprovalPanel";
 import { CreateOrganizationForm } from "@/components/CreateOrganizationForm";
 import { CreateStaffForm } from "@/components/CreateStaffForm";
 import { StaffActions } from "@/components/StaffActions";
@@ -48,6 +49,11 @@ export default async function AdminPage() {
     .order("earned_at", { ascending: false })
     .limit(50);
 
+  const { data: allEvents } = await supabase
+    .from("events")
+    .select("*")
+    .order("starts_at", { ascending: false });
+
   return (
     <div className="space-y-8">
       <div>
@@ -56,6 +62,8 @@ export default async function AdminPage() {
           Manage organizations, staff, and student accounts.
         </p>
       </div>
+
+      <EventApprovalPanel events={allEvents ?? []} />
 
       <div className="grid gap-8 lg:grid-cols-2">
         <CreateOrganizationForm />

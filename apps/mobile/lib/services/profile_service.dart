@@ -53,9 +53,45 @@ class ProfileService {
 
     return await _client
         .from('students')
-        .select('student_id, first_name, last_name, program, year_level')
+        .select('student_id, first_name, last_name, program, year_level, section, reward_points')
         .eq('id', userId)
         .maybeSingle();
+  }
+
+  Future<void> updateProfile({
+    required String firstName,
+    required String lastName,
+    required String program,
+    String? section,
+    required int yearLevel,
+  }) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) throw Exception('Not signed in');
+
+    await _client.from('students').update({
+      'first_name': firstName,
+      'last_name': lastName,
+      'program': program,
+      'section': section,
+      'year_level': yearLevel,
+    }).eq('id', userId);
+  }
+
+  Future<Map<String, dynamic>> fetchDashboardStats() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      return {'attendance_count': 0, 'reward_points': 0, 'badge_count': 0};
+    }
+
+    final student = await fetchStudentProfile();
+    final achievements = await fetchAchievements();
+    final attendanceCount = await fetchAttendanceCount();
+
+    return {
+      'attendance_count': attendanceCount,
+      'reward_points': student?['reward_points'] ?? 0,
+      'badge_count': achievements.length,
+    };
   }
 
   Future<List<AchievementItem>> fetchAchievements() async {

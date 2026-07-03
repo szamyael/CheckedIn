@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { LogOut, Calendar, Users, BarChart3, Radio, LineChart } from "lucide-react";
+import { LogOut, Calendar, Users, BarChart3, Radio, LineChart, Settings } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
+import { SessionTimeoutGuard } from "@/components/SessionTimeoutGuard";
 import type { UserRole } from "@/lib/types";
 
 async function signOut() {
@@ -40,10 +41,13 @@ export default async function DashboardLayout({
     ...(role === "admin" || role === "faculty" || role === "org_member"
       ? [{ href: "/dashboard/reports", label: "Reports", icon: BarChart3 }]
       : []),
+    ...(role === "admin" || role === "faculty"
+      ? [{ href: "/dashboard/analytics", label: "Analytics", icon: LineChart }]
+      : []),
     ...(role === "admin"
       ? [
-          { href: "/dashboard/analytics", label: "Analytics", icon: LineChart },
           { href: "/dashboard/admin", label: "Users", icon: Users },
+          { href: "/dashboard/settings", label: "Settings", icon: Settings },
         ]
       : []),
   ];
@@ -86,6 +90,7 @@ export default async function DashboardLayout({
       </aside>
 
       <main className="flex flex-1 flex-col overflow-auto">
+        <SessionTimeoutGuard />
         <header className="flex items-center justify-end border-b border-slate-200 bg-white px-8 py-3">
           <NotificationBell />
         </header>

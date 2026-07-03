@@ -25,13 +25,16 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
 
     try {
       final position = await _attendance.getCurrentPosition();
+      final meta = await _attendance.fetchCheckInMeta(widget.qrToken);
       if (!mounted) return;
       context.push(
-        '/attendance/selfie',
+        '/attendance/otp',
         extra: {
           'qr_token': widget.qrToken,
           'latitude': position.latitude,
           'longitude': position.longitude,
+          'requires_otp': meta['requires_otp'] == true,
+          'event_title': meta['title'] as String? ?? 'Event',
         },
       );
     } catch (e) {

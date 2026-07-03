@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../services/profile_service.dart';
@@ -77,8 +78,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Text('Program: ${student['program']}'),
                           if (student['year_level'] != null)
                             Text('Year Level: ${student['year_level']}'),
+                          if (student['section'] != null)
+                            Text('Section: ${student['section']}'),
+                          if (student['reward_points'] != null)
+                            Text('Reward points: ${student['reward_points']}'),
                           const SizedBox(height: 8),
                           Text('${data.attendanceCount} events attended'),
+                          const SizedBox(height: 8),
+                          OutlinedButton(
+                            onPressed: () => context.push('/profile/edit'),
+                            child: const Text('Edit profile'),
+                          ),
                         ],
                       ],
                     ),

@@ -12,6 +12,21 @@ interface CheckInRequest {
   longitude: number;
   selfie_path: string;
   client_checked_in_at?: string;
+  otp_code?: string;
+}
+
+const OFFLINE_SYNC_GRACE_MS = 24 * 60 * 60 * 1000;
+const SELFIE_MAX_AGE_MS = 15 * 60 * 1000;
+
+function isValidCoordinate(lat: number, lng: number): boolean {
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180
+  );
 }
 
 Deno.serve(async (req) => {
@@ -44,10 +59,12 @@ Deno.serve(async (req) => {
       });
     }
 
+    const userId = userData.user.id;
+
     const { data: account } = await supabase
       .from("users")
       .select("status, role")
-      .eq("id", userData.user.id)
+      .eq("id", userId)
       .single();
 
     if (!account || account.status !== "active") {
@@ -61,9 +78,65 @@ Deno.serve(async (req) => {
       );
     }
 
+    if (account.role !== "student") {
+      return new Response(
+        JSON.stringify({ error: "Only student accounts can check in to events" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const body = (await req.json()) as CheckInRequest;
-    const { qr_token, latitude, longitude, selfie_path, client_checked_in_at } =
+    const { qr_token, latitude, longitude, selfie_path, client_checked_in_at, otp_code } =
       body;
+
+    if (!qr_token || !selfie_path) {
+      return new Response(
+        JSON.stringify({ error: "Missing required check-in fields" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    if (!isValidCoordinate(latitude, longitude)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid GPS coordinates" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    const expectedSelfiePrefix = `${userId}/`;
+    if (!selfie_path.startsWith(expectedSelfiePrefix)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid selfie reference" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    const { data: selfieBlob, error: selfieError } = await supabase.storage
+      .from("selfies")
+      .download(selfie_path);
+
+    if (selfieError || !selfieBlob || selfieBlob.size < 1024) {
+      return new Response(
+        JSON.stringify({ error: "Selfie verification failed" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    const selfieFileName = selfie_path.slice(expectedSelfiePrefix.length);
+    const { data: selfieMeta } = await supabase.storage
+      .from("selfies")
+      .list(userId, { search: selfieFileName, limit: 1 });
+
+    const uploadedAt = selfieMeta?.[0]?.created_at ?? selfieMeta?.[0]?.updated_at;
+    if (uploadedAt) {
+      const ageMs = Date.now() - new Date(uploadedAt).getTime();
+      if (ageMs > SELFIE_MAX_AGE_MS) {
+        return new Response(
+          JSON.stringify({ error: "Selfie expired. Take a new live photo." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    }
 
     const { data: event, error: eventError } = await supabase
       .from("events")
@@ -79,11 +152,55 @@ Deno.serve(async (req) => {
       );
     }
 
+    if (event.latitude == null || event.longitude == null) {
+      return new Response(
+        JSON.stringify({ error: "Event venue location is not configured" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    const { data: settings } = await supabase
+      .from("system_settings")
+      .select("late_grace_minutes")
+      .eq("id", 1)
+      .single();
+
+    const lateGraceMinutes = settings?.late_grace_minutes ?? 15;
+    let otpVerified = false;
+
+    if (event.requires_otp) {
+      if (!otp_code?.trim()) {
+        return new Response(
+          JSON.stringify({ error: "Attendance OTP is required for this event" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      const { data: otpRow } = await supabase
+        .from("event_otp_codes")
+        .select("id, code, expires_at")
+        .eq("event_id", event.id)
+        .eq("code", otp_code.trim())
+        .gt("expires_at", new Date().toISOString())
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!otpRow) {
+        return new Response(
+          JSON.stringify({ error: "Invalid or expired attendance OTP" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      otpVerified = true;
+    }
+
     const now = new Date();
     let checkInTime = now;
+    const isOfflineSync = Boolean(client_checked_in_at);
 
-    if (client_checked_in_at) {
-      const clientTime = new Date(client_checked_in_at);
+    if (isOfflineSync) {
+      const clientTime = new Date(client_checked_in_at!);
       if (Number.isNaN(clientTime.getTime())) {
         return new Response(
           JSON.stringify({ error: "Invalid client check-in time" }),
@@ -130,21 +247,39 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { data: distanceData } = await supabase.rpc("haversine_distance_m", {
-      lat1: latitude,
-      lng1: longitude,
-      lat2: event.latitude,
-      lng2: event.longitude,
-    });
+    if (isOfflineSync && now.getTime() > attendanceEnd.getTime() + OFFLINE_SYNC_GRACE_MS) {
+      return new Response(
+        JSON.stringify({ error: "Offline check-in sync period has ended" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    const { data: distanceData, error: distanceError } = await supabase.rpc(
+      "haversine_distance_m",
+      {
+        lat1: latitude,
+        lng1: longitude,
+        lat2: event.latitude,
+        lng2: event.longitude,
+      },
+    );
+
+    if (distanceError || distanceData == null || !Number.isFinite(distanceData)) {
+      return new Response(
+        JSON.stringify({ error: "Location verification failed" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     const distanceM = distanceData as number;
+    const allowedRadius = event.location_radius_m ?? 100;
 
-    if (distanceM > event.location_radius_m) {
+    if (distanceM > allowedRadius) {
       return new Response(
         JSON.stringify({
           error: "You are outside the event location",
-          distance_m: distanceM,
-          allowed_radius_m: event.location_radius_m,
+          distance_m: Math.round(distanceM),
+          allowed_radius_m: allowedRadius,
         }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
@@ -154,7 +289,7 @@ Deno.serve(async (req) => {
       .from("attendance_records")
       .select("id")
       .eq("event_id", event.id)
-      .eq("student_id", userData.user.id)
+      .eq("student_id", userId)
       .maybeSingle();
 
     if (existing) {
@@ -164,17 +299,25 @@ Deno.serve(async (req) => {
       );
     }
 
+    const lateThreshold = new Date(
+      attendanceStart.getTime() + lateGraceMinutes * 60 * 1000,
+    );
+    const attendanceStatus = checkInTime > lateThreshold ? "late" : "checked_in";
+    const fraudFlag = distanceM > allowedRadius * 0.85;
+
     const { data: record, error: insertError } = await supabase
       .from("attendance_records")
       .insert({
         event_id: event.id,
-        student_id: userData.user.id,
+        student_id: userId,
         latitude,
         longitude,
         selfie_url: selfie_path,
         distance_from_venue_m: distanceM,
         checked_in_at: checkInTime.toISOString(),
-        status: "checked_in",
+        status: attendanceStatus,
+        otp_verified: otpVerified,
+        fraud_flag: fraudFlag,
       })
       .select()
       .single();
@@ -186,8 +329,14 @@ Deno.serve(async (req) => {
       );
     }
 
+    const pointsAwarded = attendanceStatus === "late" ? 5 : 10;
+    await supabase.rpc("increment_student_points", {
+      p_student_id: userId,
+      p_points: pointsAwarded,
+    });
+
     const { data: newBadges } = await supabase.rpc("award_check_in_achievements", {
-      p_student_id: userData.user.id,
+      p_student_id: userId,
       p_event_id: event.id,
       p_event_title: event.title,
     });
@@ -198,6 +347,8 @@ Deno.serve(async (req) => {
         attendance: record,
         event: { id: event.id, title: event.title },
         badges: newBadges ?? [],
+        points_awarded: pointsAwarded,
+        status: attendanceStatus,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );

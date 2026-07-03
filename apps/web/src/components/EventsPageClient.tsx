@@ -4,13 +4,15 @@ import { useState } from "react";
 import { CreateEventForm } from "@/components/CreateEventForm";
 import { EditEventForm } from "@/components/EditEventForm";
 import { EventQrCode } from "@/components/EventQrCode";
+import { EventSecurityControls } from "@/components/EventSecurityControls";
 import { EventsCalendar } from "@/components/EventsCalendar";
 import { format } from "date-fns";
 import type { Event } from "@/lib/types";
 import Link from "next/link";
 
 export function EventsPageClient({ events }: { events: Event[] }) {
-  const [view, setView] = useState<"list" | "calendar">("calendar");
+  const [view, setView] = useState<"list" | "calendar">("list");
+  const publishedEvents = events.filter((e) => e.status === "published");
 
   return (
     <div className="space-y-8">
@@ -23,8 +25,31 @@ export function EventsPageClient({ events }: { events: Event[] }) {
 
       <CreateEventForm />
 
+      {publishedEvents.length > 0 && (
+        <section className="rounded-xl border border-blue-200 bg-blue-50/50 p-6">
+          <h2 className="text-lg font-semibold text-slate-900">
+            Published event QR codes
+          </h2>
+          <p className="mt-1 text-sm text-slate-700">
+            Display or download these for students to scan in the mobile app. Open
+            List view for full event details.
+          </p>
+          <div className="mt-4 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            {publishedEvents.map((event) => (
+              <EventQrCode
+                key={event.id}
+                qrToken={event.qr_token}
+                eventTitle={event.title}
+                venueName={event.venue_name}
+                startsAt={event.starts_at}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-900">Your Events</h2>
+        <h2 className="text-lg font-semibold text-slate-900">All Events</h2>
         <div className="flex rounded-lg border border-slate-200 p-1 text-sm">
           <button
             type="button"
@@ -84,9 +109,16 @@ function EventCard({ event }: { event: Event }) {
               Live monitor →
             </Link>
           )}
+          <EventSecurityControls event={event} />
         </div>
         {event.status === "published" && (
-          <EventQrCode qrToken={event.qr_token} eventTitle={event.title} />
+          <EventQrCode
+            qrToken={event.qr_token}
+            eventTitle={event.title}
+            venueName={event.venue_name}
+            startsAt={event.starts_at}
+            compact
+          />
         )}
       </div>
     </div>

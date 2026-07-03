@@ -37,6 +37,13 @@ class _LoginScreenState extends State<LoginScreen> {
       final normalized = AppConstants.normalizeStudentId(rawId) ?? rawId;
       await _auth.signIn(normalized, _passwordController.text);
       if (mounted) context.go('/home');
+    } on EmailNotVerifiedException catch (e) {
+      if (!mounted) return;
+      context.push('/verify-email', extra: {
+        'email': e.email,
+        'password': _passwordController.text,
+        'masked_email': AuthService.maskEmail(e.email),
+      });
     } catch (e) {
       setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
     } finally {

@@ -8,6 +8,7 @@ import 'core/theme.dart';
 import 'router.dart';
 import 'services/auth_service.dart';
 import 'services/offline_sync_service.dart';
+import 'services/session_timeout_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,10 +33,12 @@ class CheckedInApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'CheckedIn',
-      theme: AppTheme.light,
-      routerConfig: router,
+    return SessionActivityWrapper(
+      child: MaterialApp.router(
+        title: 'CheckedIn',
+        theme: AppTheme.light,
+        routerConfig: router,
+      ),
     );
   }
 }

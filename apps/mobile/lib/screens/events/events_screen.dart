@@ -88,7 +88,10 @@ class _EventsScreenState extends State<EventsScreen> {
                   padding: const EdgeInsets.all(16),
                   itemCount: events.length,
                   separatorBuilder: (context, index) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) => _EventTile(event: events[index], onTap: () => context.push('/attendance/scan')),
+                  itemBuilder: (context, index) => _EventTile(
+                    event: events[index],
+                    onTap: () => context.push('/events/detail', extra: events[index]),
+                  ),
                 );
               },
             ),

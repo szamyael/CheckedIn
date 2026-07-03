@@ -26,18 +26,26 @@ CHECKEDIN/
 
 1. Capture student ID photo (camera only)
 2. **Veryfi** OCR extracts: Student ID (`0XXX-XXXX`), program, name
-3. Student confirms/edits name & program (ID number is locked)
+3. Student confirms/edits name, program, section (ID locked); provides real email
 4. System validates OCR fields match user input
 5. Student sets password → account created (**pending admin approval**)
-6. Admin approves student in web portal
-7. Login: **Student ID + Password**
+6. Email verification code (Supabase OTP)
+7. Admin approves student in web portal
+8. Login: **Student ID + Password** (forgot password: scan ID → email OTP)
 
 ## Attendance Flow (Mobile)
 
-1. Scan event QR code
+1. Scan event QR or open event from list
 2. Enable GPS → verify within event geofence
-3. Capture live selfie (camera, not gallery upload)
-4. Server records timestamp + location + selfie
+3. Enter attendance OTP if required (staff QR screen)
+4. Capture live selfie (camera only)
+5. Optional post-check-in feedback; server awards reward points
+
+## Web Features (FR-aligned)
+
+- **Admin:** dashboard, users/students/orgs, event approval, system settings, audit trail, broadcast notifications, analytics, absentee reports
+- **Faculty / Org:** calendar events, QR codes, OTP generation, QR rotation, live monitor, reports
+- **Org events:** publish submits for admin approval (`pending_approval` → `published`)
 
 ## Prerequisites
 
@@ -132,8 +140,25 @@ VERYFI_API_KEY=
 | `015_realtime.sql` | Realtime publication for live monitor |
 | `016_org_scoping.sql` | Org-scoped events/attendance RLS |
 | `017_notifications.sql` | In-app notifications + realtime |
+| `018_student_email_auth.sql` | Real email registration, student-resolve-email |
+| `019_staff_event_visibility.sql` | Faculty/org can read published events |
+| `020_fr_completion.sql` | OTP/QR security, audit logs, feedback, system settings, event approval, reward points, section |
+| `021_manual_attendance.sql` | Staff manual attendance RPC, correction review, session settings for students |
 
-## Production deploy
+## Edge Functions
+
+| Function | Purpose |
+|----------|---------|
+| `check-in` | Student attendance with GPS, selfie, optional OTP, late status, points |
+| `scan-student-id` | Veryfi OCR for registration |
+| `complete-student-registration` | Service-role profile creation after signup (`--no-verify-jwt`) |
+| `student-resolve-email` | Resolve student ID → email for login |
+| `student-verify-reset` | ID scan for forgot-password flow |
+| `student-reset-password` | Reset password after OTP |
+| `generate-event-otp` | Staff generates attendance OTP |
+| `rotate-event-qr` | Rotate event QR token |
+| `event-check-in-meta` | Mobile: event title + OTP requirement for QR token |
+
 
 ### Database migrations
 
@@ -147,9 +172,10 @@ supabase db push
 
 ```bash
 cd backend
-supabase functions deploy check-in
-supabase functions deploy scan-student-id
-supabase functions deploy student-reset-password
+supabase functions deploy check-in scan-student-id student-reset-password
+supabase functions deploy complete-student-registration --no-verify-jwt
+supabase functions deploy student-resolve-email student-verify-reset
+supabase functions deploy generate-event-otp rotate-event-qr event-check-in-meta
 ```
 
 Ensure Veryfi secrets are set on the hosted project:

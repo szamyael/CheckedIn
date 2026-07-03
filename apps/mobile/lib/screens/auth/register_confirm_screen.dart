@@ -19,6 +19,7 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
   late final TextEditingController _middleName;
   late final TextEditingController _lastName;
   late final TextEditingController _program;
+  late final TextEditingController _section;
   int _yearLevel = 1;
 
   @override
@@ -29,6 +30,7 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
     _middleName = TextEditingController(text: widget.draft.middleName ?? '');
     _lastName = TextEditingController(text: widget.draft.lastName ?? '');
     _program = TextEditingController(text: widget.draft.program ?? '');
+    _section = TextEditingController(text: widget.draft.section ?? '');
     _yearLevel = widget.draft.yearLevel ?? 1;
   }
 
@@ -39,6 +41,7 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
     _middleName.dispose();
     _lastName.dispose();
     _program.dispose();
+    _section.dispose();
     super.dispose();
   }
 
@@ -51,6 +54,7 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
           : _middleName.text.trim()
       ..lastName = _lastName.text.trim()
       ..program = _program.text.trim()
+      ..section = _section.text.trim().isEmpty ? null : _section.text.trim()
       ..yearLevel = _yearLevel;
 
     if (!widget.draft.hasRequiredFields) {
@@ -128,6 +132,15 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
                   ? 'Detected from your ID — edit if needed'
                   : 'Enter the program shown on your ID',
             ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _section,
+            decoration: const InputDecoration(
+              labelText: 'Section',
+              hintText: 'e.g. A',
+            ),
+            textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 16),
           DropdownMenu<int>(

@@ -11,12 +11,14 @@ class SelfieScreen extends StatefulWidget {
   final String qrToken;
   final double latitude;
   final double longitude;
+  final String? otpCode;
 
   const SelfieScreen({
     super.key,
     required this.qrToken,
     required this.latitude,
     required this.longitude,
+    this.otpCode,
   });
 
   @override
@@ -64,11 +66,15 @@ class _SelfieScreenState extends State<SelfieScreen> {
       final photo = await _controller!.takePicture();
       final selfieFile = File(photo.path);
 
+      // Fresh GPS at submit time — prevents using stale coordinates from the prior screen.
+      final position = await _attendance.getCurrentPosition();
+
       final submission = await _attendance.submitCheckIn(
         qrToken: widget.qrToken,
-        latitude: widget.latitude,
-        longitude: widget.longitude,
+        latitude: position.latitude,
+        longitude: position.longitude,
         selfieFile: selfieFile,
+        otpCode: widget.otpCode,
       );
 
       if (!mounted) return;
@@ -82,8 +88,10 @@ class _SelfieScreenState extends State<SelfieScreen> {
       final result = submission.serverResult!;
       final eventTitle =
           (result['event'] as Map?)?['title'] ?? 'Event';
+      final eventId = (result['event'] as Map?)?['id'] as String?;
       final badges = result['badges'] as List? ?? [];
-      _showSuccessDialog(eventTitle as String, badges);
+      final points = result['points_awarded'];
+      _showSuccessDialog(eventTitle as String, badges, eventId, points);
     } catch (e) {
       setState(() {
         _error = e.toString().replaceFirst('Exception: ', '');
@@ -115,7 +123,12 @@ class _SelfieScreenState extends State<SelfieScreen> {
     );
   }
 
-  void _showSuccessDialog(String eventTitle, List badges) {
+  void _showSuccessDialog(
+    String eventTitle,
+    List badges,
+    String? eventId,
+    dynamic points,
+  ) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -126,6 +139,10 @@ class _SelfieScreenState extends State<SelfieScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('You are marked present for $eventTitle.'),
+            if (points != null) ...[
+              const SizedBox(height: 8),
+              Text('+$points reward points earned'),
+            ],
             if (badges.isNotEmpty) ...[
               const SizedBox(height: 12),
               const Text(
@@ -140,6 +157,17 @@ class _SelfieScreenState extends State<SelfieScreen> {
           ],
         ),
         actions: [
+          if (eventId != null)
+            TextButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                context.push('/events/feedback', extra: {
+                  'event_id': eventId,
+                  'event_title': eventTitle,
+                });
+              },
+              child: const Text('Leave feedback'),
+            ),
           TextButton(
             onPressed: () {
               Navigator.of(ctx).pop();

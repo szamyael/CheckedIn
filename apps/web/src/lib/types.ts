@@ -2,7 +2,7 @@ export type UserRole = "admin" | "faculty" | "org_member" | "student";
 
 export type AccountStatus = "pending" | "active" | "disabled";
 
-export type EventStatus = "draft" | "published" | "cancelled" | "completed";
+export type EventStatus = "draft" | "pending_approval" | "published" | "cancelled" | "completed";
 
 export type BadgeType = "event" | "milestone";
 
@@ -47,6 +47,8 @@ export interface Event {
   qr_expires_at: string | null;
   status: EventStatus;
   qr_token: string;
+  requires_otp?: boolean;
+  qr_rotated_at?: string | null;
   created_by: string;
   organization_id: string | null;
 }

@@ -31,6 +31,7 @@ class RegistrationDraft {
   String? middleName;
   String? lastName;
   String? program;
+  String? section;
   int? yearLevel;
   String? idCardImagePath;
   ParsedStudentId? ocrSnapshot;

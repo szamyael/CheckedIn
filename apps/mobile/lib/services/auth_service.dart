@@ -57,7 +57,26 @@ class AuthService extends ChangeNotifier {
     return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email.trim());
   }
 
-  Future<void> registerStudent({
+  static String maskEmail(String email) {
+    final parts = email.split('@');
+    if (parts.length != 2) return email;
+    final local = parts[0];
+    final domain = parts[1];
+    if (local.length <= 2) return '${local[0]}***@$domain';
+    return '${local[0]}${'*' * (local.length - 2).clamp(1, 4)}${local[local.length - 1]}@$domain';
+  }
+
+  bool get isEmailVerified {
+    final user = _client.auth.currentUser;
+    return user?.emailConfirmedAt != null;
+  }
+
+  bool get needsEmailVerification =>
+      _client.auth.currentUser != null && !isEmailVerified;
+
+  String? get currentUserEmail => _client.auth.currentUser?.email;
+
+  Future<({bool needsEmailVerification, String email})> registerStudent({
     required RegistrationDraft draft,
     required String password,
     required File idCardImage,
@@ -96,6 +115,7 @@ class AuthService extends ChangeNotifier {
         'last_name': draft.lastName,
         'program': draft.program,
         'year_level': draft.yearLevel,
+        'section': draft.section,
         'image_base64': base64Encode(bytes),
       },
     );
@@ -105,16 +125,49 @@ class AuthService extends ChangeNotifier {
       throw Exception(err ?? 'Failed to complete registration (${response.status})');
     }
 
-    if (signUp.session == null) {
+    final needsVerification = signUp.user!.emailConfirmedAt == null;
+    if (needsVerification) {
       try {
-        await _client.auth.signInWithPassword(email: email, password: password);
+        await resendEmailVerificationCode(email);
       } catch (_) {
-        // Profile is saved; user may need email confirmation before sign-in.
+        // signUp may have already sent a code
       }
+    } else if (signUp.session == null) {
+      await _client.auth.signInWithPassword(email: email, password: password);
     }
+
+    return (needsEmailVerification: needsVerification, email: email);
   }
 
-  Future<String> _resolveEmailForStudentId(String studentId) async {
+  Future<void> resendEmailVerificationCode(String email) async {
+    await _client.auth.resend(
+      type: OtpType.signup,
+      email: email.trim().toLowerCase(),
+    );
+  }
+
+  Future<void> verifyEmailWithCode({
+    required String email,
+    required String code,
+    String? password,
+  }) async {
+    final response = await _client.auth.verifyOTP(
+      type: OtpType.signup,
+      email: email.trim().toLowerCase(),
+      token: code.trim(),
+    );
+
+    if (response.session == null && password != null) {
+      await _client.auth.signInWithPassword(
+        email: email.trim().toLowerCase(),
+        password: password,
+      );
+    }
+
+    notifyListeners();
+  }
+
+  Future<String> resolveEmailForStudentId(String studentId) async {
     final response = await _client.functions.invoke(
       'student-resolve-email',
       body: {'student_id': studentId},
@@ -137,8 +190,15 @@ class AuthService extends ChangeNotifier {
       throw Exception('Invalid student ID format. Use 0XXX-XXXX');
     }
 
-    final email = await _resolveEmailForStudentId(studentId);
-    await _client.auth.signInWithPassword(email: email, password: password);
+    final email = await resolveEmailForStudentId(studentId);
+    try {
+      await _client.auth.signInWithPassword(email: email, password: password);
+    } on AuthException catch (e) {
+      if (e.message.toLowerCase().contains('email not confirmed')) {
+        throw EmailNotVerifiedException(email);
+      }
+      rethrow;
+    }
 
     final userId = _client.auth.currentUser!.id;
     final profile = await _client
@@ -152,14 +212,8 @@ class AuthService extends ChangeNotifier {
       throw Exception('This account has been disabled.');
     }
 
-    if (profile != null && profile['status'] == 'pending') {
-      await signOut();
-      throw Exception(
-        'Your account is pending admin approval. Please try again later.',
-      );
-    }
-
-    if (profile != null && profile['status'] != 'active') {
+    if (profile != null && profile['status'] != 'active' &&
+        profile['status'] != 'pending') {
       await signOut();
       throw Exception('Your account is not active.');
     }
@@ -167,6 +221,19 @@ class AuthService extends ChangeNotifier {
     await _client.from('users').update({
       'last_login_at': DateTime.now().toUtc().toIso8601String(),
     }).eq('id', userId);
+  }
+
+  Future<String?> fetchAccountStatus() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return null;
+
+    final profile = await _client
+        .from('users')
+        .select('status')
+        .eq('id', userId)
+        .maybeSingle();
+
+    return profile?['status'] as String?;
   }
 
   Future<void> signOut() => _client.auth.signOut();
@@ -228,4 +295,12 @@ class AuthService extends ChangeNotifier {
   }
 
   bool get isSignedIn => _client.auth.currentSession != null;
+}
+
+class EmailNotVerifiedException implements Exception {
+  final String email;
+  EmailNotVerifiedException(this.email);
+
+  @override
+  String toString() => 'Email not verified';
 }

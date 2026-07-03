@@ -14,6 +14,7 @@ export function CreateEventForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [location, setLocation] = useState<EventLocation>({
     venueName: "",
     latitude: DEFAULT_MAP_CENTER.lat,
@@ -33,6 +34,8 @@ export function CreateEventForm() {
         .select("role")
         .eq("id", user.id)
         .single();
+
+      setUserRole(profile?.role ?? null);
 
       if (profile?.role !== "org_member") return;
 
@@ -80,6 +83,18 @@ export function CreateEventForm() {
       form.get("attendance_ends_at") as string,
     ).toISOString();
 
+    const { data: settings } = await supabase
+      .from("system_settings")
+      .select("default_requires_otp")
+      .eq("id", 1)
+      .maybeSingle();
+
+    const statusInput = form.get("status") as string;
+    const status =
+      userRole === "org_member" && statusInput === "published"
+        ? "pending_approval"
+        : statusInput;
+
     const { error: insertError } = await supabase.from("events").insert({
       title: form.get("title") as string,
       description: (form.get("description") as string) || null,
@@ -92,7 +107,8 @@ export function CreateEventForm() {
       attendance_starts_at: attendanceStarts,
       attendance_ends_at: attendanceEnds,
       qr_expires_at: attendanceEnds,
-      status: form.get("status") as string,
+      status,
+      requires_otp: settings?.default_requires_otp ?? false,
       created_by: user.id,
       organization_id: organizationId,
     });
@@ -122,7 +138,7 @@ export function CreateEventForm() {
 
       {organizationId && (
         <p className="text-xs text-slate-700">
-          This event will be linked to your organization.
+          This event will be linked to your organization. Publishing submits it for admin approval.
         </p>
       )}
 
@@ -153,7 +169,7 @@ export function CreateEventForm() {
           <label className="mb-1 block text-sm font-medium">Status</label>
           <select name="status" defaultValue="published" className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
             <option value="draft">Draft</option>
-            <option value="published">Published</option>
+            <option value="published">{userRole === "org_member" ? "Submit for approval" : "Published"}</option>
           </select>
         </div>
 

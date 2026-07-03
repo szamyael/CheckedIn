@@ -15,6 +15,7 @@ interface CompleteRegistrationRequest {
   last_name: string;
   program: string;
   year_level: number;
+  section?: string | null;
   image_base64: string;
 }
 
@@ -50,6 +51,7 @@ Deno.serve(async (req) => {
       last_name,
       program,
       year_level,
+      section,
       image_base64,
     } = body;
 
@@ -200,6 +202,7 @@ Deno.serve(async (req) => {
       last_name: last_name.trim(),
       program: program.trim(),
       year_level,
+      section: section?.trim() || null,
       id_card_image_url: path,
     });
 

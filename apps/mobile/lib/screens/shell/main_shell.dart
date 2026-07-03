@@ -19,7 +19,9 @@ class _MainShellState extends State<MainShell> {
   int _index = 0;
   final _notifications = NotificationService();
   final _offlineSync = OfflineSyncService.instance;
+  final _auth = AuthService.instance;
   int _unreadCount = 0;
+  String? _accountStatus;
 
   static const _tabs = [
     _Tab('/home', Icons.home, 'Home'),
@@ -31,8 +33,14 @@ class _MainShellState extends State<MainShell> {
   void initState() {
     super.initState();
     _refreshUnread();
+    _loadAccountStatus();
     _notifications.subscribeToNew(_refreshUnread);
     _offlineSync.addListener(_onOfflineChanged);
+  }
+
+  Future<void> _loadAccountStatus() async {
+    final status = await _auth.fetchAccountStatus();
+    if (mounted) setState(() => _accountStatus = status);
   }
 
   @override
@@ -84,6 +92,14 @@ class _MainShellState extends State<MainShell> {
       ),
       body: Column(
         children: [
+          if (_accountStatus == 'pending')
+            MaterialBanner(
+              content: const Text(
+                'Your account is pending admin approval. You can browse the app, but check-in unlocks once approved.',
+              ),
+              leading: Icon(Icons.hourglass_top, color: Colors.orange.shade800),
+              actions: const [SizedBox.shrink()],
+            ),
           if (_offlineSync.pendingCount > 0)
             MaterialBanner(
               content: Text(

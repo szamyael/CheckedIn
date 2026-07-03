@@ -1,8 +1,19 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AnalyticsCharts } from "@/components/AnalyticsCharts";
 
 export default async function AnalyticsPage() {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: profile } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", user!.id)
+    .single();
+
+  if (!profile || !["admin", "faculty"].includes(profile.role)) {
+    redirect("/dashboard");
+  }
 
   const [
     { count: totalEvents },

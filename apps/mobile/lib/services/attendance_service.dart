@@ -82,12 +82,24 @@ class AttendanceService {
     return null;
   }
 
+  Future<Map<String, dynamic>> fetchCheckInMeta(String qrToken) async {
+    final response = await _client.functions.invoke(
+      'event-check-in-meta',
+      body: {'qr_token': qrToken},
+    );
+    if (response.status != 200) {
+      throw Exception('Could not load event details');
+    }
+    return Map<String, dynamic>.from(response.data as Map);
+  }
+
   Future<Map<String, dynamic>> checkIn({
     required String qrToken,
     required double latitude,
     required double longitude,
     required String selfiePath,
     DateTime? clientCheckedInAt,
+    String? otpCode,
   }) async {
     final body = <String, dynamic>{
       'qr_token': qrToken,
@@ -97,6 +109,9 @@ class AttendanceService {
     };
     if (clientCheckedInAt != null) {
       body['client_checked_in_at'] = clientCheckedInAt.toUtc().toIso8601String();
+    }
+    if (otpCode != null && otpCode.isNotEmpty) {
+      body['otp_code'] = otpCode;
     }
 
     final response = await _client.functions.invoke('check-in', body: body);
@@ -115,6 +130,7 @@ class AttendanceService {
     required double latitude,
     required double longitude,
     required File selfieFile,
+    String? otpCode,
   }) async {
     final capturedAt = DateTime.now().toUtc();
 
@@ -134,6 +150,7 @@ class AttendanceService {
           latitude: latitude,
           longitude: longitude,
           selfiePath: selfiePath,
+          otpCode: otpCode,
         );
         return CheckInSubmission.synced(result);
       } catch (e) {

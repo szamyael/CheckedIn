@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { LiveAttendanceMonitor } from "@/components/LiveAttendanceMonitor";
+import { MonitorTools } from "@/components/MonitorTools";
 import { EventSelector } from "@/components/EventSelector";
 
 export default async function MonitorPage({
@@ -36,9 +37,12 @@ export default async function MonitorPage({
       </div>
 
       {eventId && selected && (
-        <div>
-          <h2 className="mb-4 text-lg font-semibold">{selected.title}</h2>
-          <LiveAttendanceMonitor eventId={eventId} />
+        <div className="space-y-6">
+          <div>
+            <h2 className="mb-4 text-lg font-semibold">{selected.title}</h2>
+            <LiveAttendanceMonitor eventId={eventId} />
+          </div>
+          <MonitorTools eventId={eventId} />
         </div>
       )}
     </div>

@@ -71,26 +71,15 @@ class _RegisterPasswordScreenState extends State<RegisterPasswordScreen> {
         idCardImage: idFile,
       );
 
+      final email = widget.draft.email!.trim().toLowerCase();
       await _auth.signOut();
 
       if (!mounted) return;
-      await showDialog<void>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Registration submitted'),
-          content: const Text(
-            'Your account is pending admin approval. You can sign in once approved.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
-      if (!mounted) return;
-      context.go('/login');
+      context.go('/verify-email', extra: {
+        'email': email,
+        'password': _passwordController.text,
+        'masked_email': AuthService.maskEmail(email),
+      });
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

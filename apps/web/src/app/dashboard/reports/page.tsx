@@ -7,7 +7,8 @@ import { ReportFilters } from "@/components/ReportFilters";
 import { ReportModeTabs } from "@/components/ReportModeTabs";
 import { ReportDateRangeFilter } from "@/components/ReportDateRangeFilter";
 import { ReportMultiEventSelect } from "@/components/ReportMultiEventSelect";
-import type { ExportRow } from "@/lib/export-report";
+import { AbsenteeReport } from "@/components/AbsenteeReport";
+import { AttendanceCorrectionPanel } from "@/components/AttendanceCorrectionPanel";import type { ExportRow } from "@/lib/export-report";
 
 type AttendanceRow = {
   id: string;
@@ -87,7 +88,7 @@ export default async function ReportsPage({
         "id, event_id, checked_in_at, distance_from_venue_m, selfie_url, students(student_id, first_name, last_name, program, year_level)",
       )
       .in("event_id", targetEventIds)
-      .eq("status", "checked_in")
+      .in("status", ["checked_in", "late", "excused"])
       .order("checked_in_at", { ascending: true });
 
     attendance = await Promise.all(
@@ -271,6 +272,15 @@ export default async function ReportsPage({
           </table>
         </div>
       )}
+
+      {mode === "single" && eventId && (
+        <AbsenteeReport eventId={eventId} />
+      )}
+
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold text-slate-900">Correction requests</h2>
+        <AttendanceCorrectionPanel isAdmin={false} />
+      </section>
     </div>
   );
 }
