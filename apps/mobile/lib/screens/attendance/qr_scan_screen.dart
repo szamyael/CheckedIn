@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../services/attendance_service.dart';
+import '../../services/screenshot_guard_service.dart';
 
 class QrScanScreen extends StatefulWidget {
   const QrScanScreen({super.key});
@@ -15,6 +16,12 @@ class _QrScanScreenState extends State<QrScanScreen> {
   final _attendance = AttendanceService();
   bool _handled = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    ScreenshotGuardService.instance.beginProtectedSession(reset: true);
+  }
 
   void _onDetect(BarcodeCapture capture) {
     if (_handled) return;

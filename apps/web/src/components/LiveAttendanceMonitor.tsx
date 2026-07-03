@@ -7,6 +7,8 @@ import { format } from "date-fns";
 interface MonitorRow {
   id: string;
   checked_in_at: string;
+  fraud_flag: boolean;
+  is_manual_override: boolean;
   students: {
     student_id: string;
     first_name: string;
@@ -26,7 +28,7 @@ export function LiveAttendanceMonitor({ eventId }: { eventId: string }) {
       const { data } = await supabase
         .from("attendance_records")
         .select(
-          "id, checked_in_at, students(student_id, first_name, last_name, program)",
+          "id, checked_in_at, fraud_flag, is_manual_override, students(student_id, first_name, last_name, program)",
         )
         .eq("event_id", eventId)
         .eq("status", "checked_in")
@@ -37,6 +39,8 @@ export function LiveAttendanceMonitor({ eventId }: { eventId: string }) {
         return {
           id: row.id as string,
           checked_in_at: row.checked_in_at as string,
+          fraud_flag: Boolean(row.fraud_flag),
+          is_manual_override: Boolean(row.is_manual_override),
           students: student as MonitorRow["students"],
         };
       });
@@ -81,6 +85,7 @@ export function LiveAttendanceMonitor({ eventId }: { eventId: string }) {
               <th className="px-4 py-2 font-medium">Name</th>
               <th className="px-4 py-2 font-medium">Program</th>
               <th className="px-4 py-2 font-medium">Time</th>
+              <th className="px-4 py-2 font-medium">Flags</th>
             </tr>
           </thead>
           <tbody>
@@ -93,6 +98,19 @@ export function LiveAttendanceMonitor({ eventId }: { eventId: string }) {
                 <td className="px-4 py-2 text-slate-700">{row.students.program}</td>
                 <td className="px-4 py-2">
                   {format(new Date(row.checked_in_at), "h:mm:ss a")}
+                </td>
+                <td className="px-4 py-2">
+                  {row.fraud_flag && (
+                    <span className="mr-1 rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">
+                      Screenshot suspected
+                    </span>
+                  )}
+                  {row.is_manual_override && (
+                    <span className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-700">
+                      Manual
+                    </span>
+                  )}
+                  {!row.fraud_flag && !row.is_manual_override && "—"}
                 </td>
               </tr>
             ))}

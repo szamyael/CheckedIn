@@ -41,6 +41,8 @@ CHECKEDIN/
 4. Capture live selfie (camera only)
 5. Optional post-check-in feedback; server awards reward points
 
+**Screenshot fraud prevention:** During check-in the app blocks screenshots and screen recording, analyzes the selfie for screenshot metadata/format, and the server performs a second verification. Suspicious check-ins are flagged on the live monitor.
+
 ## Web Features (FR-aligned)
 
 - **Admin:** dashboard, users/students/orgs, event approval, system settings, audit trail, broadcast notifications, analytics, absentee reports
@@ -149,7 +151,7 @@ VERYFI_API_KEY=
 
 | Function | Purpose |
 |----------|---------|
-| `check-in` | Student attendance with GPS, selfie, optional OTP, late status, points |
+| `check-in` | Student attendance with GPS, selfie, optional OTP, late status, points, screenshot detection |
 | `scan-student-id` | Veryfi OCR for registration |
 | `complete-student-registration` | Service-role profile creation after signup (`--no-verify-jwt`) |
 | `student-resolve-email` | Resolve student ID → email for login |

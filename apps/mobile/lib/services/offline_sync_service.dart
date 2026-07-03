@@ -81,6 +81,7 @@ class OfflineSyncService extends ChangeNotifier {
         longitude: item.longitude,
         selfiePath: selfiePath,
         clientCheckedInAt: item.capturedAt,
+        captureIntegrity: item.captureIntegrity,
       );
 
       final eventTitle =
@@ -113,6 +114,8 @@ class OfflineSyncService extends ChangeNotifier {
         lower.contains('pending admin approval') ||
         lower.contains('attendance window is not open') ||
         lower.contains('qr code has expired') ||
-        lower.contains('outside the event location');
+        lower.contains('outside the event location') ||
+        lower.contains('screenshot') ||
+        lower.contains('screen recording');
   }
 }

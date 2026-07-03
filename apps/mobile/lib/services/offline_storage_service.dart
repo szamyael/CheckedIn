@@ -60,6 +60,7 @@ class OfflineStorageService {
     required File selfieFile,
     required DateTime capturedAt,
     String? eventTitleHint,
+    Map<String, dynamic>? captureIntegrity,
   }) async {
     if (await hasPendingForQrToken(qrToken)) {
       throw Exception(
@@ -80,6 +81,7 @@ class OfflineStorageService {
       localSelfiePath: dest.path,
       capturedAt: capturedAt,
       eventTitleHint: eventTitleHint,
+      captureIntegrity: captureIntegrity,
     );
 
     final items = await loadPending()..add(item);

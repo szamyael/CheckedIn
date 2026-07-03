@@ -10,6 +10,7 @@ class PendingCheckIn {
   final PendingCheckInStatus status;
   final String? lastError;
   final String? eventTitleHint;
+  final Map<String, dynamic>? captureIntegrity;
 
   const PendingCheckIn({
     required this.id,
@@ -21,12 +22,14 @@ class PendingCheckIn {
     this.status = PendingCheckInStatus.pending,
     this.lastError,
     this.eventTitleHint,
+    this.captureIntegrity,
   });
 
   PendingCheckIn copyWith({
     PendingCheckInStatus? status,
     String? lastError,
     String? eventTitleHint,
+    Map<String, dynamic>? captureIntegrity,
   }) {
     return PendingCheckIn(
       id: id,
@@ -38,6 +41,7 @@ class PendingCheckIn {
       status: status ?? this.status,
       lastError: lastError,
       eventTitleHint: eventTitleHint ?? this.eventTitleHint,
+      captureIntegrity: captureIntegrity ?? this.captureIntegrity,
     );
   }
 
@@ -51,6 +55,7 @@ class PendingCheckIn {
         'status': status.name,
         'last_error': lastError,
         'event_title_hint': eventTitleHint,
+        'capture_integrity': captureIntegrity,
       };
 
   factory PendingCheckIn.fromJson(Map<String, dynamic> json) {
@@ -66,6 +71,9 @@ class PendingCheckIn {
       ),
       lastError: json['last_error'] as String?,
       eventTitleHint: json['event_title_hint'] as String?,
+      captureIntegrity: json['capture_integrity'] is Map
+          ? Map<String, dynamic>.from(json['capture_integrity'] as Map)
+          : null,
     );
   }
 }

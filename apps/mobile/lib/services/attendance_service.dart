@@ -8,6 +8,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/constants.dart';
 import '../models/pending_check_in.dart';
 import 'offline_storage_service.dart';
+import 'screenshot_guard_service.dart';
+import '../core/selfie_integrity_analyzer.dart';
 
 enum CheckInOutcome { synced, queuedOffline }
 
@@ -100,6 +102,7 @@ class AttendanceService {
     required String selfiePath,
     DateTime? clientCheckedInAt,
     String? otpCode,
+    Map<String, dynamic>? captureIntegrity,
   }) async {
     final body = <String, dynamic>{
       'qr_token': qrToken,
@@ -113,6 +116,9 @@ class AttendanceService {
     if (otpCode != null && otpCode.isNotEmpty) {
       body['otp_code'] = otpCode;
     }
+    if (captureIntegrity != null) {
+      body['capture_integrity'] = captureIntegrity;
+    }
 
     final response = await _client.functions.invoke('check-in', body: body);
 
@@ -125,6 +131,16 @@ class AttendanceService {
     return Map<String, dynamic>.from(response.data as Map);
   }
 
+  Future<Map<String, dynamic>> buildCaptureIntegrity(File selfieFile) async {
+    final guard = ScreenshotGuardService.instance;
+    final analysis = await SelfieIntegrityAnalyzer.analyze(selfieFile);
+
+    return {
+      ...guard.integrityPayload(),
+      'analysis_issues': analysis.issues,
+    };
+  }
+
   Future<CheckInSubmission> submitCheckIn({
     required String qrToken,
     required double latitude,
@@ -133,6 +149,20 @@ class AttendanceService {
     String? otpCode,
   }) async {
     final capturedAt = DateTime.now().toUtc();
+
+    final guardError = ScreenshotGuardService.instance.validateBeforeCapture();
+    if (guardError != null) {
+      throw Exception(guardError);
+    }
+
+    final analysis = await SelfieIntegrityAnalyzer.analyze(selfieFile);
+    if (analysis.blocksCheckIn) {
+      throw Exception(
+        'This photo looks like a screenshot. Use the camera to take a live selfie.',
+      );
+    }
+
+    final captureIntegrity = await buildCaptureIntegrity(selfieFile);
 
     if (await OfflineStorageService.instance.hasPendingForQrToken(qrToken)) {
       throw Exception(
@@ -151,6 +181,7 @@ class AttendanceService {
           longitude: longitude,
           selfiePath: selfiePath,
           otpCode: otpCode,
+          captureIntegrity: captureIntegrity,
         );
         return CheckInSubmission.synced(result);
       } catch (e) {
@@ -164,6 +195,7 @@ class AttendanceService {
       longitude: longitude,
       selfieFile: selfieFile,
       capturedAt: capturedAt,
+      captureIntegrity: captureIntegrity,
     );
     return CheckInSubmission.queuedOffline(pending);
   }

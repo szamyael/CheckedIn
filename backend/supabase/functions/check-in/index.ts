@@ -1,4 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  analyzeSelfieImage,
+  validateCaptureIntegrity,
+} from "./screenshot_detection.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,6 +17,13 @@ interface CheckInRequest {
   selfie_path: string;
   client_checked_in_at?: string;
   otp_code?: string;
+  capture_integrity?: {
+    screenshot_events?: number;
+    screen_recording?: boolean;
+    captured_at_ms?: number;
+    live_camera_capture?: boolean;
+    analysis_issues?: string[];
+  };
 }
 
 const OFFLINE_SYNC_GRACE_MS = 24 * 60 * 60 * 1000;
@@ -86,8 +97,15 @@ Deno.serve(async (req) => {
     }
 
     const body = (await req.json()) as CheckInRequest;
-    const { qr_token, latitude, longitude, selfie_path, client_checked_in_at, otp_code } =
-      body;
+    const {
+      qr_token,
+      latitude,
+      longitude,
+      selfie_path,
+      client_checked_in_at,
+      otp_code,
+      capture_integrity,
+    } = body;
 
     if (!qr_token || !selfie_path) {
       return new Response(
@@ -118,6 +136,32 @@ Deno.serve(async (req) => {
     if (selfieError || !selfieBlob || selfieBlob.size < 1024) {
       return new Response(
         JSON.stringify({ error: "Selfie verification failed" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    const selfieBytes = new Uint8Array(await selfieBlob.arrayBuffer());
+    const integrityCheck = validateCaptureIntegrity(capture_integrity);
+    const imageAnalysis = analyzeSelfieImage(selfieBytes);
+
+    if (integrityCheck.block) {
+      return new Response(
+        JSON.stringify({
+          error:
+            "Check-in blocked: screenshot or screen recording detected during attendance.",
+          fraud_reasons: integrityCheck.reasons,
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    if (imageAnalysis.block) {
+      return new Response(
+        JSON.stringify({
+          error:
+            "Selfie appears to be a screenshot, not a live camera capture. Take a new photo.",
+          fraud_reasons: imageAnalysis.reasons,
+        }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -303,7 +347,11 @@ Deno.serve(async (req) => {
       attendanceStart.getTime() + lateGraceMinutes * 60 * 1000,
     );
     const attendanceStatus = checkInTime > lateThreshold ? "late" : "checked_in";
-    const fraudFlag = distanceM > allowedRadius * 0.85;
+    const fraudFlag =
+      imageAnalysis.suspected ||
+      integrityCheck.reasons.length > 0 ||
+      (capture_integrity?.analysis_issues?.includes("screen_resolution_match") ??
+        false);
 
     const { data: record, error: insertError } = await supabase
       .from("attendance_records")
@@ -349,6 +397,8 @@ Deno.serve(async (req) => {
         badges: newBadges ?? [],
         points_awarded: pointsAwarded,
         status: attendanceStatus,
+        fraud_flag: fraudFlag,
+        fraud_reasons: [...integrityCheck.reasons, ...imageAnalysis.reasons],
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );

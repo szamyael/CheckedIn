@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../services/attendance_service.dart';
 import '../../services/offline_sync_service.dart';
+import '../../services/screenshot_guard_service.dart';
 
 class SelfieScreen extends StatefulWidget {
   final String qrToken;
@@ -57,6 +58,12 @@ class _SelfieScreenState extends State<SelfieScreen> {
   Future<void> _captureAndSubmit() async {
     if (_controller == null || !_controller!.value.isInitialized) return;
 
+    final guardError = ScreenshotGuardService.instance.validateBeforeCapture();
+    if (guardError != null) {
+      setState(() => _error = guardError);
+      return;
+    }
+
     setState(() {
       _submitting = true;
       _error = null;
@@ -81,11 +88,13 @@ class _SelfieScreenState extends State<SelfieScreen> {
 
       if (submission.outcome == CheckInOutcome.queuedOffline) {
         await OfflineSyncService.instance.refresh();
+        await ScreenshotGuardService.instance.endProtectedSession();
         _showPendingDialog();
         return;
       }
 
       final result = submission.serverResult!;
+      await ScreenshotGuardService.instance.endProtectedSession();
       final eventTitle =
           (result['event'] as Map?)?['title'] ?? 'Event';
       final eventId = (result['event'] as Map?)?['id'] as String?;
@@ -197,7 +206,7 @@ class _SelfieScreenState extends State<SelfieScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Take a live selfie to complete check-in. If you are offline, attendance is saved on this device and syncs later.',
+                  'Take a live selfie to complete check-in. Screenshots and screen recording are blocked during check-in.',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
