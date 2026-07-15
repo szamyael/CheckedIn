@@ -7,6 +7,7 @@ class AttendanceOtpScreen extends StatefulWidget {
   final double longitude;
   final bool requiresOtp;
   final String eventTitle;
+  final String? eventId;
 
   const AttendanceOtpScreen({
     super.key,
@@ -15,6 +16,7 @@ class AttendanceOtpScreen extends StatefulWidget {
     required this.longitude,
     required this.requiresOtp,
     required this.eventTitle,
+    this.eventId,
   });
 
   @override
@@ -38,6 +40,8 @@ class _AttendanceOtpScreenState extends State<AttendanceOtpScreen> {
         'qr_token': widget.qrToken,
         'latitude': widget.latitude,
         'longitude': widget.longitude,
+        'event_id': widget.eventId,
+        'event_title': widget.eventTitle,
         if (_codeController.text.trim().isNotEmpty)
           'otp_code': _codeController.text.trim(),
       },

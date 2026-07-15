@@ -51,7 +51,7 @@ export function EventLocationPicker({
   compact = false,
 }: EventLocationPickerProps) {
   const initialMatch = findPresetMatch(value.latitude, value.longitude);
-  const [mode, setMode] = useState<LocationMode>("preset");
+  const [mode, setMode] = useState<LocationMode>("map");
   const [campusId, setCampusId] = useState(
     initialMatch?.campusId ?? CAMPUS_LOCATIONS[0]?.id ?? "",
   );

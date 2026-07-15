@@ -85,6 +85,8 @@ class OfflineSyncService extends ChangeNotifier {
         longitude: item.longitude,
         selfiePath: selfiePath,
         clientCheckedInAt: item.capturedAt,
+        otpCode: item.otpCode,
+        eventId: item.eventId,
         captureIntegrity: item.captureIntegrity,
       );
 
@@ -112,14 +114,14 @@ class OfflineSyncService extends ChangeNotifier {
 
   bool _isPermanentFailure(String message) {
     final lower = message.toLowerCase();
+    // Do NOT treat attendance-window / QR-expiry as permanent for offline
+    // check-ins — the server accepts capture-time validation after reconnect.
     return lower.contains('already checked in') ||
-        lower.contains('invalid or expired qr') ||
         lower.contains('not active') ||
         lower.contains('pending admin approval') ||
-        lower.contains('attendance window is not open') ||
-        lower.contains('qr code has expired') ||
         lower.contains('outside the event location') ||
         lower.contains('screenshot') ||
-        lower.contains('screen recording');
+        lower.contains('screen recording') ||
+        lower.contains('selfie appears to be a screenshot');
   }
 }

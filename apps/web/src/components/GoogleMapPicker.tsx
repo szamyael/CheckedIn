@@ -25,9 +25,10 @@ export function GoogleMapPicker({
   longitude,
   onLocationChange,
 }: GoogleMapPickerProps) {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?.trim();
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: apiKey ?? "",
+    id: "checkedin-google-maps",
+    googleMapsApiKey: apiKey || "missing",
     libraries: MAP_LIBRARIES,
   });
 
@@ -87,8 +88,10 @@ export function GoogleMapPicker({
     return (
       <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
         Add <code className="text-xs">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> to{" "}
-        <code className="text-xs">.env.local</code> to enable the map picker.
-        Use campus presets or manual coordinates instead.
+        <code className="text-xs">.env.local</code> (and Vercel) to enable the
+        map picker. Enable <strong>Maps JavaScript API</strong> and{" "}
+        <strong>Places API</strong> for the key. Campus presets and manual
+        coordinates still work.
       </p>
     );
   }
@@ -96,8 +99,9 @@ export function GoogleMapPicker({
   if (loadError) {
     return (
       <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
-        Could not load Google Maps. Check your API key and enabled APIs (Maps
-        JavaScript API, Places API).
+        Could not load Google Maps. Check that the API key is valid and that
+        Maps JavaScript API and Places API are enabled (with billing if
+        required). You can still use campus presets or manual coordinates.
       </p>
     );
   }
@@ -105,7 +109,7 @@ export function GoogleMapPicker({
   if (!isLoaded) {
     return (
       <div className="flex h-64 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-sm text-slate-700">
-        Loading map…
+        Loading Google Maps…
       </div>
     );
   }

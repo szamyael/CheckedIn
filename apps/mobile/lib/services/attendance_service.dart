@@ -39,7 +39,9 @@ class AttendanceService {
   Future<Position> getCurrentPosition() async {
     final enabled = await Geolocator.isLocationServiceEnabled();
     if (!enabled) {
-      throw Exception('Location services are disabled. Please enable GPS.');
+      throw Exception(
+        'Location services are disabled. Open system settings and enable GPS.',
+      );
     }
 
     var permission = await Geolocator.checkPermission();
@@ -47,14 +49,21 @@ class AttendanceService {
       permission = await Geolocator.requestPermission();
     }
 
-    if (permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever) {
-      throw Exception('Location permission is required for attendance.');
+    if (permission == LocationPermission.denied) {
+      throw Exception('Location permission was denied. Allow location to check in.');
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      throw Exception(
+        'Location permission is permanently denied. Enable it in app settings.',
+      );
     }
 
     return Geolocator.getCurrentPosition(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,
+        distanceFilter: 0,
+        timeLimit: Duration(seconds: 25),
       ),
     );
   }
@@ -126,6 +135,7 @@ class AttendanceService {
     required String selfiePath,
     DateTime? clientCheckedInAt,
     String? otpCode,
+    String? eventId,
     Map<String, dynamic>? captureIntegrity,
   }) async {
     final body = <String, dynamic>{
@@ -139,6 +149,9 @@ class AttendanceService {
     }
     if (otpCode != null && otpCode.isNotEmpty) {
       body['otp_code'] = otpCode;
+    }
+    if (eventId != null && eventId.isNotEmpty) {
+      body['event_id'] = eventId;
     }
     if (captureIntegrity != null) {
       body['capture_integrity'] = captureIntegrity;
@@ -171,6 +184,8 @@ class AttendanceService {
     required double longitude,
     required File selfieFile,
     String? otpCode,
+    String? eventId,
+    String? eventTitleHint,
   }) async {
     final capturedAt = DateTime.now().toUtc();
 
@@ -207,6 +222,7 @@ class AttendanceService {
           longitude: longitude,
           selfiePath: selfiePath,
           otpCode: otpCode,
+          eventId: eventId,
           captureIntegrity: captureIntegrity,
         );
         return CheckInSubmission.synced(result);
@@ -221,6 +237,9 @@ class AttendanceService {
       longitude: longitude,
       selfieFile: selfieFile,
       capturedAt: capturedAt,
+      eventTitleHint: eventTitleHint,
+      eventId: eventId,
+      otpCode: otpCode,
       captureIntegrity: captureIntegrity,
     );
     return CheckInSubmission.queuedOffline(pending);

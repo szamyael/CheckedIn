@@ -13,6 +13,8 @@ class SelfieScreen extends StatefulWidget {
   final double latitude;
   final double longitude;
   final String? otpCode;
+  final String? eventId;
+  final String? eventTitle;
 
   const SelfieScreen({
     super.key,
@@ -20,6 +22,8 @@ class SelfieScreen extends StatefulWidget {
     required this.latitude,
     required this.longitude,
     this.otpCode,
+    this.eventId,
+    this.eventTitle,
   });
 
   @override
@@ -39,14 +43,34 @@ class _SelfieScreenState extends State<SelfieScreen> {
   }
 
   Future<void> _initCamera() async {
-    final cameras = await availableCameras();
-    final front = cameras.firstWhere(
-      (c) => c.lensDirection == CameraLensDirection.front,
-      orElse: () => cameras.first,
-    );
-    _controller = CameraController(front, ResolutionPreset.medium);
-    await _controller!.initialize();
-    if (mounted) setState(() {});
+    try {
+      final cameras = await availableCameras();
+      if (cameras.isEmpty) {
+        if (mounted) {
+          setState(() => _error = 'No camera found on this device.');
+        }
+        return;
+      }
+      final front = cameras.firstWhere(
+        (c) => c.lensDirection == CameraLensDirection.front,
+        orElse: () => cameras.first,
+      );
+      _controller = CameraController(
+        front,
+        ResolutionPreset.medium,
+        enableAudio: false,
+        imageFormatGroup: ImageFormatGroup.jpeg,
+      );
+      await _controller!.initialize();
+      if (mounted) setState(() {});
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error =
+              'Could not open camera. Grant camera permission and try again.';
+        });
+      }
+    }
   }
 
   @override
@@ -82,6 +106,8 @@ class _SelfieScreenState extends State<SelfieScreen> {
         longitude: position.longitude,
         selfieFile: selfieFile,
         otpCode: widget.otpCode,
+        eventId: widget.eventId,
+        eventTitleHint: widget.eventTitle,
       );
 
       if (!mounted) return;
@@ -117,7 +143,7 @@ class _SelfieScreenState extends State<SelfieScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('Saved — pending sync'),
         content: const Text(
-          'You are checked in on this device. Your attendance will upload automatically when internet is available.',
+          'You are checked in on this device. Your attendance stays saved here even after the event closes, and uploads automatically when internet is available.',
         ),
         actions: [
           TextButton(

@@ -119,6 +119,7 @@ GoRouter createRouter(AuthService auth) {
             longitude: data['longitude'] as double,
             requiresOtp: data['requires_otp'] as bool? ?? false,
             eventTitle: data['event_title'] as String? ?? 'Event',
+            eventId: data['event_id'] as String?,
           );
         },
       ),
@@ -131,6 +132,8 @@ GoRouter createRouter(AuthService auth) {
             latitude: data['latitude'] as double,
             longitude: data['longitude'] as double,
             otpCode: data['otp_code'] as String?,
+            eventId: data['event_id'] as String?,
+            eventTitle: data['event_title'] as String?,
           );
         },
       ),

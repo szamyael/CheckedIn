@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { LogOut, Calendar, Users, BarChart3, Radio, LineChart, Settings } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 import { SessionTimeoutGuard } from "@/components/SessionTimeoutGuard";
+import { BrandLogo } from "@/components/BrandLogo";
 import type { UserRole } from "@/lib/types";
 
 async function signOut() {
@@ -55,9 +56,9 @@ export default async function DashboardLayout({
   return (
     <div className="flex min-h-screen bg-slate-50">
       <aside className="flex w-60 flex-col border-r border-slate-200 bg-white">
-        <div className="border-b border-slate-200 px-5 py-5">
-          <p className="font-bold text-slate-900">CheckedIn</p>
-          <p className="mt-1 text-xs capitalize text-slate-700">{role}</p>
+        <div className="border-b border-slate-200 px-4 py-4">
+          <BrandLogo variant="transparent" className="max-h-16 w-full" />
+          <p className="mt-2 text-center text-xs capitalize text-slate-700">{role}</p>
         </div>
 
         <nav className="flex-1 space-y-1 p-3">

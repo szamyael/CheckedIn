@@ -10,6 +10,8 @@ class PendingCheckIn {
   final PendingCheckInStatus status;
   final String? lastError;
   final String? eventTitleHint;
+  final String? eventId;
+  final String? otpCode;
   final Map<String, dynamic>? captureIntegrity;
 
   const PendingCheckIn({
@@ -22,6 +24,8 @@ class PendingCheckIn {
     this.status = PendingCheckInStatus.pending,
     this.lastError,
     this.eventTitleHint,
+    this.eventId,
+    this.otpCode,
     this.captureIntegrity,
   });
 
@@ -29,6 +33,8 @@ class PendingCheckIn {
     PendingCheckInStatus? status,
     String? lastError,
     String? eventTitleHint,
+    String? eventId,
+    String? otpCode,
     Map<String, dynamic>? captureIntegrity,
   }) {
     return PendingCheckIn(
@@ -41,6 +47,8 @@ class PendingCheckIn {
       status: status ?? this.status,
       lastError: lastError,
       eventTitleHint: eventTitleHint ?? this.eventTitleHint,
+      eventId: eventId ?? this.eventId,
+      otpCode: otpCode ?? this.otpCode,
       captureIntegrity: captureIntegrity ?? this.captureIntegrity,
     );
   }
@@ -55,6 +63,8 @@ class PendingCheckIn {
         'status': status.name,
         'last_error': lastError,
         'event_title_hint': eventTitleHint,
+        'event_id': eventId,
+        'otp_code': otpCode,
         'capture_integrity': captureIntegrity,
       };
 
@@ -71,6 +81,8 @@ class PendingCheckIn {
       ),
       lastError: json['last_error'] as String?,
       eventTitleHint: json['event_title_hint'] as String?,
+      eventId: json['event_id'] as String?,
+      otpCode: json['otp_code'] as String?,
       captureIntegrity: json['capture_integrity'] is Map
           ? Map<String, dynamic>.from(json['capture_integrity'] as Map)
           : null,

@@ -60,6 +60,8 @@ class OfflineStorageService {
     required File selfieFile,
     required DateTime capturedAt,
     String? eventTitleHint,
+    String? eventId,
+    String? otpCode,
     Map<String, dynamic>? captureIntegrity,
   }) async {
     if (await hasPendingForQrToken(qrToken)) {
@@ -81,6 +83,8 @@ class OfflineStorageService {
       localSelfiePath: dest.path,
       capturedAt: capturedAt,
       eventTitleHint: eventTitleHint,
+      eventId: eventId,
+      otpCode: otpCode,
       captureIntegrity: captureIntegrity,
     );
 

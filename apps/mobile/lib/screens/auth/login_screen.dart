@@ -5,6 +5,7 @@ import '../../core/constants.dart';
 import '../../models/registration_draft.dart';
 import '../../services/auth_service.dart';
 import '../../services/offline_credential_store.dart';
+import '../../widgets/app_logo.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -75,14 +76,8 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Spacer(),
-              Text(
-                'CheckedIn',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              const SizedBox(height: 8),
+              const Center(child: AppLogo(size: 140)),
+              const SizedBox(height: 16),
               Text(
                 'Student Attendance',
                 textAlign: TextAlign.center,

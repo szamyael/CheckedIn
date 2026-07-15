@@ -48,6 +48,7 @@ After **one successful online login** on a device:
 - Sign in with Student ID + password **without internet** (local salted password unlock)
 - Browse cached Home stats, Events, Profile, attendance history, and Notifications
 - Start check-in (GPS + selfie); records queue locally and sync when back online with a live session
+- Offline attendance captured **during** the event window remains valid after the event closes (sync window: **7 days**)
 - Screenshot guard and selfie integrity checks still run offline
 
 Registration, email verification, password reset, profile edits, and feedback require internet.

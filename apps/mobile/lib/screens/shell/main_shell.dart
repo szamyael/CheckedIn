@@ -8,6 +8,7 @@ import '../../services/offline_sync_service.dart';
 import '../events/events_screen.dart';
 import '../profile/profile_screen.dart';
 import '../home/home_screen.dart';
+import '../../widgets/app_logo.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -76,7 +77,8 @@ class _MainShellState extends State<MainShell> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('CheckedIn'),
+        title: const AppLogo(size: 36),
+        centerTitle: true,
         actions: [
           IconButton(
             onPressed: () async {

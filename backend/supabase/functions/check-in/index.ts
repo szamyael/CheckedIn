@@ -17,6 +17,7 @@ interface CheckInRequest {
   selfie_path: string;
   client_checked_in_at?: string;
   otp_code?: string;
+  event_id?: string;
   capture_integrity?: {
     screenshot_events?: number;
     screen_recording?: boolean;
@@ -26,7 +27,8 @@ interface CheckInRequest {
   };
 }
 
-const OFFLINE_SYNC_GRACE_MS = 24 * 60 * 60 * 1000;
+/** Offline capture may sync for up to 7 days after attendance ends. */
+const OFFLINE_SYNC_GRACE_MS = 7 * 24 * 60 * 60 * 1000;
 const SELFIE_MAX_AGE_MS = 15 * 60 * 1000;
 
 function isValidCoordinate(lat: number, lng: number): boolean {
@@ -104,6 +106,7 @@ Deno.serve(async (req) => {
       selfie_path,
       client_checked_in_at,
       otp_code,
+      event_id,
       capture_integrity,
     } = body;
 
@@ -172,7 +175,8 @@ Deno.serve(async (req) => {
       .list(userId, { search: selfieFileName, limit: 1 });
 
     const uploadedAt = selfieMeta?.[0]?.created_at ?? selfieMeta?.[0]?.updated_at;
-    if (uploadedAt) {
+    const isOfflineSyncEarly = Boolean(client_checked_in_at);
+    if (uploadedAt && !isOfflineSyncEarly) {
       const ageMs = Date.now() - new Date(uploadedAt).getTime();
       if (ageMs > SELFIE_MAX_AGE_MS) {
         return new Response(
@@ -182,14 +186,29 @@ Deno.serve(async (req) => {
       }
     }
 
-    const { data: event, error: eventError } = await supabase
+    let event: Record<string, unknown> | null = null;
+
+    const { data: byToken } = await supabase
       .from("events")
       .select("*")
       .eq("qr_token", qr_token)
       .eq("status", "published")
-      .single();
+      .maybeSingle();
 
-    if (eventError || !event) {
+    event = byToken;
+
+    // Offline sync: QR may have rotated — fall back to event_id saved at capture.
+    if (!event && event_id && client_checked_in_at) {
+      const { data: byId } = await supabase
+        .from("events")
+        .select("*")
+        .eq("id", event_id)
+        .eq("status", "published")
+        .maybeSingle();
+      event = byId;
+    }
+
+    if (!event) {
       return new Response(
         JSON.stringify({ error: "Invalid or expired QR code" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -210,34 +229,6 @@ Deno.serve(async (req) => {
       .single();
 
     const lateGraceMinutes = settings?.late_grace_minutes ?? 15;
-    let otpVerified = false;
-
-    if (event.requires_otp) {
-      if (!otp_code?.trim()) {
-        return new Response(
-          JSON.stringify({ error: "Attendance OTP is required for this event" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-        );
-      }
-
-      const { data: otpRow } = await supabase
-        .from("event_otp_codes")
-        .select("id, code, expires_at")
-        .eq("event_id", event.id)
-        .eq("code", otp_code.trim())
-        .gt("expires_at", new Date().toISOString())
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (!otpRow) {
-        return new Response(
-          JSON.stringify({ error: "Invalid or expired attendance OTP" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-        );
-      }
-      otpVerified = true;
-    }
 
     const now = new Date();
     let checkInTime = now;
@@ -267,16 +258,56 @@ Deno.serve(async (req) => {
       checkInTime = clientTime;
     }
 
+    let otpVerified = false;
+
+    if (event.requires_otp === true) {
+      if (!otp_code?.trim()) {
+        return new Response(
+          JSON.stringify({ error: "Attendance OTP is required for this event" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      // Online: OTP must still be valid now. Offline sync: OTP must have been
+      // valid at the time the student captured attendance.
+      let otpQuery = supabase
+        .from("event_otp_codes")
+        .select("id, code, expires_at, created_at")
+        .eq("event_id", event.id as string)
+        .eq("code", otp_code.trim())
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (isOfflineSync) {
+        otpQuery = otpQuery
+          .lte("created_at", checkInTime.toISOString())
+          .gt("expires_at", checkInTime.toISOString());
+      } else {
+        otpQuery = otpQuery.gt("expires_at", now.toISOString());
+      }
+
+      const { data: otpRow } = await otpQuery.maybeSingle();
+
+      if (!otpRow) {
+        return new Response(
+          JSON.stringify({ error: "Invalid or expired attendance OTP" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      otpVerified = true;
+    }
+
     const attendanceStart = new Date(
-      event.attendance_starts_at ?? event.starts_at,
+      (event.attendance_starts_at as string | null) ?? (event.starts_at as string),
     );
     const attendanceEnd = new Date(
-      event.attendance_ends_at ?? event.ends_at,
+      (event.attendance_ends_at as string | null) ?? (event.ends_at as string),
     );
     const qrExpires = event.qr_expires_at
-      ? new Date(event.qr_expires_at)
+      ? new Date(event.qr_expires_at as string)
       : attendanceEnd;
 
+    // Validate against capture time (not sync time) so offline attendees keep credit.
     if (checkInTime < attendanceStart || checkInTime > attendanceEnd) {
       return new Response(
         JSON.stringify({ error: "Attendance window is not open" }),
@@ -316,7 +347,7 @@ Deno.serve(async (req) => {
     }
 
     const distanceM = distanceData as number;
-    const allowedRadius = event.location_radius_m ?? 100;
+    const allowedRadius = (event.location_radius_m as number | null) ?? 100;
 
     if (distanceM > allowedRadius) {
       return new Response(

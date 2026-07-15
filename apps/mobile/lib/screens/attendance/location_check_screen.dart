@@ -16,17 +16,23 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
   final _attendance = AttendanceService();
   bool _checking = false;
   String? _error;
+  String? _status;
 
   Future<void> _verifyLocation() async {
     setState(() {
       _checking = true;
       _error = null;
+      _status = 'Requesting GPS…';
     });
 
     try {
       final position = await _attendance.getCurrentPosition();
+      if (!mounted) return;
+      setState(() => _status = 'Loading event details…');
+
       final meta = await _attendance.fetchCheckInMeta(widget.qrToken);
       if (!mounted) return;
+
       context.push(
         '/attendance/otp',
         extra: {
@@ -35,14 +41,21 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
           'longitude': position.longitude,
           'requires_otp': meta['requires_otp'] == true,
           'event_title': meta['title'] as String? ?? 'Event',
+          'event_id': meta['id'] as String?,
         },
       );
     } catch (e) {
       setState(() {
         _error = e.toString().replaceFirst('Exception: ', '');
+        _status = null;
       });
     } finally {
-      if (mounted) setState(() => _checking = false);
+      if (mounted) {
+        setState(() {
+          _checking = false;
+          _status = null;
+        });
+      }
     }
   }
 
@@ -64,10 +77,18 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'You must be at the event venue to check in. Enable GPS and tap below to verify your location.',
+              'You must be at the event venue to check in. Enable GPS and grant location permission, then tap below.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
+            if (_status != null) ...[
+              const SizedBox(height: 16),
+              Text(
+                _status!,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
             if (_error != null) ...[
               const SizedBox(height: 16),
               Text(_error!, style: const TextStyle(color: Colors.red)),

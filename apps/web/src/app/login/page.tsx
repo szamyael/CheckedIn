@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { BootstrapGate } from "@/components/BootstrapGate";
+import { BrandLogo } from "@/components/BrandLogo";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
@@ -57,18 +58,22 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-slate-900">CheckedIn</h1>
-          <p className="mt-2 text-sm text-slate-700">
-            Admin, Faculty &amp; Organization Portal
-          </p>
+    <div className="flex min-h-screen items-center justify-center bg-black px-4 py-10">
+      <div className="w-full max-w-md">
+        <div className="mb-8 flex justify-center">
+          <BrandLogo variant="background" className="max-h-40" priority />
         </div>
+
+        <div className="rounded-2xl border border-slate-700 bg-slate-900/90 p-8 shadow-xl">
+          <div className="mb-6 text-center">
+            <p className="text-sm text-slate-300">
+              Admin, Faculty &amp; Organization Portal
+            </p>
+          </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
+            <label className="mb-1 block text-sm font-medium text-slate-200">
               Email
             </label>
             <input
@@ -76,13 +81,13 @@ export default function LoginPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
               placeholder="you@university.edu"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
+            <label className="mb-1 block text-sm font-medium text-slate-200">
               Password
             </label>
             <input
@@ -90,12 +95,12 @@ export default function LoginPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
             />
           </div>
 
           {error && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+            <p className="rounded-lg bg-red-950/60 px-3 py-2 text-sm text-red-300">
               {error}
             </p>
           )}
@@ -103,7 +108,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="w-full rounded-lg bg-teal-600 py-2.5 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
           >
             {loading ? "Signing in…" : "Sign in"}
           </button>
@@ -111,18 +116,19 @@ export default function LoginPage() {
           <p className="text-center text-sm">
             <a
               href="/forgot-password"
-              className="text-blue-600 hover:underline"
+              className="text-teal-400 hover:underline"
             >
               Forgot password?
             </a>
           </p>
         </form>
 
-        <p className="mt-6 text-center text-xs text-slate-600">
+        <p className="mt-6 text-center text-xs text-slate-400">
           Student accounts use the mobile app.
         </p>
 
         <BootstrapGate />
+        </div>
       </div>
     </div>
   );
