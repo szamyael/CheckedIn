@@ -29,7 +29,7 @@ const BLOCKING_IMAGE_ISSUES = new Set([
   "file_too_small",
 ]);
 
-function analyzeSelfieImage(bytes: Uint8Array): SelfieAnalysis {
+export function analyzeSelfieImage(bytes: Uint8Array): SelfieAnalysis {
   const reasons: string[] = [];
 
   if (bytes.length < 2048) {
@@ -96,7 +96,7 @@ function analyzeSelfieImage(bytes: Uint8Array): SelfieAnalysis {
   return { block, suspected, reasons };
 }
 
-function validateCaptureIntegrity(
+export function validateCaptureIntegrity(
   integrity: CaptureIntegrity | undefined,
 ): { block: boolean; reasons: string[] } {
   const reasons: string[] = [];
