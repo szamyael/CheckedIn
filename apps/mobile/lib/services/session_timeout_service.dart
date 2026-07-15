@@ -17,9 +17,15 @@ class SessionTimeoutService {
   Duration get timeout => _timeout;
 
   Future<void> loadSettings() async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) {
+    if (!AuthService.instance.isSignedIn) {
       _enabled = false;
+      return;
+    }
+
+    // Keep offline unlock sessions until the user signs out explicitly.
+    if (AuthService.instance.isOfflineMode) {
+      _enabled = false;
+      _timer?.cancel();
       return;
     }
 
@@ -41,7 +47,8 @@ class SessionTimeoutService {
 
   void resetTimer() {
     _timer?.cancel();
-    if (!_enabled || Supabase.instance.client.auth.currentUser == null) return;
+    if (!_enabled || !AuthService.instance.isSignedIn) return;
+    if (AuthService.instance.isOfflineMode) return;
 
     _timer = Timer(_timeout, () async {
       await AuthService.instance.signOut();
@@ -80,7 +87,7 @@ class _SessionActivityWrapperState extends State<SessionActivityWrapper> {
   }
 
   void _onAuthChange() {
-    if (Supabase.instance.client.auth.currentUser != null) {
+    if (AuthService.instance.isSignedIn) {
       _session.loadSettings().then((_) => _session.resetTimer());
     } else {
       _session.stop();

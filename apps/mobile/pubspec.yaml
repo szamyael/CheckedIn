@@ -19,9 +19,10 @@ dependencies:
   screen_capture_event: ^1.2.0
   flutter_dotenv: ^5.2.1
   intl: ^0.20.2
-  connectivity_plus: ^6.1.4
+  connectivity_plus: ^7.2.0
   path_provider: ^2.1.5
   uuid: ^4.5.1
+  crypto: ^3.0.7
 
 dev_dependencies:
   flutter_test:

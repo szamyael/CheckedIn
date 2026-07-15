@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'auth_service.dart';
+
 class FeedbackService {
   SupabaseClient get _client => Supabase.instance.client;
 
@@ -8,7 +10,13 @@ class FeedbackService {
     required int rating,
     String? comment,
   }) async {
-    final userId = _client.auth.currentUser?.id;
+    if (AuthService.instance.isOfflineMode || _client.auth.currentUser == null) {
+      throw Exception(
+        'Feedback requires an internet connection. Try again when online.',
+      );
+    }
+
+    final userId = AuthService.instance.currentUserId;
     if (userId == null) throw Exception('Not signed in');
 
     await _client.from('event_feedback').insert({

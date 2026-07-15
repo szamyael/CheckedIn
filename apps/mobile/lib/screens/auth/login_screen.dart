@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants.dart';
 import '../../models/registration_draft.dart';
 import '../../services/auth_service.dart';
+import '../../services/offline_credential_store.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,6 +19,19 @@ class _LoginScreenState extends State<LoginScreen> {
   final _auth = AuthService.instance;
   bool _loading = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _prefillStudentId();
+  }
+
+  Future<void> _prefillStudentId() async {
+    final creds = await OfflineCredentialStore.instance.load();
+    if (creds != null && mounted && _studentIdController.text.isEmpty) {
+      _studentIdController.text = creds.studentId;
+    }
+  }
 
   @override
   void dispose() {
@@ -104,6 +118,13 @@ class _LoginScreenState extends State<LoginScreen> {
               TextButton(
                 onPressed: () => context.push('/forgot-password'),
                 child: const Text('Forgot password?'),
+              ),
+              Text(
+                'Tip: Sign in once online to unlock offline login and cached events on this device.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: const Color(0xFF64748B),
+                    ),
               ),
               const SizedBox(height: 4),
               OutlinedButton(

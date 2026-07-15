@@ -1,15 +1,17 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/constants.dart';
+import '../core/selfie_integrity_analyzer.dart';
 import '../models/pending_check_in.dart';
+import 'auth_service.dart';
+import 'connectivity_service.dart';
+import 'local_cache_service.dart';
 import 'offline_storage_service.dart';
 import 'screenshot_guard_service.dart';
-import '../core/selfie_integrity_analyzer.dart';
 
 enum CheckInOutcome { synced, queuedOffline }
 
@@ -30,12 +32,9 @@ class CheckInSubmission {
 class AttendanceService {
   SupabaseClient get _client => Supabase.instance.client;
 
-  String? get currentUserId => _client.auth.currentUser?.id;
+  String? get currentUserId => AuthService.instance.currentUserId;
 
-  Future<bool> hasConnectivity() async {
-    final results = await Connectivity().checkConnectivity();
-    return results.any((r) => r != ConnectivityResult.none);
-  }
+  Future<bool> hasConnectivity() => ConnectivityService.instance.refresh();
 
   Future<Position> getCurrentPosition() async {
     final enabled = await Geolocator.isLocationServiceEnabled();
@@ -61,7 +60,10 @@ class AttendanceService {
   }
 
   Future<String> uploadSelfie(File selfieFile) async {
-    final userId = _client.auth.currentUser!.id;
+    final userId = AuthService.instance.currentUserId;
+    if (userId == null || AuthService.instance.isOfflineMode) {
+      throw Exception('Selfie upload requires an online session.');
+    }
     final path = '$userId/${DateTime.now().millisecondsSinceEpoch}.jpg';
     await _client.storage.from('selfies').upload(path, selfieFile);
     return path;
@@ -85,14 +87,36 @@ class AttendanceService {
   }
 
   Future<Map<String, dynamic>> fetchCheckInMeta(String qrToken) async {
-    final response = await _client.functions.invoke(
-      'event-check-in-meta',
-      body: {'qr_token': qrToken},
-    );
-    if (response.status != 200) {
-      throw Exception('Could not load event details');
+    final cacheKey = CacheKeys.checkInMeta(qrToken);
+
+    try {
+      final response = await _client.functions.invoke(
+        'event-check-in-meta',
+        body: {'qr_token': qrToken},
+      );
+      if (response.status != 200) {
+        throw Exception('Could not load event details');
+      }
+      final meta = Map<String, dynamic>.from(response.data as Map);
+      await LocalCacheService.instance.writeJson(cacheKey, meta);
+      return meta;
+    } catch (_) {
+      final cached = await LocalCacheService.instance.readJson(
+        cacheKey,
+        (raw) {
+          if (raw is! Map) return null;
+          return Map<String, dynamic>.from(raw);
+        },
+      );
+      if (cached != null) return cached;
+
+      // Last resort: allow check-in to proceed offline; server validates on sync.
+      return {
+        'requires_otp': false,
+        'title': 'Event (offline)',
+        'offline_fallback': true,
+      };
     }
-    return Map<String, dynamic>.from(response.data as Map);
   }
 
   Future<Map<String, dynamic>> checkIn({
@@ -171,8 +195,10 @@ class AttendanceService {
     }
 
     final online = await hasConnectivity();
+    final canSyncNow =
+        online && !AuthService.instance.isOfflineMode && _client.auth.currentSession != null;
 
-    if (online) {
+    if (canSyncNow) {
       try {
         final selfiePath = await uploadSelfie(selfieFile);
         final result = await checkIn(

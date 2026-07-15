@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/auth_service.dart';
+import '../../services/connectivity_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/offline_sync_service.dart';
 import '../events/events_screen.dart';
@@ -20,6 +21,7 @@ class _MainShellState extends State<MainShell> {
   final _notifications = NotificationService();
   final _offlineSync = OfflineSyncService.instance;
   final _auth = AuthService.instance;
+  final _connectivity = ConnectivityService.instance;
   int _unreadCount = 0;
   String? _accountStatus;
 
@@ -36,6 +38,8 @@ class _MainShellState extends State<MainShell> {
     _loadAccountStatus();
     _notifications.subscribeToNew(_refreshUnread);
     _offlineSync.addListener(_onOfflineChanged);
+    _connectivity.addListener(_onOfflineChanged);
+    _auth.addListener(_onOfflineChanged);
   }
 
   Future<void> _loadAccountStatus() async {
@@ -46,6 +50,8 @@ class _MainShellState extends State<MainShell> {
   @override
   void dispose() {
     _offlineSync.removeListener(_onOfflineChanged);
+    _connectivity.removeListener(_onOfflineChanged);
+    _auth.removeListener(_onOfflineChanged);
     super.dispose();
   }
 
@@ -65,6 +71,8 @@ class _MainShellState extends State<MainShell> {
       const EventsScreen(),
       const ProfileScreen(),
     ];
+
+    final offline = _connectivity.isOffline || _auth.isOfflineMode;
 
     return Scaffold(
       appBar: AppBar(
@@ -92,6 +100,17 @@ class _MainShellState extends State<MainShell> {
       ),
       body: Column(
         children: [
+          if (offline)
+            MaterialBanner(
+              content: Text(
+                _auth.isOfflineMode
+                    ? 'Offline mode — browsing cached data. Check-ins save on device and sync when you reconnect and sign in online.'
+                    : 'No internet — showing cached data. Check-ins will sync when you reconnect.',
+              ),
+              leading: Icon(Icons.wifi_off, color: Colors.blueGrey.shade700),
+              backgroundColor: Colors.blueGrey.shade50,
+              actions: const [SizedBox.shrink()],
+            ),
           if (_accountStatus == 'pending')
             MaterialBanner(
               content: const Text(
@@ -112,7 +131,7 @@ class _MainShellState extends State<MainShell> {
                 color: Colors.amber.shade800,
               ),
               actions: [
-                if (!_offlineSync.isSyncing)
+                if (!_offlineSync.isSyncing && !_auth.isOfflineMode)
                   TextButton(
                     onPressed: () => _offlineSync.syncPending(),
                     child: const Text('Sync now'),

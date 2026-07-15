@@ -41,7 +41,17 @@ CHECKEDIN/
 4. Capture live selfie (camera only)
 5. Optional post-check-in feedback; server awards reward points
 
-**Screenshot fraud prevention:** During check-in the app blocks screenshots and screen recording, analyzes the selfie for screenshot metadata/format, and the server performs a second verification. Suspicious check-ins are flagged on the live monitor.
+## Offline support (Mobile)
+
+After **one successful online login** on a device:
+
+- Sign in with Student ID + password **without internet** (local salted password unlock)
+- Browse cached Home stats, Events, Profile, attendance history, and Notifications
+- Start check-in (GPS + selfie); records queue locally and sync when back online with a live session
+- Screenshot guard and selfie integrity checks still run offline
+
+Registration, email verification, password reset, profile edits, and feedback require internet.
+
 
 ## Web Features (FR-aligned)
 

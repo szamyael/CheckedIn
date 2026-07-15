@@ -7,6 +7,7 @@ import 'core/env_config.dart';
 import 'core/theme.dart';
 import 'router.dart';
 import 'services/auth_service.dart';
+import 'services/connectivity_service.dart';
 import 'services/offline_sync_service.dart';
 import 'services/session_timeout_service.dart';
 
@@ -21,6 +22,7 @@ Future<void> main() async {
   );
 
   final auth = AuthService.instance..init();
+  await ConnectivityService.instance.init();
   await OfflineSyncService.instance.init();
 
   runApp(CheckedInApp(router: createRouter(auth)));

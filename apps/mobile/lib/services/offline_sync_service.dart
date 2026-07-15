@@ -2,9 +2,11 @@ import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/pending_check_in.dart';
 import 'attendance_service.dart';
+import 'auth_service.dart';
 import 'offline_storage_service.dart';
 
 class OfflineSyncService extends ChangeNotifier {
@@ -58,7 +60,9 @@ class OfflineSyncService extends ChangeNotifier {
   }
 
   bool _clientSessionMissing() {
-    return AttendanceService().currentUserId == null;
+    return AttendanceService().currentUserId == null ||
+        AuthService.instance.isOfflineMode ||
+        Supabase.instance.client.auth.currentSession == null;
   }
 
   Future<void> _syncOne(PendingCheckIn item) async {

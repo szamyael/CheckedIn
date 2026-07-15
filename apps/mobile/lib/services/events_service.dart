@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'local_cache_service.dart';
+
 class EventItem {
   final String id;
   final String title;
@@ -41,6 +43,18 @@ class EventItem {
     );
   }
 
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'description': description,
+        'venue_name': venueName,
+        'starts_at': startsAt.toUtc().toIso8601String(),
+        'ends_at': endsAt.toUtc().toIso8601String(),
+        'attendance_starts_at': attendanceStartsAt.toUtc().toIso8601String(),
+        'attendance_ends_at': attendanceEndsAt.toUtc().toIso8601String(),
+        'status': status,
+      };
+
   bool get isAttendanceOpen {
     final now = DateTime.now().toUtc();
     return now.isAfter(attendanceStartsAt.toUtc()) &&
@@ -50,19 +64,38 @@ class EventItem {
 
 class EventsService {
   SupabaseClient get _client => Supabase.instance.client;
+  final _cache = LocalCacheService.instance;
 
   Future<List<EventItem>> fetchPublishedEvents() async {
-    final response = await _client
-        .from('events')
-        .select(
-          'id, title, description, venue_name, starts_at, ends_at, attendance_starts_at, attendance_ends_at, status',
-        )
-        .eq('status', 'published')
-        .gte('ends_at', DateTime.now().toUtc().toIso8601String())
-        .order('starts_at', ascending: true);
+    try {
+      final response = await _client
+          .from('events')
+          .select(
+            'id, title, description, venue_name, starts_at, ends_at, attendance_starts_at, attendance_ends_at, status',
+          )
+          .eq('status', 'published')
+          .gte('ends_at', DateTime.now().toUtc().toIso8601String())
+          .order('starts_at', ascending: true);
 
-    return (response as List)
-        .map((e) => EventItem.fromJson(Map<String, dynamic>.from(e as Map)))
-        .toList();
+      final events = (response as List)
+          .map((e) => EventItem.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList();
+      await _cache.writeJson(
+        CacheKeys.events,
+        events.map((e) => e.toJson()).toList(),
+      );
+      return events;
+    } catch (_) {
+      final cached = await _cache.readJson(CacheKeys.events, (raw) {
+        if (raw is! List) return <EventItem>[];
+        return raw
+            .map((e) => EventItem.fromJson(Map<String, dynamic>.from(e as Map)))
+            .toList();
+      });
+      if (cached != null) return cached;
+      throw Exception(
+        'Events unavailable offline. Connect once to download the event list for this device.',
+      );
+    }
   }
 }
