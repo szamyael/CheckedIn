@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../services/attendance_service.dart';
 
+/// Step 1 of check-in: GPS must pass the event geofence before OTP/selfie.
 class LocationCheckScreen extends StatefulWidget {
   final String qrToken;
 
@@ -17,22 +18,45 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
   bool _checking = false;
   String? _error;
   String? _status;
+  String? _distanceHint;
 
   Future<void> _verifyLocation() async {
     setState(() {
       _checking = true;
       _error = null;
+      _distanceHint = null;
       _status = 'Requesting GPS…';
     });
 
     try {
       final position = await _attendance.getCurrentPosition();
       if (!mounted) return;
-      setState(() => _status = 'Loading event details…');
+      setState(() => _status = 'Verifying you are at the venue…');
 
-      final meta = await _attendance.fetchCheckInMeta(widget.qrToken);
+      final meta = await _attendance.verifyLocationForCheckIn(
+        qrToken: widget.qrToken,
+        latitude: position.latitude,
+        longitude: position.longitude,
+      );
+
       if (!mounted) return;
 
+      final locationOk = meta['location_ok'] == true;
+      if (!locationOk) {
+        final distance = meta['distance_m'];
+        final allowed = meta['allowed_radius_m'];
+        setState(() {
+          _error = (meta['error'] as String?) ??
+              'Location check failed. Move closer to the venue and try again.';
+          if (distance != null && allowed != null) {
+            _distanceHint = 'Distance: ${distance}m (allowed: ${allowed}m)';
+          }
+          _status = null;
+        });
+        return;
+      }
+
+      // Location passed — only then continue to OTP → selfie.
       context.push(
         '/attendance/otp',
         extra: {
@@ -42,6 +66,7 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
           'requires_otp': meta['requires_otp'] == true,
           'event_title': meta['title'] as String? ?? 'Event',
           'event_id': meta['id'] as String?,
+          'location_verified': true,
         },
       );
     } catch (e) {
@@ -71,13 +96,13 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
             const Icon(Icons.location_on, size: 72),
             const SizedBox(height: 16),
             Text(
-              'Location Required',
+              'Step 1 of 3 — Location',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
             Text(
-              'You must be at the event venue to check in. Enable GPS and grant location permission, then tap below.',
+              'You must be inside the event geofence before OTP or selfie. If verification fails, check-in stops here.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
@@ -92,11 +117,20 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
             if (_error != null) ...[
               const SizedBox(height: 16),
               Text(_error!, style: const TextStyle(color: Colors.red)),
+              if (_distanceHint != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  _distanceHint!,
+                  style: const TextStyle(color: Colors.red, fontSize: 13),
+                ),
+              ],
             ],
             const Spacer(),
             FilledButton(
               onPressed: _checking ? null : _verifyLocation,
-              child: Text(_checking ? 'Checking location…' : 'Verify My Location'),
+              child: Text(
+                _checking ? 'Verifying location…' : 'Verify My Location',
+              ),
             ),
           ],
         ),

@@ -232,7 +232,7 @@ class _SelfieScreenState extends State<SelfieScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Take a live selfie to complete check-in. Screenshots and screen recording are blocked during check-in.',
+                  'Step 3 of 3 — Live selfie. Screenshots and screen recording are blocked during check-in.',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),

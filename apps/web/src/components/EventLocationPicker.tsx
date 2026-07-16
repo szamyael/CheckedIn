@@ -4,9 +4,9 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 import { CAMPUS_LOCATIONS, DEFAULT_MAP_CENTER } from "@/lib/campus-locations";
 
-const GoogleMapPicker = dynamic(
+const LeafletMapPicker = dynamic(
   () =>
-    import("@/components/GoogleMapPicker").then((m) => m.GoogleMapPicker),
+    import("@/components/LeafletMapPicker").then((m) => m.LeafletMapPicker),
   {
     ssr: false,
     loading: () => (
@@ -184,7 +184,7 @@ export function EventLocationPicker({
       )}
 
       {mode === "map" && (
-        <GoogleMapPicker
+        <LeafletMapPicker
           latitude={value.latitude || DEFAULT_MAP_CENTER.lat}
           longitude={value.longitude || DEFAULT_MAP_CENTER.lng}
           onLocationChange={({ latitude, longitude, venueName }) => {

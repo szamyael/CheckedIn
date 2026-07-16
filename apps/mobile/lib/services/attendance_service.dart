@@ -119,11 +119,95 @@ class AttendanceService {
       );
       if (cached != null) return cached;
 
-      // Last resort: allow check-in to proceed offline; server validates on sync.
       return {
         'requires_otp': false,
         'title': 'Event (offline)',
         'offline_fallback': true,
+      };
+    }
+  }
+
+  /// Server-side geofence check. Must pass before OTP / selfie.
+  Future<Map<String, dynamic>> verifyLocationForCheckIn({
+    required String qrToken,
+    required double latitude,
+    required double longitude,
+  }) async {
+    final cacheKey = CacheKeys.checkInMeta(qrToken);
+
+    try {
+      final response = await _client.functions.invoke(
+        'event-check-in-meta',
+        body: {
+          'qr_token': qrToken,
+          'latitude': latitude,
+          'longitude': longitude,
+        },
+      );
+
+      final data = response.data is Map
+          ? Map<String, dynamic>.from(response.data as Map)
+          : <String, dynamic>{};
+
+      if (response.status == 200 && data['location_ok'] == true) {
+        await LocalCacheService.instance.writeJson(cacheKey, data);
+        return data;
+      }
+
+      // Non-200 with body still carries distance / error for the UI.
+      if (data.isNotEmpty) {
+        data['location_ok'] = false;
+        return data;
+      }
+
+      throw Exception(
+        data['error']?.toString() ??
+            'Location verification failed (${response.status})',
+      );
+    } catch (e) {
+      // Offline: verify locally against cached venue coordinates.
+      final cached = await LocalCacheService.instance.readJson(
+        cacheKey,
+        (raw) {
+          if (raw is! Map) return null;
+          return Map<String, dynamic>.from(raw);
+        },
+      );
+
+      final venueLat = (cached?['latitude'] as num?)?.toDouble();
+      final venueLng = (cached?['longitude'] as num?)?.toDouble();
+      final radius = (cached?['location_radius_m'] as num?)?.toDouble() ?? 100;
+
+      if (venueLat == null || venueLng == null) {
+        throw Exception(
+          'Cannot verify location offline without cached event venue. '
+          'Connect once near the event, then retry.',
+        );
+      }
+
+      final distanceM = Geolocator.distanceBetween(
+        latitude,
+        longitude,
+        venueLat,
+        venueLng,
+      );
+
+      if (distanceM > radius) {
+        return {
+          ...?cached,
+          'location_ok': false,
+          'distance_m': distanceM.round(),
+          'allowed_radius_m': radius.round(),
+          'error':
+              'You are outside the event location (${distanceM.round()}m away; allowed ${radius.round()}m)',
+        };
+      }
+
+      return {
+        ...?cached,
+        'location_ok': true,
+        'distance_m': distanceM.round(),
+        'allowed_radius_m': radius.round(),
       };
     }
   }

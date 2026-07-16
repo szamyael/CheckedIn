@@ -8,6 +8,7 @@ class AttendanceOtpScreen extends StatefulWidget {
   final bool requiresOtp;
   final String eventTitle;
   final String? eventId;
+  final bool locationVerified;
 
   const AttendanceOtpScreen({
     super.key,
@@ -17,6 +18,7 @@ class AttendanceOtpScreen extends StatefulWidget {
     required this.requiresOtp,
     required this.eventTitle,
     this.eventId,
+    this.locationVerified = false,
   });
 
   @override
@@ -26,7 +28,25 @@ class AttendanceOtpScreen extends StatefulWidget {
 class _AttendanceOtpScreenState extends State<AttendanceOtpScreen> {
   final _codeController = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.locationVerified) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Location must be verified before OTP.'),
+          ),
+        );
+        context.go('/attendance/scan');
+      });
+    }
+  }
+
   void _continue() {
+    if (!widget.locationVerified) return;
+
     if (widget.requiresOtp && _codeController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Enter the OTP announced at the event.')),
@@ -42,6 +62,7 @@ class _AttendanceOtpScreenState extends State<AttendanceOtpScreen> {
         'longitude': widget.longitude,
         'event_id': widget.eventId,
         'event_title': widget.eventTitle,
+        'location_verified': true,
         if (_codeController.text.trim().isNotEmpty)
           'otp_code': _codeController.text.trim(),
       },
@@ -64,9 +85,14 @@ class _AttendanceOtpScreenState extends State<AttendanceOtpScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
+              'Step 2 of 3 — OTP',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(
               widget.requiresOtp
-                  ? 'Enter the OTP announced for ${widget.eventTitle}.'
-                  : 'If staff announced an OTP for ${widget.eventTitle}, enter it below. Otherwise tap continue.',
+                  ? 'Location verified. Enter the OTP announced for ${widget.eventTitle}.'
+                  : 'Location verified. If staff announced an OTP for ${widget.eventTitle}, enter it below. Otherwise continue.',
             ),
             const SizedBox(height: 24),
             TextField(

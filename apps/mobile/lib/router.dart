@@ -120,6 +120,7 @@ GoRouter createRouter(AuthService auth) {
             requiresOtp: data['requires_otp'] as bool? ?? false,
             eventTitle: data['event_title'] as String? ?? 'Event',
             eventId: data['event_id'] as String?,
+            locationVerified: data['location_verified'] as bool? ?? false,
           );
         },
       ),
@@ -127,6 +128,9 @@ GoRouter createRouter(AuthService auth) {
         path: '/attendance/selfie',
         builder: (ctx, state) {
           final data = state.extra! as Map<String, dynamic>;
+          if (data['location_verified'] != true) {
+            return const QrScanScreen();
+          }
           return SelfieScreen(
             qrToken: data['qr_token'] as String,
             latitude: data['latitude'] as double,
