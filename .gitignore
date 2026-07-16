@@ -9,6 +9,8 @@ node_modules/
 .env.*.local
 backend/supabase/.env
 apps/mobile/.env
+apps/ios/.env
+apps/ios/**/Config.plist
 !**/.env.example
 
 # Next.js

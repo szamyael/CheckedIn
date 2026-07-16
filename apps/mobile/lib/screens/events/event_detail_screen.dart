@@ -42,7 +42,7 @@ class EventDetailScreen extends StatelessWidget {
             icon: const Icon(Icons.qr_code_scanner),
             label: Text(
               event.isAttendanceOpen
-                  ? 'Scan QR to check in'
+                  ? 'Scan QR to check in or out'
                   : 'Check-in not open yet',
             ),
           ),

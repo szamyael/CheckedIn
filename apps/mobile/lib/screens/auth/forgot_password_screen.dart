@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants.dart';
+import '../../core/student_id_formatter.dart';
 import '../../services/auth_service.dart';
+import '../../widgets/universal_loader.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -58,6 +60,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       _loading = true;
       _error = null;
     });
+    UniversalLoaderController.instance.show('Verifying ID…');
 
     try {
       if (_idCardImage == null) {
@@ -85,6 +88,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     } catch (e) {
       setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
     } finally {
+      UniversalLoaderController.instance.hide();
       if (mounted) setState(() => _loading = false);
     }
   }
@@ -126,6 +130,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 labelText: 'Student ID',
                 hintText: '0123-4567',
               ),
+              keyboardType: TextInputType.number,
+              inputFormatters: [StudentIdInputFormatter()],
             ),
             if (_error != null) ...[
               const SizedBox(height: 12),

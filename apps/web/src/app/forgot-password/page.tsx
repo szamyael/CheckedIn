@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useLoader } from "@/components/LoaderProvider";
 import { createClient } from "@/lib/supabase/client";
 
 export default function ForgotPasswordPage() {
+  const { showLoader, hideLoader } = useLoader();
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -15,23 +17,27 @@ export default function ForgotPasswordPage() {
     setError(null);
     setMessage(null);
     setLoading(true);
+    showLoader("Sending reset link…");
 
-    const supabase = createClient();
-    const redirectTo = `${window.location.origin}/auth/callback?next=/auth/reset-password`;
+    try {
+      const supabase = createClient();
+      const redirectTo = `${window.location.origin}/auth/callback?next=/auth/reset-password`;
 
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-      email,
-      { redirectTo },
-    );
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        email,
+        { redirectTo },
+      );
 
-    setLoading(false);
+      if (resetError) {
+        setError(resetError.message);
+        return;
+      }
 
-    if (resetError) {
-      setError(resetError.message);
-      return;
+      setMessage("Check your email for a password reset link.");
+    } finally {
+      setLoading(false);
+      hideLoader();
     }
-
-    setMessage("Check your email for a password reset link.");
   }
 
   return (

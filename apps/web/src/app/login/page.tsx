@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { BootstrapGate } from "@/components/BootstrapGate";
-import { BrandLogo } from "@/components/BrandLogo";
+import { BrandMark } from "@/components/BrandLogo";
+import { useLoader } from "@/components/LoaderProvider";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { showLoader, hideLoader } = useLoader();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -17,51 +19,53 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
+    showLoader("Signing in…");
 
-    const supabase = createClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const supabase = createClient();
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (!signInError) {
-      const { data: profile } = await supabase
-        .from("users")
-        .select("status")
-        .eq("id", (await supabase.auth.getUser()).data.user!.id)
-        .single();
+      if (!signInError) {
+        const { data: profile } = await supabase
+          .from("users")
+          .select("status")
+          .eq("id", (await supabase.auth.getUser()).data.user!.id)
+          .single();
 
-      if (profile?.status === "disabled") {
-        await supabase.auth.signOut();
-        setError("This account has been disabled.");
-        setLoading(false);
+        if (profile?.status === "disabled") {
+          await supabase.auth.signOut();
+          setError("This account has been disabled.");
+          return;
+        }
+
+        if (profile?.status === "pending") {
+          await supabase.auth.signOut();
+          setError("Your account is pending admin approval.");
+          return;
+        }
+      }
+
+      if (signInError) {
+        setError(signInError.message);
         return;
       }
 
-      if (profile?.status === "pending") {
-        await supabase.auth.signOut();
-        setError("Your account is pending admin approval.");
-        setLoading(false);
-        return;
-      }
+      router.push("/dashboard");
+      router.refresh();
+    } finally {
+      setLoading(false);
+      hideLoader();
     }
-
-    setLoading(false);
-
-    if (signInError) {
-      setError(signInError.message);
-      return;
-    }
-
-    router.push("/dashboard");
-    router.refresh();
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-black px-4 py-10">
       <div className="w-full max-w-md">
         <div className="mb-8 flex justify-center">
-          <BrandLogo variant="background" className="max-h-40" priority />
+          <BrandMark size={160} className="drop-shadow-lg" />
         </div>
 
         <div className="rounded-2xl border border-slate-700 bg-slate-900/90 p-8 shadow-xl">

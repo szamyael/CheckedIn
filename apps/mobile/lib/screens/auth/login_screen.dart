@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants.dart';
+import '../../core/student_id_formatter.dart';
 import '../../models/registration_draft.dart';
 import '../../services/auth_service.dart';
 import '../../services/offline_credential_store.dart';
 import '../../widgets/app_logo.dart';
+import '../../widgets/universal_loader.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -30,7 +32,9 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _prefillStudentId() async {
     final creds = await OfflineCredentialStore.instance.load();
     if (creds != null && mounted && _studentIdController.text.isEmpty) {
-      _studentIdController.text = creds.studentId;
+      final normalized =
+          AppConstants.normalizeStudentId(creds.studentId) ?? creds.studentId;
+      _studentIdController.text = normalized;
     }
   }
 
@@ -46,6 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _loading = true;
       _error = null;
     });
+    UniversalLoaderController.instance.show('Signing in…');
 
     try {
       final rawId = _studentIdController.text.trim();
@@ -62,6 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
     } finally {
+      UniversalLoaderController.instance.hide();
       if (mounted) setState(() => _loading = false);
     }
   }
@@ -93,12 +99,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   hintText: '0123-4567',
                 ),
                 keyboardType: TextInputType.number,
+                inputFormatters: [StudentIdInputFormatter()],
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _passwordController,
                 decoration: const InputDecoration(labelText: 'Password'),
                 obscureText: true,
+                onSubmitted: (_) {
+                  if (!_loading) _login();
+                },
               ),
               if (_error != null) ...[
                 const SizedBox(height: 12),

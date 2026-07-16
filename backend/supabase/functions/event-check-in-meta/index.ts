@@ -69,6 +69,17 @@ Deno.serve(async (req) => {
     const attendanceEnd = new Date(event.attendance_ends_at ?? event.ends_at);
     const windowOpen = now >= attendanceStart && now <= attendanceEnd;
 
+    const { data: myAttendance } = await supabase
+      .from("attendance_records")
+      .select("status, checked_in_at, checked_out_at")
+      .eq("event_id", event.id)
+      .eq("student_id", userData.user.id)
+      .maybeSingle();
+
+    const myStatus = (myAttendance?.status as string | undefined) ?? null;
+    const canCheckOut = myStatus === "checked_in" || myStatus === "late";
+    const alreadyCheckedOut = myStatus === "checked_out";
+
     const base = {
       id: event.id,
       title: event.title,
@@ -80,6 +91,11 @@ Deno.serve(async (req) => {
       attendance_starts_at: event.attendance_starts_at ?? event.starts_at,
       attendance_ends_at: event.attendance_ends_at ?? event.ends_at,
       window_open: windowOpen,
+      my_attendance_status: myStatus,
+      can_check_out: canCheckOut,
+      already_checked_out: alreadyCheckedOut,
+      checked_in_at: myAttendance?.checked_in_at ?? null,
+      checked_out_at: myAttendance?.checked_out_at ?? null,
     };
 
     // Location verification gate — required before OTP / selfie.

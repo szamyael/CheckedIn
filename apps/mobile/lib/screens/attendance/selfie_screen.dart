@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../services/attendance_service.dart';
 import '../../services/offline_sync_service.dart';
 import '../../services/screenshot_guard_service.dart';
+import '../../widgets/universal_loader.dart';
 
 class SelfieScreen extends StatefulWidget {
   final String qrToken;
@@ -92,6 +93,7 @@ class _SelfieScreenState extends State<SelfieScreen> {
       _submitting = true;
       _error = null;
     });
+    UniversalLoaderController.instance.show('Submitting check-in…');
 
     try {
       final photo = await _controller!.takePicture();
@@ -132,6 +134,7 @@ class _SelfieScreenState extends State<SelfieScreen> {
         _error = e.toString().replaceFirst('Exception: ', '');
       });
     } finally {
+      UniversalLoaderController.instance.hide();
       if (mounted) setState(() => _submitting = false);
     }
   }

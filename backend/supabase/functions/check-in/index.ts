@@ -362,14 +362,18 @@ Deno.serve(async (req) => {
 
     const { data: existing } = await supabase
       .from("attendance_records")
-      .select("id")
+      .select("id, status")
       .eq("event_id", event.id)
       .eq("student_id", userId)
       .maybeSingle();
 
     if (existing) {
+      const msg =
+        existing.status === "checked_out"
+          ? "You already checked out of this event"
+          : "Already checked in to this event. Scan the QR again to check out.";
       return new Response(
-        JSON.stringify({ error: "Already checked in to this event" }),
+        JSON.stringify({ error: msg, status: existing.status }),
         { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/attendance_service.dart';
+import '../../widgets/universal_loader.dart';
 
 /// Step 1 of check-in: GPS must pass the event geofence before OTP/selfie.
 class LocationCheckScreen extends StatefulWidget {
@@ -27,6 +28,7 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
       _distanceHint = null;
       _status = 'Requesting GPS…';
     });
+    UniversalLoaderController.instance.show('Verifying location…');
 
     try {
       final position = await _attendance.getCurrentPosition();
@@ -75,6 +77,7 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
         _status = null;
       });
     } finally {
+      UniversalLoaderController.instance.hide();
       if (mounted) {
         setState(() {
           _checking = false;

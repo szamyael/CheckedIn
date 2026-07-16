@@ -212,6 +212,22 @@ class AttendanceService {
     }
   }
 
+  /// Check out by scanning the event QR again — no OTP or selfie.
+  Future<Map<String, dynamic>> checkOut({required String qrToken}) async {
+    final response = await _client.functions.invoke(
+      'check-out',
+      body: {'qr_token': qrToken},
+    );
+
+    if (response.status != 200) {
+      final data = response.data;
+      final err = data is Map ? data['error'] : 'Check-out failed';
+      throw Exception(err ?? 'Check-out failed');
+    }
+
+    return Map<String, dynamic>.from(response.data as Map);
+  }
+
   Future<Map<String, dynamic>> checkIn({
     required String qrToken,
     required double latitude,

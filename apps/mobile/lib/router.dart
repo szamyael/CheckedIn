@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import '../models/registration_draft.dart';
 import '../screens/attendance/attendance_otp_screen.dart';
+import '../screens/attendance/attendance_resolve_screen.dart';
 import '../screens/attendance/location_check_screen.dart';
 import '../screens/attendance/qr_scan_screen.dart';
 import '../screens/attendance/selfie_screen.dart';
@@ -103,6 +104,11 @@ GoRouter createRouter(AuthService auth) {
       GoRoute(
         path: '/attendance/scan',
         builder: (context, state) => const QrScanScreen(),
+      ),
+      GoRoute(
+        path: '/attendance/resolve',
+        builder: (ctx, state) =>
+            AttendanceResolveScreen(qrToken: state.extra! as String),
       ),
       GoRoute(
         path: '/attendance/location',

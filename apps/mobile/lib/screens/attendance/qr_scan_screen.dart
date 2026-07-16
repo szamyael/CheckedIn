@@ -35,7 +35,7 @@ class _QrScanScreenState extends State<QrScanScreen> {
     }
 
     _handled = true;
-    context.push('/attendance/location', extra: token);
+    context.push('/attendance/resolve', extra: token);
   }
 
   @override
@@ -61,7 +61,7 @@ class _QrScanScreenState extends State<QrScanScreen> {
                     ),
                   ),
                 Text(
-                  'Point your camera at the event QR code displayed by your instructor or organization.',
+                  'Point your camera at the event QR code. Scan once to check in, or scan again after check-in to check out (no OTP or selfie needed for checkout).',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
