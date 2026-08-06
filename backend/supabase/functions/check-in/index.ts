@@ -424,12 +424,19 @@ Deno.serve(async (req) => {
       p_event_title: event.title,
     });
 
+    const { data: bingoResult } = await supabase.rpc("apply_bingo_after_check_in", {
+      p_student_id: userId,
+      p_event_id: event.id,
+      p_attendance_id: record.id,
+    });
+
     return new Response(
       JSON.stringify({
         success: true,
         attendance: record,
         event: { id: event.id, title: event.title },
         badges: newBadges ?? [],
+        bingo: bingoResult ?? null,
         points_awarded: pointsAwarded,
         status: attendanceStatus,
         fraud_flag: fraudFlag,

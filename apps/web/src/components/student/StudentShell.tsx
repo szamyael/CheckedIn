@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, Home, UserRound } from "lucide-react";
+import { CalendarDays, Home, LayoutGrid, UserRound } from "lucide-react";
 import { BrandMark } from "@/components/BrandLogo";
 
 const TABS = [
   { href: "/student", label: "Home", icon: Home, exact: true },
   { href: "/student/events", label: "Events", icon: CalendarDays, exact: false },
+  { href: "/student/bingo", label: "Bingo", icon: LayoutGrid, exact: false },
   { href: "/student/profile", label: "Profile", icon: UserRound, exact: false },
 ];
 
@@ -65,7 +66,7 @@ export function StudentShell({
       <main className="flex-1 overflow-y-auto px-4 pb-24 pt-4">{children}</main>
 
       <nav className="fixed bottom-0 left-1/2 z-20 w-full max-w-md -translate-x-1/2 border-t border-slate-200 bg-white/95 backdrop-blur">
-        <ul className="grid grid-cols-3">
+        <ul className="grid grid-cols-4">
           {TABS.map(({ href, label, icon: Icon, exact }) => {
             const active = exact
               ? pathname === href

@@ -1,7 +1,16 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { LogOut, Calendar, Users, BarChart3, Radio, LineChart, Settings } from "lucide-react";
+import {
+  LogOut,
+  Calendar,
+  Users,
+  BarChart3,
+  Radio,
+  LineChart,
+  Settings,
+  LayoutGrid,
+} from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 import { SessionTimeoutGuard } from "@/components/SessionTimeoutGuard";
 import { BrandLogo } from "@/components/BrandLogo";
@@ -35,7 +44,24 @@ export default async function DashboardLayout({
   const role = profile?.role as UserRole;
 
   const nav = [
-    { href: "/dashboard/events", label: "Events", icon: Calendar },
+    ...(role === "org_member" || role === "admin" || role === "faculty"
+      ? [
+          {
+            href: "/dashboard/events",
+            label: role === "faculty" ? "Events (view)" : "Events",
+            icon: Calendar,
+          },
+        ]
+      : []),
+    ...(role === "org_member" || role === "admin"
+      ? [
+          {
+            href: "/dashboard/org/bingo",
+            label: "Bingo & Badges",
+            icon: LayoutGrid,
+          },
+        ]
+      : []),
     ...(role === "admin" || role === "faculty" || role === "org_member"
       ? [{ href: "/dashboard/monitor", label: "Live Monitor", icon: Radio }]
       : []),
@@ -51,6 +77,12 @@ export default async function DashboardLayout({
           { href: "/dashboard/settings", label: "Settings", icon: Settings },
         ]
       : []),
+    ...(role === "org_member"
+      ? [{ href: "/dashboard/org", label: "Org Home", icon: Users }]
+      : []),
+    ...(role === "faculty"
+      ? [{ href: "/dashboard/faculty", label: "Faculty Home", icon: Users }]
+      : []),
   ];
 
   return (
@@ -58,7 +90,9 @@ export default async function DashboardLayout({
       <aside className="flex w-60 flex-col border-r border-slate-200 bg-white">
         <div className="border-b border-slate-200 px-4 py-4">
           <BrandLogo variant="transparent" className="max-h-16 w-full" />
-          <p className="mt-2 text-center text-xs capitalize text-slate-700">{role}</p>
+          <p className="mt-2 text-center text-xs capitalize text-slate-700">
+            {role}
+          </p>
         </div>
 
         <nav className="flex-1 space-y-1 p-3">

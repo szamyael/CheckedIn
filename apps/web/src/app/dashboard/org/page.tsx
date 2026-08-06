@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { Calendar } from "lucide-react";
+import { Calendar, LayoutGrid } from "lucide-react";
 
 export default async function OrgDashboard() {
   const supabase = await createClient();
@@ -26,20 +26,38 @@ export default async function OrgDashboard() {
           Organization Dashboard
         </h1>
         <p className="mt-1 text-sm text-slate-700">
-          Post and manage your organization&apos;s events on the calendar.
+          Create events (subject to admin approval) and manage Bingo badges for
+          your students.
         </p>
       </div>
 
-      <Link
-        href="/dashboard/events"
-        className="flex max-w-sm items-center gap-4 rounded-xl border border-slate-200 bg-white p-6 hover:border-blue-200"
-      >
-        <Calendar className="h-8 w-8 text-blue-600" />
-        <div>
-          <p className="font-semibold">Manage Events</p>
-          <p className="text-sm text-slate-700">Create events with QR codes</p>
-        </div>
-      </Link>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Link
+          href="/dashboard/events"
+          className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-6 hover:border-teal-200"
+        >
+          <Calendar className="h-8 w-8 text-teal-600" />
+          <div>
+            <p className="font-semibold">Manage Events</p>
+            <p className="text-sm text-slate-700">
+              Create calendar events with QR codes
+            </p>
+          </div>
+        </Link>
+
+        <Link
+          href="/dashboard/org/bingo"
+          className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-6 hover:border-teal-200"
+        >
+          <LayoutGrid className="h-8 w-8 text-teal-600" />
+          <div>
+            <p className="font-semibold">Bingo &amp; Badges</p>
+            <p className="text-sm text-slate-700">
+              3×3 card, line &amp; streak rewards
+            </p>
+          </div>
+        </Link>
+      </div>
     </div>
   );
 }

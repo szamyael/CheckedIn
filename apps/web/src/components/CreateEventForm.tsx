@@ -37,24 +37,37 @@ export function CreateEventForm() {
 
       setUserRole(profile?.role ?? null);
 
-      if (profile?.role !== "org_member") return;
-
-      const { data: staff } = await supabase
-        .from("staff_profiles")
-        .select("organization_id")
-        .eq("id", user.id)
-        .single();
-
-      setOrganizationId(staff?.organization_id ?? null);
+      if (profile?.role === "org_member" || profile?.role === "admin") {
+        const { data: staff } = await supabase
+          .from("staff_profiles")
+          .select("organization_id")
+          .eq("id", user.id)
+          .maybeSingle();
+        setOrganizationId(staff?.organization_id ?? null);
+      }
     }
 
-    loadProfile();
+    void loadProfile();
   }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    if (userRole === "faculty") {
+      setError(
+        "Faculty accounts cannot create events. Organizations manage the event calendar.",
+      );
+      setLoading(false);
+      return;
+    }
+
+    if (userRole !== "org_member" && userRole !== "admin") {
+      setError("Only organization accounts can create events.");
+      setLoading(false);
+      return;
+    }
 
     if (!location.venueName.trim()) {
       setError("Venue name is required.");
@@ -129,6 +142,10 @@ export function CreateEventForm() {
     });
   }
 
+  if (userRole === "faculty") {
+    return null;
+  }
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -138,19 +155,30 @@ export function CreateEventForm() {
 
       {organizationId && (
         <p className="text-xs text-slate-700">
-          This event will be linked to your organization. Publishing submits it for admin approval.
+          This event will be linked to your organization. Publishing submits it
+          for admin approval.
         </p>
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label className="mb-1 block text-sm font-medium text-slate-800">Title</label>
-          <input name="title" required className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+          <label className="mb-1 block text-sm font-medium text-slate-800">
+            Title
+          </label>
+          <input
+            name="title"
+            required
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          />
         </div>
 
         <div className="sm:col-span-2">
           <label className="mb-1 block text-sm font-medium">Description</label>
-          <textarea name="description" rows={2} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+          <textarea
+            name="description"
+            rows={2}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          />
         </div>
 
         <div className="sm:col-span-2">
@@ -158,45 +186,88 @@ export function CreateEventForm() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium">Check-in radius (meters)</label>
-          <input name="location_radius_m" type="number" defaultValue={100} min={10} max={5000} required className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-          <p className="mt-1 text-xs text-slate-700">
-            Students must be within this distance of the pin to check in.
-          </p>
+          <label className="mb-1 block text-sm font-medium">
+            Check-in radius (meters)
+          </label>
+          <input
+            name="location_radius_m"
+            type="number"
+            defaultValue={100}
+            min={10}
+            max={5000}
+            required
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          />
         </div>
 
         <div>
           <label className="mb-1 block text-sm font-medium">Status</label>
-          <select name="status" defaultValue="published" className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+          <select
+            name="status"
+            defaultValue="published"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          >
             <option value="draft">Draft</option>
-            <option value="published">{userRole === "org_member" ? "Submit for approval" : "Published"}</option>
+            <option value="published">
+              {userRole === "org_member"
+                ? "Submit for approval"
+                : "Published"}
+            </option>
           </select>
         </div>
 
         <div>
           <label className="mb-1 block text-sm font-medium">Event Starts</label>
-          <input name="starts_at" type="datetime-local" required className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+          <input
+            name="starts_at"
+            type="datetime-local"
+            required
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          />
         </div>
 
         <div>
           <label className="mb-1 block text-sm font-medium">Event Ends</label>
-          <input name="ends_at" type="datetime-local" required className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+          <input
+            name="ends_at"
+            type="datetime-local"
+            required
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          />
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium">Attendance Opens</label>
-          <input name="attendance_starts_at" type="datetime-local" required className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+          <label className="mb-1 block text-sm font-medium">
+            Attendance Opens
+          </label>
+          <input
+            name="attendance_starts_at"
+            type="datetime-local"
+            required
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          />
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium">Attendance Closes (QR expires)</label>
-          <input name="attendance_ends_at" type="datetime-local" required className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+          <label className="mb-1 block text-sm font-medium">
+            Attendance Closes (QR expires)
+          </label>
+          <input
+            name="attendance_ends_at"
+            type="datetime-local"
+            required
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          />
         </div>
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
-      <button type="submit" disabled={loading} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
+      <button
+        type="submit"
+        disabled={loading}
+        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+      >
         {loading ? "Creating…" : "Create Event"}
       </button>
     </form>

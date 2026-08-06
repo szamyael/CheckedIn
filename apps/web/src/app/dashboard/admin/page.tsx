@@ -6,6 +6,7 @@ import { CreateStaffForm } from "@/components/CreateStaffForm";
 import { StaffActions } from "@/components/StaffActions";
 import { StudentActions } from "@/components/StudentActions";
 import { StudentAchievementsPanel } from "@/components/StudentAchievementsPanel";
+import { AdminBingoOverview } from "@/components/bingo/AdminBingoOverview";
 
 export default async function AdminPage() {
   const supabase = await createClient();
@@ -64,6 +65,8 @@ export default async function AdminPage() {
       </div>
 
       <EventApprovalPanel events={allEvents ?? []} />
+
+      <AdminBingoOverview />
 
       <div className="grid gap-8 lg:grid-cols-2">
         <CreateOrganizationForm />

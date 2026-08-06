@@ -30,7 +30,13 @@ function statusLabel(event: Event, now: Date) {
   return event.status;
 }
 
-export function EventsPageClient({ events }: { events: Event[] }) {
+export function EventsPageClient({
+  events,
+  canCreate = false,
+}: {
+  events: Event[];
+  canCreate?: boolean;
+}) {
   const [view, setView] = useState<ViewMode>("list");
   const [category, setCategory] = useState<ListCategory>("upcoming");
   const now = useMemo(() => new Date(), []);
@@ -67,11 +73,20 @@ export function EventsPageClient({ events }: { events: Event[] }) {
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Events Calendar</h1>
         <p className="mt-1 text-sm text-slate-700">
-          Create events and share QR codes for student attendance.
+          {canCreate
+            ? "Create organization events and share QR codes for student attendance."
+            : "View published events. Organizations create events; faculty generate reports."}
         </p>
       </div>
 
-      <CreateEventForm />
+      {canCreate && <CreateEventForm />}
+
+      {!canCreate && (
+        <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          Event creation is limited to Organization accounts. Use Reports and
+          Live Monitor for attendance oversight.
+        </p>
+      )}
 
       {publishedUpcoming.length > 0 && (
         <section className="rounded-xl border border-blue-200 bg-blue-50/50 p-6">

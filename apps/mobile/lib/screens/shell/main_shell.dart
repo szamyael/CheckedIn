@@ -5,6 +5,7 @@ import '../../services/auth_service.dart';
 import '../../services/connectivity_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/offline_sync_service.dart';
+import '../bingo/bingo_screen.dart';
 import '../events/events_screen.dart';
 import '../profile/profile_screen.dart';
 import '../home/home_screen.dart';
@@ -29,6 +30,7 @@ class _MainShellState extends State<MainShell> {
   static const _tabs = [
     _Tab('/home', Icons.home, 'Home'),
     _Tab('/events', Icons.event, 'Events'),
+    _Tab('/bingo', Icons.grid_view_rounded, 'Bingo'),
     _Tab('/profile', Icons.person, 'Profile'),
   ];
 
@@ -70,6 +72,7 @@ class _MainShellState extends State<MainShell> {
     final pages = [
       HomeScreen(onScan: () => context.push('/attendance/scan')),
       const EventsScreen(),
+      const BingoScreen(),
       const ProfileScreen(),
     ];
 

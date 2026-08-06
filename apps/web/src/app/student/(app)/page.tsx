@@ -79,6 +79,13 @@ export default function StudentHomePage() {
         Scan Event QR
       </Link>
 
+      <Link
+        href="/student/bingo"
+        className="block rounded-2xl border border-teal-100 bg-teal-50 px-4 py-3 text-center text-sm font-semibold text-teal-800 hover:bg-teal-100"
+      >
+        View Bingo board
+      </Link>
+
       <p className="text-center text-xs text-slate-500">
         Scan once to check in (location → OTP → selfie). Scan again after
         check-in to check out — no OTP or selfie needed.
