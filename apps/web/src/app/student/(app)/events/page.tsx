@@ -1,0 +1,66 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { format, parseISO } from "date-fns";
+import { createClient } from "@/lib/supabase/client";
+import type { StudentEvent } from "@/lib/student/api";
+
+export default function StudentEventsPage() {
+  const [events, setEvents] = useState<StudentEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      const supabase = createClient();
+      const now = new Date().toISOString();
+      const { data } = await supabase
+        .from("events")
+        .select(
+          "id,title,description,venue_name,starts_at,ends_at,attendance_starts_at,attendance_ends_at,latitude,longitude,location_radius_m,requires_otp,status",
+        )
+        .eq("status", "published")
+        .gte("ends_at", now)
+        .order("starts_at", { ascending: true });
+      setEvents((data as StudentEvent[]) ?? []);
+      setLoading(false);
+    }
+    void load();
+  }, []);
+
+  if (loading) {
+    return <p className="text-sm text-slate-500">Loading events…</p>;
+  }
+
+  if (events.length === 0) {
+    return (
+      <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
+        No upcoming published events.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-bold">Events</h1>
+      <ul className="space-y-3">
+        {events.map((event) => (
+          <li key={event.id}>
+            <Link
+              href={`/student/events/${event.id}`}
+              className="block rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:border-teal-300"
+            >
+              <p className="font-semibold text-slate-900">{event.title}</p>
+              <p className="mt-1 text-sm text-slate-500">
+                {event.venue_name ?? "Venue TBA"}
+              </p>
+              <p className="mt-2 text-xs text-slate-400">
+                {format(parseISO(event.starts_at), "MMM d, yyyy • h:mm a")}
+              </p>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}

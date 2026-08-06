@@ -6,7 +6,7 @@ const ROLE_HOME: Record<UserRole, string> = {
   admin: "/dashboard/admin",
   faculty: "/dashboard/faculty",
   org_member: "/dashboard/org",
-  student: "/login",
+  student: "/student",
 };
 
 export default async function DashboardPage() {
