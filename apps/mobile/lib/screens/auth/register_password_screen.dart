@@ -61,7 +61,7 @@ class _RegisterPasswordScreenState extends State<RegisterPasswordScreen> {
       final snapshot = widget.draft.ocrSnapshot;
       if (snapshot != null && !_auth.fieldsMatchOcr(snapshot, widget.draft)) {
         throw Exception(
-          'Your entries do not match your student ID. Please go back and correct them.',
+          'Student ID on the card does not match. Please restart registration and scan again.',
         );
       }
 

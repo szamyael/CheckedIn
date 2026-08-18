@@ -83,11 +83,10 @@ class AuthService extends ChangeNotifier {
   }
 
   bool fieldsMatchOcr(ParsedStudentId ocr, RegistrationDraft draft) {
-    return OcrMatching.studentIdMatches(ocr.studentId, draft.studentId) &&
-        OcrMatching.nameMatches(ocr.firstName, draft.firstName) &&
-        OcrMatching.middleNameMatches(ocr.middleName, draft.middleName) &&
-        OcrMatching.nameMatches(ocr.lastName, draft.lastName) &&
-        OcrMatching.programMatches(ocr.program, draft.program);
+    // We intentionally only enforce the Student ID match here.
+    // The registration UI allows users to correct OCR-extracted name/program
+    // fields (common when OCR misreads), so we should not block submission.
+    return OcrMatching.studentIdMatches(ocr.studentId, draft.studentId);
   }
 
   static bool isValidEmail(String email) {
