@@ -6,7 +6,7 @@ import '../../core/student_id_formatter.dart';
 import '../../models/registration_draft.dart';
 import '../../services/auth_service.dart';
 import '../../services/offline_credential_store.dart';
-import '../../widgets/app_logo.dart';
+import '../../widgets/student_ui.dart';
 import '../../widgets/universal_loader.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -74,74 +74,60 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Spacer(),
-              const Center(child: AppLogo(size: 140)),
-              const SizedBox(height: 16),
-              Text(
-                'Student Attendance',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: const Color(0xFF475569),
-                    ),
-              ),
-              const SizedBox(height: 40),
-              TextField(
-                controller: _studentIdController,
-                decoration: const InputDecoration(
-                  labelText: 'Student ID',
-                  hintText: '0123-4567',
-                ),
-                keyboardType: TextInputType.number,
-                inputFormatters: [StudentIdInputFormatter()],
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _passwordController,
-                decoration: const InputDecoration(labelText: 'Password'),
-                obscureText: true,
-                onSubmitted: (_) {
-                  if (!_loading) _login();
-                },
-              ),
-              if (_error != null) ...[
-                const SizedBox(height: 12),
-                Text(_error!, style: const TextStyle(color: Colors.red)),
-              ],
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: _loading ? null : _login,
-                child: Text(_loading ? 'Signing in…' : 'Sign In'),
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => context.push('/forgot-password'),
-                child: const Text('Forgot password?'),
-              ),
-              Text(
-                'Tip: Sign in once online to unlock offline login and cached events on this device.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: const Color(0xFF64748B),
-                    ),
-              ),
-              const SizedBox(height: 4),
-              OutlinedButton(
-                onPressed: () {
-                  context.push('/register/id-scan', extra: RegistrationDraft());
-                },
-                child: const Text('Create Account'),
-              ),
-              const Spacer(),
-            ],
+    return StudentAuthScaffold(
+      subtitle: 'Student Attendance',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: _studentIdController,
+            decoration: const InputDecoration(
+              labelText: 'Student ID',
+              hintText: '0123-4567',
+            ),
+            keyboardType: TextInputType.number,
+            inputFormatters: [StudentIdInputFormatter()],
           ),
-        ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _passwordController,
+            decoration: const InputDecoration(labelText: 'Password'),
+            obscureText: true,
+            onSubmitted: (_) {
+              if (!_loading) _login();
+            },
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 12),
+            StudentErrorBanner(message: _error!),
+          ],
+          const SizedBox(height: 24),
+          FilledButton(
+            onPressed: _loading ? null : _login,
+            child: Text(_loading ? 'Signing in…' : 'Sign In'),
+          ),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: () => context.push('/forgot-password'),
+            child: const Text('Forgot password?'),
+          ),
+          const SizedBox(height: 8),
+          StudentInfoBanner(
+            message:
+                'Tip: Sign in once online to unlock offline login, cached events, and background sync on this device.',
+            icon: Icons.offline_bolt_outlined,
+            background: StudentUi.slateBg,
+            border: StudentUi.border,
+            foreground: StudentUi.muted,
+          ),
+          const SizedBox(height: 12),
+          StudentSecondaryButton(
+            label: 'Create Account',
+            onPressed: () {
+              context.push('/register/id-scan', extra: RegistrationDraft());
+            },
+          ),
+        ],
       ),
     );
   }

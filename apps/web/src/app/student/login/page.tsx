@@ -6,6 +6,12 @@ import { useRouter } from "next/navigation";
 import { BrandMark } from "@/components/BrandLogo";
 import { useLoader } from "@/components/LoaderProvider";
 import {
+  StudentErrorBanner,
+  studentInputClass,
+  studentPrimaryButtonClass,
+  studentSecondaryButtonClass,
+} from "@/components/student/StudentUi";
+import {
   formatStudentIdInput,
   isValidStudentId,
   normalizeStudentId,
@@ -117,7 +123,7 @@ export default function StudentLoginPage() {
               value={studentId}
               onChange={(e) => setStudentId(formatStudentIdInput(e.target.value))}
               placeholder="0123-4567"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
+              className={studentInputClass}
             />
           </div>
           <div>
@@ -130,20 +136,13 @@ export default function StudentLoginPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
+              className={studentInputClass}
             />
           </div>
 
-          {error && (
-            <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">
-              {error}
-            </p>
-          )}
+          {error && <StudentErrorBanner message={error} />}
 
-          <button
-            type="submit"
-            className="w-full rounded-xl bg-teal-600 py-3 text-sm font-semibold text-white hover:bg-teal-500"
-          >
+          <button type="submit" className={studentPrimaryButtonClass}>
             Sign In
           </button>
         </form>
@@ -155,10 +154,7 @@ export default function StudentLoginPage() {
           >
             Forgot password?
           </Link>
-          <Link
-            href="/student/register"
-            className="block rounded-xl border border-slate-200 py-2.5 font-medium text-slate-700 hover:bg-slate-50"
-          >
+          <Link href="/student/register" className={studentSecondaryButtonClass}>
             Create Account
           </Link>
           <Link

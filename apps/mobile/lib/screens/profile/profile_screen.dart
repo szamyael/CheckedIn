@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../services/profile_service.dart';
+import '../../widgets/student_ui.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -60,77 +61,106 @@ class _ProfileScreenState extends State<ProfileScreen> {
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          student != null
-                              ? '${student['first_name']} ${student['last_name']}'
-                              : 'Student',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        if (student != null) ...[
-                          const SizedBox(height: 8),
-                          Text('ID: ${student['student_id']}'),
-                          Text('Program: ${student['program']}'),
-                          if (student['year_level'] != null)
-                            Text('Year Level: ${student['year_level']}'),
-                          if (student['section'] != null)
-                            Text('Section: ${student['section']}'),
-                          if (student['reward_points'] != null)
-                            Text('Reward points: ${student['reward_points']}'),
-                          const SizedBox(height: 8),
-                          Text('${data.attendanceCount} events attended'),
-                          const SizedBox(height: 8),
-                          OutlinedButton(
-                            onPressed: () => context.push('/profile/edit'),
-                            child: const Text('Edit profile'),
+                StudentCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        student != null
+                            ? '${student['first_name']} ${student['last_name']}'
+                            : 'Student',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      if (student != null) ...[
+                        const SizedBox(height: 8),
+                        Text('ID: ${student['student_id']}'),
+                        Text('Program: ${student['program']}'),
+                        if (student['year_level'] != null)
+                          Text('Year Level: ${student['year_level']}'),
+                        if (student['section'] != null)
+                          Text('Section: ${student['section']}'),
+                        if (student['reward_points'] != null)
+                          Text(
+                            'Reward points: ${student['reward_points']}',
+                            style: const TextStyle(
+                              color: StudentUi.teal,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ],
+                        const SizedBox(height: 8),
+                        Text('${data.attendanceCount} events attended'),
+                        const SizedBox(height: 8),
+                        OutlinedButton(
+                          onPressed: () => context.push('/profile/edit'),
+                          child: const Text('Edit profile'),
+                        ),
                       ],
-                    ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text('Achievements', style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
                 if (data.achievements.isEmpty)
-                  const Text('No badges yet. Check in to events to earn them!')
+                  const StudentEmptyState(
+                    icon: Icons.emoji_events_outlined,
+                    message: 'No badges yet. Check in to events to earn them!',
+                  )
                 else
                   ...data.achievements.map(
-                    (a) => ListTile(
-                      leading: Icon(
-                        a.badgeType == 'milestone' ? Icons.emoji_events : Icons.verified,
-                        color: Colors.amber.shade700,
+                    (a) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: StudentCard(
+                        padding: EdgeInsets.zero,
+                        child: ListTile(
+                          leading: Icon(
+                            a.badgeType == 'milestone'
+                                ? Icons.emoji_events
+                                : Icons.verified,
+                            color: Colors.amber.shade700,
+                          ),
+                          title: Text(a.badgeName),
+                          subtitle: Text(fmt.format(a.earnedAt.toLocal())),
+                        ),
                       ),
-                      title: Text(a.badgeName),
-                      subtitle: Text(fmt.format(a.earnedAt.toLocal())),
                     ),
                   ),
                 const SizedBox(height: 16),
                 Text('Attendance History', style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
                 if (data.history.isEmpty)
-                  const Text('No attendance records yet.')
+                  const StudentEmptyState(
+                    icon: Icons.history,
+                    message: 'No attendance records yet.',
+                  )
                 else
                   ...data.history.map(
-                    (h) => ListTile(
-                      leading: Icon(
-                        h.isPending ? Icons.cloud_upload : Icons.check_circle,
-                        color: h.isPending ? Colors.amber.shade800 : Colors.green,
+                    (h) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: StudentCard(
+                        padding: EdgeInsets.zero,
+                        child: ListTile(
+                          leading: Icon(
+                            h.isPending ? Icons.cloud_upload : Icons.check_circle,
+                            color: h.isPending
+                                ? Colors.amber.shade800
+                                : StudentUi.teal,
+                          ),
+                          title: Text(h.eventTitle),
+                          subtitle: Text(
+                            h.isPending
+                                ? 'Pending sync • ${fmt.format(h.checkedInAt.toLocal())}'
+                                : fmt.format(h.checkedInAt.toLocal()),
+                          ),
+                          trailing: h.syncError != null
+                              ? const Icon(
+                                  Icons.error_outline,
+                                  color: Colors.red,
+                                  size: 20,
+                                )
+                              : null,
+                        ),
                       ),
-                      title: Text(h.eventTitle),
-                      subtitle: Text(
-                        h.isPending
-                            ? 'Pending sync • ${fmt.format(h.checkedInAt.toLocal())}'
-                            : fmt.format(h.checkedInAt.toLocal()),
-                      ),
-                      trailing: h.syncError != null
-                          ? const Icon(Icons.error_outline, color: Colors.red, size: 20)
-                          : null,
                     ),
                   ),
               ],

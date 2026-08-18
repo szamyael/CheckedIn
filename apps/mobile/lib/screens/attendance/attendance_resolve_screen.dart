@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/attendance_service.dart';
+import '../../widgets/student_ui.dart';
 import '../../widgets/universal_loader.dart';
 
 /// After scanning an event QR: check out if already checked in,
@@ -90,13 +91,13 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (_error != null) ...[
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
-              const SizedBox(height: 16),
-              Text(
-                _error!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.red),
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Theme.of(context).colorScheme.error,
               ),
+              const SizedBox(height: 16),
+              StudentErrorBanner(message: _error!),
               const SizedBox(height: 24),
               FilledButton(
                 onPressed: _resolve,
@@ -107,7 +108,11 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
                 child: const Text('Scan again'),
               ),
             ] else if (_successTitle != null) ...[
-              const Icon(Icons.check_circle, size: 72, color: Color(0xFF14B8A6)),
+              Icon(
+                Icons.check_circle,
+                size: 72,
+                color: Theme.of(context).colorScheme.primary,
+              ),
               const SizedBox(height: 16),
               Text(
                 _successTitle!,
@@ -126,8 +131,10 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
               ),
             ] else ...[
               const Spacer(),
-              const Center(
-                child: CircularProgressIndicator(color: Color(0xFF14B8A6)),
+              Center(
+                child: CircularProgressIndicator(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
               const SizedBox(height: 16),
               const Text(

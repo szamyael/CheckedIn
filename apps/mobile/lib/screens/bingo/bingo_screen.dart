@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../services/bingo_service.dart';
+import '../../widgets/student_ui.dart';
 
 class BingoScreen extends StatefulWidget {
   const BingoScreen({super.key});
@@ -40,13 +41,10 @@ class _BingoScreenState extends State<BingoScreen> {
             return ListView(
               padding: const EdgeInsets.all(24),
               children: const [
-                SizedBox(height: 80),
-                Icon(Icons.grid_view_rounded, size: 56, color: Colors.grey),
-                SizedBox(height: 16),
-                Text(
-                  'No active bingo card yet.\nCheck back when an organization publishes one.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.black54),
+                StudentEmptyState(
+                  icon: Icons.grid_view_rounded,
+                  message:
+                      'No active bingo card yet. Check back when an organization publishes one.',
                 ),
               ],
             );
@@ -55,18 +53,10 @@ class _BingoScreenState extends State<BingoScreen> {
           return ListView(
             padding: const EdgeInsets.all(20),
             children: [
-              Text(
-                board.title,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Season ${board.seasonLabel} · Streak goal ${board.streakThreshold}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.black54,
-                    ),
+              StudentPageTitle(
+                title: board.title,
+                subtitle:
+                    'Season ${board.seasonLabel} · Streak goal ${board.streakThreshold}',
               ),
               const SizedBox(height: 16),
               Row(
@@ -119,7 +109,7 @@ class _BingoScreenState extends State<BingoScreen> {
                       border: Border.all(
                         color: done
                             ? Theme.of(context).colorScheme.primary
-                            : Colors.black12,
+                            : StudentUi.border,
                       ),
                     ),
                     padding: const EdgeInsets.all(8),
@@ -163,18 +153,22 @@ class _BingoScreenState extends State<BingoScreen> {
               if (board.awards.isEmpty)
                 const Text(
                   'Complete a line or streak to earn badges.',
-                  style: TextStyle(color: Colors.black45),
+                  style: TextStyle(color: StudentUi.muted),
                 )
               else
                 ...board.awards.map(
-                  (a) => Card(
-                    child: ListTile(
-                      title: Text(a.name),
-                      trailing: Text(
-                        '+${a.points}',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.bold,
+                  (a) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: StudentCard(
+                      padding: EdgeInsets.zero,
+                      child: ListTile(
+                        title: Text(a.name),
+                        trailing: Text(
+                          '+${a.points}',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -196,26 +190,24 @@ class _MetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.primary,
-              ),
+    return StudentCard(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.primary,
             ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: const TextStyle(fontSize: 12, color: Colors.black54),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 12, color: StudentUi.muted),
+          ),
+        ],
       ),
     );
   }

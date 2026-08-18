@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../services/events_service.dart';
+import '../../widgets/student_ui.dart';
 
 class EventsScreen extends StatefulWidget {
   const EventsScreen({super.key});
@@ -30,74 +31,95 @@ class _EventsScreenState extends State<EventsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: SegmentedButton<bool>(
-            segments: const [
-              ButtonSegment(value: true, label: Text('Calendar'), icon: Icon(Icons.calendar_month)),
-              ButtonSegment(value: false, label: Text('List'), icon: Icon(Icons.list)),
-            ],
-            selected: {_calendarView},
-            onSelectionChanged: (s) => setState(() => _calendarView = s.first),
-          ),
-        ),
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: _refresh,
-            child: FutureBuilder<List<EventItem>>(
-              future: _future,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  return ListView(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text('Error: ${snapshot.error}'),
-                      ),
-                    ],
-                  );
-                }
+    return RefreshIndicator(
+      onRefresh: _refresh,
+      child: FutureBuilder<List<EventItem>>(
+        future: _future,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return ListView(
+              padding: const EdgeInsets.all(24),
+              children: [
+                const StudentPageTitle(title: 'Events'),
+                const SizedBox(height: 16),
+                StudentErrorBanner(message: '${snapshot.error}'),
+              ],
+            );
+          }
 
-                final events = snapshot.data ?? [];
-                if (events.isEmpty) {
-                  return ListView(
-                    children: const [
-                      SizedBox(height: 80),
-                      Icon(Icons.event_busy, size: 48, color: Colors.grey),
-                      SizedBox(height: 16),
-                      Text('No upcoming events', textAlign: TextAlign.center),
-                    ],
-                  );
-                }
+          final events = snapshot.data ?? [];
+          if (events.isEmpty) {
+            return ListView(
+              padding: const EdgeInsets.all(24),
+              children: const [
+                StudentPageTitle(title: 'Events'),
+                StudentEmptyState(
+                  icon: Icons.event_busy,
+                  message: 'No upcoming events',
+                ),
+              ],
+            );
+          }
 
-                if (_calendarView) {
-                  return _MonthCalendar(
-                    month: _month,
-                    events: events,
-                    onMonthChanged: (m) => setState(() => _month = m),
-                    onEventTap: () => context.push('/attendance/scan'),
-                  );
-                }
+          if (_calendarView) {
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              children: [
+                const StudentPageTitle(title: 'Events'),
+                const SizedBox(height: 12),
+                SegmentedButton<bool>(
+                  segments: const [
+                    ButtonSegment(value: true, label: Text('Calendar'), icon: Icon(Icons.calendar_month)),
+                    ButtonSegment(value: false, label: Text('List'), icon: Icon(Icons.list)),
+                  ],
+                  selected: {_calendarView},
+                  onSelectionChanged: (s) => setState(() => _calendarView = s.first),
+                ),
+                const SizedBox(height: 12),
+                _MonthCalendar(
+                  month: _month,
+                  events: events,
+                  onMonthChanged: (m) => setState(() => _month = m),
+                  onEventTap: () => context.push('/attendance/scan'),
+                ),
+              ],
+            );
+          }
 
-                return ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: events.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) => _EventTile(
-                    event: events[index],
-                    onTap: () => context.push('/events/detail', extra: events[index]),
-                  ),
+          return ListView.separated(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            itemCount: events.length + 1,
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const StudentPageTitle(title: 'Events'),
+                    const SizedBox(height: 12),
+                    SegmentedButton<bool>(
+                      segments: const [
+                        ButtonSegment(value: true, label: Text('Calendar'), icon: Icon(Icons.calendar_month)),
+                        ButtonSegment(value: false, label: Text('List'), icon: Icon(Icons.list)),
+                      ],
+                      selected: {_calendarView},
+                      onSelectionChanged: (s) => setState(() => _calendarView = s.first),
+                    ),
+                  ],
                 );
-              },
-            ),
-          ),
-        ),
-      ],
+              }
+              final event = events[index - 1];
+              return _EventTile(
+                event: event,
+                onTap: () => context.push('/events/detail', extra: event),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }
@@ -111,7 +133,9 @@ class _EventTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fmt = DateFormat('MMM d, yyyy • h:mm a');
-    return Card(
+    return StudentCard(
+      padding: EdgeInsets.zero,
+      onTap: onTap,
       child: ListTile(
         title: Text(event.title, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Column(
@@ -123,12 +147,14 @@ class _EventTile extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               event.isAttendanceOpen ? 'Check-in open' : 'Check-in opens ${fmt.format(event.attendanceStartsAt.toLocal())}',
-              style: TextStyle(color: event.isAttendanceOpen ? Colors.green : Colors.grey, fontSize: 12),
+              style: TextStyle(
+                color: event.isAttendanceOpen ? StudentUi.teal : StudentUi.muted,
+                fontSize: 12,
+              ),
             ),
           ],
         ),
         trailing: const Icon(Icons.chevron_right),
-        onTap: onTap,
       ),
     );
   }
@@ -163,7 +189,9 @@ class _MonthCalendar extends StatelessWidget {
     }
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.zero,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -191,7 +219,11 @@ class _MonthCalendar extends StatelessWidget {
               child: Container(
                 margin: const EdgeInsets.all(2),
                 decoration: BoxDecoration(
-                  border: Border.all(color: isToday ? Theme.of(context).colorScheme.primary : Colors.grey.shade300),
+                  border: Border.all(
+                    color: isToday
+                        ? Theme.of(context).colorScheme.primary
+                        : StudentUi.border,
+                  ),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 padding: const EdgeInsets.all(4),

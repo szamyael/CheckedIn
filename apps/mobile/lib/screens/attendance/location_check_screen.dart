@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/attendance_service.dart';
+import '../../widgets/student_ui.dart';
 import '../../widgets/universal_loader.dart';
 
 /// Step 1 of check-in: GPS must pass the event geofence before OTP/selfie.
@@ -96,18 +97,16 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Icon(Icons.location_on, size: 72),
-            const SizedBox(height: 16),
-            Text(
-              'Step 1 of 3 — Location',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleLarge,
+            Icon(
+              Icons.location_on,
+              size: 72,
+              color: Theme.of(context).colorScheme.primary,
             ),
-            const SizedBox(height: 8),
-            Text(
-              'You must be inside the event geofence before OTP or selfie. If verification fails, check-in stops here.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium,
+            const SizedBox(height: 16),
+            const StudentPageTitle(
+              title: 'Step 1 of 3 — Location',
+              subtitle:
+                  'You must be inside the event geofence before OTP or selfie. If verification fails, check-in stops here.',
             ),
             if (_status != null) ...[
               const SizedBox(height: 16),
@@ -119,14 +118,11 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
             ],
             if (_error != null) ...[
               const SizedBox(height: 16),
-              Text(_error!, style: const TextStyle(color: Colors.red)),
-              if (_distanceHint != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  _distanceHint!,
-                  style: const TextStyle(color: Colors.red, fontSize: 13),
-                ),
-              ],
+              StudentErrorBanner(
+                message: _distanceHint == null
+                    ? _error!
+                    : '$_error\n$_distanceHint',
+              ),
             ],
             const Spacer(),
             FilledButton(

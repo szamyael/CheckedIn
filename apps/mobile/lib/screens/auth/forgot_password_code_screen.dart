@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/auth_service.dart';
+import '../../widgets/student_ui.dart';
 
 class ForgotPasswordCodeScreen extends StatefulWidget {
   final String email;
@@ -101,8 +102,10 @@ class _ForgotPasswordCodeScreenState extends State<ForgotPasswordCodeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'We sent a reset code to ${widget.maskedEmail}. Enter it below with your new password.',
+            StudentPageTitle(
+              title: 'Enter reset code',
+              subtitle:
+                  'We sent a reset code to ${widget.maskedEmail}. Enter it below with your new password.',
             ),
             const SizedBox(height: 24),
             TextField(
@@ -131,7 +134,7 @@ class _ForgotPasswordCodeScreenState extends State<ForgotPasswordCodeScreen> {
             ),
             if (_error != null) ...[
               const SizedBox(height: 12),
-              Text(_error!, style: const TextStyle(color: Colors.red)),
+              StudentErrorBanner(message: _error!),
             ],
             const SizedBox(height: 24),
             FilledButton(

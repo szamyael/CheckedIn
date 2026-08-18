@@ -10,6 +10,9 @@ import '../events/events_screen.dart';
 import '../profile/profile_screen.dart';
 import '../home/home_screen.dart';
 import '../../widgets/app_logo.dart';
+import '../../widgets/student_ui.dart';
+
+const _shellBorder = Color(0xFFE2E8F0);
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -70,7 +73,10 @@ class _MainShellState extends State<MainShell> {
   @override
   Widget build(BuildContext context) {
     final pages = [
-      HomeScreen(onScan: () => context.push('/attendance/scan')),
+      HomeScreen(
+        onScan: () => context.push('/attendance/scan'),
+        onOpenBingo: () => setState(() => _index = 2),
+      ),
       const EventsScreen(),
       const BingoScreen(),
       const ProfileScreen(),
@@ -82,6 +88,10 @@ class _MainShellState extends State<MainShell> {
       appBar: AppBar(
         title: const AppLogo(size: 36),
         centerTitle: true,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: _shellBorder),
+        ),
         actions: [
           IconButton(
             onPressed: () async {
@@ -105,53 +115,69 @@ class _MainShellState extends State<MainShell> {
       ),
       body: Column(
         children: [
-          if (offline)
-            MaterialBanner(
-              content: Text(
-                _auth.isOfflineMode
-                    ? 'Offline mode — browsing cached data. Check-ins save on device and sync when you reconnect and sign in online.'
-                    : 'No internet — showing cached data. Check-ins will sync when you reconnect.',
+          if (offline ||
+              _accountStatus == 'pending' ||
+              _offlineSync.pendingCount > 0)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Column(
+                children: [
+                  if (offline)
+                    StudentInfoBanner(
+                      message: _auth.isOfflineMode
+                          ? 'Offline mode — browsing cached data. Check-ins save on device and sync when you reconnect and sign in online.'
+                          : 'No internet — showing cached data. Check-ins will sync when you reconnect.',
+                      icon: Icons.wifi_off,
+                      background: StudentUi.slateBg,
+                      border: StudentUi.border,
+                      foreground: StudentUi.muted,
+                    ),
+                  if (offline &&
+                      (_accountStatus == 'pending' ||
+                          _offlineSync.pendingCount > 0))
+                    const SizedBox(height: 8),
+                  if (_accountStatus == 'pending')
+                    const StudentInfoBanner(
+                      message:
+                          'Your account is pending admin approval. You can browse the app, but check-in unlocks once approved.',
+                      icon: Icons.hourglass_top,
+                    ),
+                  if (_accountStatus == 'pending' &&
+                      _offlineSync.pendingCount > 0)
+                    const SizedBox(height: 8),
+                  if (_offlineSync.pendingCount > 0)
+                    StudentInfoBanner(
+                      message: _offlineSync.isSyncing
+                          ? 'Syncing ${_offlineSync.pendingCount} pending attendance…'
+                          : '${_offlineSync.pendingCount} attendance waiting to sync when online',
+                      icon: _offlineSync.isSyncing
+                          ? Icons.sync
+                          : Icons.cloud_off,
+                      action: (!_offlineSync.isSyncing && !_auth.isOfflineMode)
+                          ? TextButton(
+                              onPressed: () => _offlineSync.syncPending(),
+                              child: const Text('Sync now'),
+                            )
+                          : null,
+                    ),
+                ],
               ),
-              leading: Icon(Icons.wifi_off, color: Colors.blueGrey.shade700),
-              backgroundColor: Colors.blueGrey.shade50,
-              actions: const [SizedBox.shrink()],
-            ),
-          if (_accountStatus == 'pending')
-            MaterialBanner(
-              content: const Text(
-                'Your account is pending admin approval. You can browse the app, but check-in unlocks once approved.',
-              ),
-              leading: Icon(Icons.hourglass_top, color: Colors.orange.shade800),
-              actions: const [SizedBox.shrink()],
-            ),
-          if (_offlineSync.pendingCount > 0)
-            MaterialBanner(
-              content: Text(
-                _offlineSync.isSyncing
-                    ? 'Syncing ${_offlineSync.pendingCount} pending attendance…'
-                    : '${_offlineSync.pendingCount} attendance waiting to sync when online',
-              ),
-              leading: Icon(
-                _offlineSync.isSyncing ? Icons.sync : Icons.cloud_off,
-                color: Colors.amber.shade800,
-              ),
-              actions: [
-                if (!_offlineSync.isSyncing && !_auth.isOfflineMode)
-                  TextButton(
-                    onPressed: () => _offlineSync.syncPending(),
-                    child: const Text('Sync now'),
-                  ),
-              ],
             ),
           Expanded(child: pages[_index]),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
-        destinations: _tabs
-            .map((t) => NavigationDestination(icon: Icon(t.icon), label: t.label))
-            .toList(),
+      bottomNavigationBar: DecoratedBox(
+        decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: _shellBorder)),
+        ),
+        child: NavigationBar(
+          height: 72,
+          selectedIndex: _index,
+          onDestinationSelected: (i) => setState(() => _index = i),
+          destinations: _tabs
+              .map((t) => NavigationDestination(icon: Icon(t.icon), label: t.label))
+              .toList(),
+        ),
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../services/notification_service.dart';
+import '../../widgets/student_ui.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -62,47 +63,62 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             if (items.isEmpty) {
               return ListView(
                 children: const [
-                  SizedBox(height: 120),
-                  Center(child: Text('No notifications yet.')),
+                  StudentEmptyState(
+                    icon: Icons.notifications_none,
+                    message: 'No notifications yet.',
+                  ),
                 ],
               );
             }
 
             return ListView.separated(
+              padding: const EdgeInsets.all(16),
               itemCount: items.length,
-              separatorBuilder: (context, index) => const Divider(height: 1),
+              separatorBuilder: (context, index) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final n = items[index];
-                return ListTile(
-                  tileColor: n.isUnread ? Colors.blue.shade50 : null,
-                  leading: Icon(
-                    _iconForType(n.type),
-                    color: n.isUnread ? Colors.blue : Colors.grey,
-                  ),
-                  title: Text(
-                    n.title,
-                    style: TextStyle(
-                      fontWeight:
-                          n.isUnread ? FontWeight.w600 : FontWeight.normal,
-                    ),
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(n.body),
-                      const SizedBox(height: 4),
-                      Text(
-                        fmt.format(n.createdAt.toLocal()),
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
+                return StudentCard(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   onTap: () async {
                     if (n.isUnread) {
                       await _service.markRead(n.id);
                       setState(() => _future = _service.fetchNotifications());
                     }
                   },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            _iconForType(n.type),
+                            size: 18,
+                            color: n.isUnread ? StudentUi.teal : StudentUi.muted,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              n.title,
+                              style: TextStyle(
+                                fontWeight:
+                                    n.isUnread ? FontWeight.w600 : FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(n.body, style: Theme.of(context).textTheme.bodySmall),
+                      const SizedBox(height: 6),
+                      Text(
+                        fmt.format(n.createdAt.toLocal()),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontSize: 11,
+                              color: StudentUi.muted,
+                            ),
+                      ),
+                    ],
+                  ),
                 );
               },
             );
@@ -118,10 +134,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         return Icons.emoji_events;
       case 'event_published':
         return Icons.event;
-      case 'account_approved':
-        return Icons.verified_user;
       default:
-        return Icons.notifications;
+        return Icons.notifications_outlined;
     }
   }
 }

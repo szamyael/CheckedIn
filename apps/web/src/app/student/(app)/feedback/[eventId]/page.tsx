@@ -4,6 +4,12 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useLoader } from "@/components/LoaderProvider";
 import { createClient } from "@/lib/supabase/client";
+import {
+  StudentErrorBanner,
+  StudentPageTitle,
+  studentInputClass,
+  studentPrimaryButtonClass,
+} from "@/components/student/StudentUi";
 
 export default function EventFeedbackPage() {
   const params = useParams<{ eventId: string }>();
@@ -47,7 +53,7 @@ export default function EventFeedbackPage() {
         <button
           type="button"
           onClick={() => router.push("/student")}
-          className="w-full rounded-xl bg-teal-600 py-3 text-sm font-semibold text-white"
+          className={studentPrimaryButtonClass}
         >
           Back to home
         </button>
@@ -57,7 +63,7 @@ export default function EventFeedbackPage() {
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      <h1 className="text-xl font-bold">Event feedback</h1>
+      <StudentPageTitle title="Event feedback" />
       <div>
         <label className="mb-2 block text-sm font-medium">Rating</label>
         <div className="flex gap-2">
@@ -85,14 +91,11 @@ export default function EventFeedbackPage() {
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           rows={4}
-          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+          className={studentInputClass}
         />
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <button
-        type="submit"
-        className="w-full rounded-xl bg-teal-600 py-3 text-sm font-semibold text-white"
-      >
+      {error && <StudentErrorBanner message={error} />}
+      <button type="submit" className={studentPrimaryButtonClass}>
         Submit
       </button>
     </form>

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/auth_service.dart';
+import '../../widgets/student_ui.dart';
 
 class VerifyEmailScreen extends StatefulWidget {
   final String email;
@@ -92,8 +93,10 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'We sent a 6-digit verification code to $_displayEmail. Enter it below to activate your account.',
+            StudentPageTitle(
+              title: 'Verify email',
+              subtitle:
+                  'We sent a 6-digit verification code to $_displayEmail. Enter it below to activate your account.',
             ),
             const SizedBox(height: 24),
             TextField(
@@ -108,7 +111,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
             ),
             if (_error != null) ...[
               const SizedBox(height: 12),
-              Text(_error!, style: const TextStyle(color: Colors.red)),
+              StudentErrorBanner(message: _error!),
             ],
             const SizedBox(height: 24),
             FilledButton(

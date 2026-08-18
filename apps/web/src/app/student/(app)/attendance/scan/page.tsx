@@ -3,6 +3,11 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { QrScanner } from "@/components/student/QrScanner";
+import {
+  StudentErrorBanner,
+  StudentPageTitle,
+  studentPrimaryButtonClass,
+} from "@/components/student/StudentUi";
 import { useLoader } from "@/components/LoaderProvider";
 import type { CheckInMeta } from "@/lib/student/api";
 import { clearFlow, saveFlow } from "@/lib/student/attendance-flow";
@@ -88,7 +93,7 @@ export default function AttendanceScanPage() {
         <button
           type="button"
           onClick={() => router.push("/student")}
-          className="w-full rounded-xl bg-teal-600 py-3 text-sm font-semibold text-white"
+          className={studentPrimaryButtonClass}
         >
           Back to home
         </button>
@@ -98,13 +103,9 @@ export default function AttendanceScanPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold">Scan Event QR</h1>
+      <StudentPageTitle title="Scan Event QR" />
       <QrScanner onScan={(t) => void onScan(t)} onError={setError} />
-      {error && (
-        <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">
-          {error}
-        </p>
-      )}
+      {error && <StudentErrorBanner message={error} />}
       <p className="text-center text-xs text-slate-500">
         Point your camera at the event QR. Scan once to check in, or again after
         check-in to check out.

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/feedback_service.dart';
+import '../../widgets/student_ui.dart';
 
 class EventFeedbackScreen extends StatefulWidget {
   final String eventId;
@@ -58,7 +59,10 @@ class _EventFeedbackScreenState extends State<EventFeedbackScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('How was ${widget.eventTitle}?'),
+            StudentPageTitle(
+              title: 'Event feedback',
+              subtitle: 'How was ${widget.eventTitle}?',
+            ),
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,

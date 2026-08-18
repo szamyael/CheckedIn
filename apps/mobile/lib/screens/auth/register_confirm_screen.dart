@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../models/registration_draft.dart';
 import '../../services/auth_service.dart';
+import '../../widgets/student_ui.dart';
 
 class RegisterConfirmScreen extends StatefulWidget {
   final RegistrationDraft draft;
@@ -81,9 +82,10 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          Text(
-            'Verify the information from your ID. You can edit your name and program, but your Student ID cannot be changed.',
-            style: Theme.of(context).textTheme.bodyMedium,
+          const StudentPageTitle(
+            title: 'Confirm details',
+            subtitle:
+                'Verify the information from your ID. You can edit your name and program, but your Student ID cannot be changed.',
           ),
           const SizedBox(height: 24),
           TextField(

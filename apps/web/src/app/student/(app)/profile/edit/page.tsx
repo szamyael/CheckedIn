@@ -5,6 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLoader } from "@/components/LoaderProvider";
 import { createClient } from "@/lib/supabase/client";
+import {
+  StudentErrorBanner,
+  StudentPageTitle,
+  studentInputClass,
+  studentPrimaryButtonClass,
+} from "@/components/student/StudentUi";
 
 export default function EditStudentProfilePage() {
   const router = useRouter();
@@ -73,7 +79,10 @@ export default function EditStudentProfilePage() {
       <Link href="/student/profile" className="text-sm text-teal-600">
         ← Profile
       </Link>
-      <h1 className="text-xl font-bold">Edit profile</h1>
+      <StudentPageTitle
+        title="Edit profile"
+        subtitle="Update your name, program, and section."
+      />
       <form onSubmit={save} className="space-y-3">
         {(
           [
@@ -89,7 +98,7 @@ export default function EditStudentProfilePage() {
               required={label !== "Section"}
               value={value}
               onChange={(e) => setter(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm"
+              className={studentInputClass}
             />
           </div>
         ))}
@@ -98,7 +107,7 @@ export default function EditStudentProfilePage() {
           <select
             value={yearLevel}
             onChange={(e) => setYearLevel(Number(e.target.value))}
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm"
+            className={studentInputClass}
           >
             {[1, 2, 3, 4, 5].map((y) => (
               <option key={y} value={y}>
@@ -107,11 +116,8 @@ export default function EditStudentProfilePage() {
             ))}
           </select>
         </div>
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <button
-          type="submit"
-          className="w-full rounded-xl bg-teal-600 py-3 text-sm font-semibold text-white"
-        >
+        {error && <StudentErrorBanner message={error} />}
+        <button type="submit" className={studentPrimaryButtonClass}>
           Save changes
         </button>
       </form>

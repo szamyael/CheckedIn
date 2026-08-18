@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../services/attendance_service.dart';
 import '../../services/offline_sync_service.dart';
 import '../../services/screenshot_guard_service.dart';
+import '../../widgets/student_ui.dart';
 import '../../widgets/universal_loader.dart';
 
 class SelfieScreen extends StatefulWidget {
@@ -241,7 +242,7 @@ class _SelfieScreenState extends State<SelfieScreen> {
                 ),
                 if (_error != null) ...[
                   const SizedBox(height: 8),
-                  Text(_error!, style: const TextStyle(color: Colors.red)),
+                  StudentErrorBanner(message: _error!),
                 ],
                 const SizedBox(height: 16),
                 FilledButton(

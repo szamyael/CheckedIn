@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants.dart';
 import '../../core/student_id_formatter.dart';
 import '../../services/auth_service.dart';
+import '../../widgets/student_ui.dart';
 import '../../widgets/universal_loader.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -102,8 +103,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Scan your student ID to verify your identity. We will send a reset code to the email on your account.',
+            const StudentPageTitle(
+              title: 'Reset password',
+              subtitle:
+                  'Scan your student ID to verify your identity. We will send a reset code to the email on your account.',
             ),
             const SizedBox(height: 16),
             if (_controller != null && _controller!.value.isInitialized)
@@ -135,7 +138,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             ),
             if (_error != null) ...[
               const SizedBox(height: 12),
-              Text(_error!, style: const TextStyle(color: Colors.red)),
+              StudentErrorBanner(message: _error!),
             ],
             const SizedBox(height: 24),
             FilledButton(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../widgets/student_ui.dart';
+
 class AttendanceOtpScreen extends StatefulWidget {
   final String qrToken;
   final double latitude;
@@ -84,15 +86,13 @@ class _AttendanceOtpScreenState extends State<AttendanceOtpScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Step 2 of 3 — OTP',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
+            const StudentPageTitle(title: 'Step 2 of 3 — OTP'),
             const SizedBox(height: 8),
             Text(
               widget.requiresOtp
                   ? 'Location verified. Enter the OTP announced for ${widget.eventTitle}.'
                   : 'Location verified. If staff announced an OTP for ${widget.eventTitle}, enter it below. Otherwise continue.',
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 24),
             TextField(

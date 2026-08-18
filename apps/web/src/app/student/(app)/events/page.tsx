@@ -5,6 +5,10 @@ import Link from "next/link";
 import { format, parseISO } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import type { StudentEvent } from "@/lib/student/api";
+import {
+  StudentEmptyState,
+  StudentPageTitle,
+} from "@/components/student/StudentUi";
 
 export default function StudentEventsPage() {
   const [events, setEvents] = useState<StudentEvent[]>([]);
@@ -34,15 +38,16 @@ export default function StudentEventsPage() {
 
   if (events.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
-        No upcoming published events.
+      <div className="space-y-4">
+        <StudentPageTitle title="Events" />
+        <StudentEmptyState message="No upcoming published events." />
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold">Events</h1>
+      <StudentPageTitle title="Events" />
       <ul className="space-y-3">
         {events.map((event) => (
           <li key={event.id}>

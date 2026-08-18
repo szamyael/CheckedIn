@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../models/registration_draft.dart';
 import '../../core/ocr_matching.dart';
 import '../../services/auth_service.dart';
+import '../../widgets/student_ui.dart';
 
 class RegisterPasswordScreen extends StatefulWidget {
   final RegistrationDraft draft;
@@ -101,8 +102,10 @@ class _RegisterPasswordScreenState extends State<RegisterPasswordScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Set a password for Student ID ${widget.draft.studentId}. You will use this to sign in.',
+            StudentPageTitle(
+              title: 'Create password',
+              subtitle:
+                  'Set a password for Student ID ${widget.draft.studentId}. You will use this to sign in.',
             ),
             const SizedBox(height: 24),
             TextField(

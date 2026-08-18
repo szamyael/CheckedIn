@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/profile_service.dart';
+import '../../widgets/student_ui.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -83,6 +84,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
+          const StudentPageTitle(
+            title: 'Edit profile',
+            subtitle: 'Update your name, program, and section.',
+          ),
+          const SizedBox(height: 24),
           TextField(
             controller: _firstName,
             decoration: const InputDecoration(labelText: 'First name'),

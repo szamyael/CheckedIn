@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
+import {
+  StudentEmptyState,
+  StudentPageTitle,
+} from "@/components/student/StudentUi";
 
 type Notif = {
   id: string;
@@ -66,7 +70,7 @@ export default function StudentNotificationsPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">Notifications</h1>
+        <StudentPageTitle title="Notifications" />
         <button
           type="button"
           onClick={() => void markAll()}
@@ -76,7 +80,7 @@ export default function StudentNotificationsPage() {
         </button>
       </div>
       {items.length === 0 ? (
-        <p className="text-sm text-slate-400">No notifications.</p>
+        <StudentEmptyState message="No notifications." />
       ) : (
         <ul className="space-y-2">
           {items.map((n) => (

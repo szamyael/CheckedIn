@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants.dart';
 import '../../models/registration_draft.dart';
 import '../../services/auth_service.dart';
+import '../../widgets/student_ui.dart';
 
 class RegisterIdScanScreen extends StatefulWidget {
   final RegistrationDraft draft;
@@ -109,7 +110,7 @@ class _RegisterIdScanScreenState extends State<RegisterIdScanScreen> {
                 ),
                 if (_error != null) ...[
                   const SizedBox(height: 8),
-                  Text(_error!, style: const TextStyle(color: Colors.red)),
+                  StudentErrorBanner(message: _error!),
                 ],
                 const SizedBox(height: 16),
                 FilledButton(

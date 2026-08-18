@@ -4,6 +4,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../services/attendance_service.dart';
 import '../../services/screenshot_guard_service.dart';
+import '../../widgets/student_ui.dart';
 
 class QrScanScreen extends StatefulWidget {
   const QrScanScreen({super.key});
@@ -54,11 +55,7 @@ class _QrScanScreenState extends State<QrScanScreen> {
                 if (_error != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: Text(
-                      _error!,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.red),
-                    ),
+                    child: StudentErrorBanner(message: _error!),
                   ),
                 Text(
                   'Point your camera at the event QR code. Scan once to check in, or scan again after check-in to check out (no OTP or selfie needed for checkout).',

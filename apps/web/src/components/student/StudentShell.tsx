@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, Home, LayoutGrid, UserRound } from "lucide-react";
+import { Bell, CalendarDays, Home, LayoutGrid, UserRound } from "lucide-react";
 import { BrandMark } from "@/components/BrandLogo";
 
 const TABS = [
@@ -33,20 +33,7 @@ export function StudentShell({
             className="relative rounded-full p-2 text-slate-600 hover:bg-slate-100"
             aria-label="Notifications"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-            </svg>
+            <Bell className="h-[22px] w-[22px]" />
             {notificationCount > 0 && (
               <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-teal-500 px-1 text-[10px] font-bold text-white">
                 {notificationCount > 9 ? "9+" : notificationCount}

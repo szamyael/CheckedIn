@@ -6,6 +6,11 @@ import { useParams } from "next/navigation";
 import { format, parseISO } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import type { StudentEvent } from "@/lib/student/api";
+import {
+  StudentCard,
+  StudentPageTitle,
+  studentPrimaryButtonClass,
+} from "@/components/student/StudentUi";
 
 export default function StudentEventDetailPage() {
   const params = useParams<{ id: string }>();
@@ -42,32 +47,38 @@ export default function StudentEventDetailPage() {
       <Link href="/student/events" className="text-sm text-teal-600">
         ← Events
       </Link>
-      <h1 className="text-2xl font-bold">{event.title}</h1>
-      <p className="text-slate-600">{event.venue_name ?? "Venue TBA"}</p>
+      <StudentPageTitle
+        title={event.title}
+        subtitle={event.venue_name ?? "Venue TBA"}
+      />
       {event.description && (
-        <p className="text-sm text-slate-600">{event.description}</p>
+        <StudentCard>
+          <p className="text-sm text-slate-600">{event.description}</p>
+        </StudentCard>
       )}
-      <dl className="space-y-2 text-sm">
-        <div className="flex gap-2">
-          <dt className="w-28 text-slate-500">Starts</dt>
-          <dd>{format(parseISO(event.starts_at), "MMM d, yyyy • h:mm a")}</dd>
-        </div>
-        <div className="flex gap-2">
-          <dt className="w-28 text-slate-500">Ends</dt>
-          <dd>{format(parseISO(event.ends_at), "MMM d, yyyy • h:mm a")}</dd>
-        </div>
-        <div className="flex gap-2">
-          <dt className="w-28 text-slate-500">Check-in</dt>
-          <dd>
-            {format(new Date(openStart), "MMM d • h:mm a")} –{" "}
-            {format(new Date(openEnd), "h:mm a")}
-          </dd>
-        </div>
-      </dl>
+      <StudentCard>
+        <dl className="space-y-2 text-sm">
+          <div className="flex gap-2">
+            <dt className="w-28 text-slate-500">Starts</dt>
+            <dd>{format(parseISO(event.starts_at), "MMM d, yyyy • h:mm a")}</dd>
+          </div>
+          <div className="flex gap-2">
+            <dt className="w-28 text-slate-500">Ends</dt>
+            <dd>{format(parseISO(event.ends_at), "MMM d, yyyy • h:mm a")}</dd>
+          </div>
+          <div className="flex gap-2">
+            <dt className="w-28 text-slate-500">Check-in</dt>
+            <dd>
+              {format(new Date(openStart), "MMM d • h:mm a")} –{" "}
+              {format(new Date(openEnd), "h:mm a")}
+            </dd>
+          </div>
+        </dl>
+      </StudentCard>
       <Link
         href="/student/attendance/scan"
-        className={`block rounded-xl py-3 text-center text-sm font-semibold text-white ${
-          isOpen ? "bg-teal-600 hover:bg-teal-500" : "bg-slate-300"
+        className={`${studentPrimaryButtonClass} ${
+          isOpen ? "" : "pointer-events-none bg-slate-300 hover:bg-slate-300"
         }`}
       >
         {isOpen ? "Scan QR to check in or out" : "Check-in not open yet"}
