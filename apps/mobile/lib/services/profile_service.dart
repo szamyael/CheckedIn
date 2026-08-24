@@ -89,7 +89,7 @@ class ProfileService {
       final profile = await _client
           .from('students')
           .select(
-            'student_id, first_name, last_name, program, year_level, section, reward_points',
+            'student_id, first_name, last_name, program, year_level, section, reward_points, profile_photo_url',
           )
           .eq('id', userId)
           .maybeSingle();

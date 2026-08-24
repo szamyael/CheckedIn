@@ -23,7 +23,7 @@ export const studentTermsContent = {
         "Account details: Student ID number, full name, program, section, year level, and school email address.",
         "Credentials: A password you choose (stored securely; never stored in plain text).",
         "Student ID image: A photo of your physical ID card captured during registration or password recovery, used to verify your identity and extract ID details.",
-        "Profile photo: Your ID card image may be saved as your profile avatar.",
+        "Profile photo: A cropped face photo from your student ID is saved as your profile avatar.",
         "Location data: GPS coordinates when you verify attendance, to confirm you are inside the event venue geofence.",
         "Camera captures: Live selfies taken during check-in to confirm your physical presence at an event.",
         "Attendance records: Event check-in and check-out times, QR tokens scanned, OTP codes entered, and verification results.",

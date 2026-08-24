@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../widgets/student_ui.dart';
 
@@ -15,6 +17,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final _profile = ProfileService();
   late Future<_ProfileData> _future;
+  String? _avatarUrl;
 
   @override
   void initState() {
@@ -33,8 +36,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _profile.fetchAttendanceHistory(),
       _profile.fetchAttendanceCount(),
     ]);
+    final student = results[0] as Map<String, dynamic>?;
+    String? avatarUrl;
+    final photoPath = student?['profile_photo_url'] as String?;
+    if (photoPath != null &&
+        photoPath.isNotEmpty &&
+        !AuthService.instance.isOfflineMode) {
+      try {
+        avatarUrl = await Supabase.instance.client.storage
+            .from('student-ids')
+            .createSignedUrl(photoPath, 3600);
+      } catch (_) {
+        avatarUrl = null;
+      }
+    }
+    if (mounted) setState(() => _avatarUrl = avatarUrl);
     return _ProfileData(
-      student: results[0] as Map<String, dynamic>?,
+      student: student,
       achievements: results[1] as List<AchievementItem>,
       history: results[2] as List<AttendanceHistoryItem>,
       attendanceCount: results[3] as int,
@@ -65,14 +83,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        student != null
-                            ? '${student['first_name']} ${student['last_name']}'
-                            : 'Student',
-                        style: Theme.of(context).textTheme.titleLarge,
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 36,
+                            backgroundColor: StudentUi.tealSoft,
+                            backgroundImage: _avatarUrl != null
+                                ? NetworkImage(_avatarUrl!)
+                                : null,
+                            child: _avatarUrl == null
+                                ? Text(
+                                    _initials(student),
+                                    style: const TextStyle(
+                                      color: StudentUi.tealText,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 20,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Text(
+                              student != null
+                                  ? '${student['first_name']} ${student['last_name']}'
+                                  : 'Student',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                          ),
+                        ],
                       ),
                       if (student != null) ...[
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
                         Text('ID: ${student['student_id']}'),
                         Text('Program: ${student['program']}'),
                         if (student['year_level'] != null)
@@ -168,6 +210,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
           },
         ),
     );
+  }
+
+  String _initials(Map<String, dynamic>? student) {
+    final first = (student?['first_name'] as String?)?.trim() ?? '';
+    final last = (student?['last_name'] as String?)?.trim() ?? '';
+    final a = first.isNotEmpty ? first[0] : '';
+    final b = last.isNotEmpty ? last[0] : '';
+    final out = '$a$b'.toUpperCase();
+    return out.isEmpty ? '?' : out;
   }
 }
 

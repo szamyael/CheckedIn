@@ -17,6 +17,8 @@ interface CompleteRegistrationRequest {
   year_level: number;
   section?: string | null;
   image_base64: string;
+  /** Optional cropped face from the ID card for the profile avatar. */
+  avatar_base64?: string | null;
 }
 
 function normalizeStudentId(value: string | null | undefined): string | null {
@@ -53,6 +55,7 @@ Deno.serve(async (req) => {
       year_level,
       section,
       image_base64,
+      avatar_base64,
     } = body;
 
     if (
@@ -176,6 +179,22 @@ Deno.serve(async (req) => {
       );
     }
 
+    let avatarPath: string | null = null;
+    if (avatar_base64 && avatar_base64.trim().length > 0) {
+      avatarPath = `${user_id}/avatar.jpg`;
+      const avatarBytes = decodeBase64Image(avatar_base64);
+      const { error: avatarError } = await supabase.storage
+        .from("student-ids")
+        .upload(avatarPath, avatarBytes, {
+          contentType: "image/jpeg",
+          upsert: true,
+        });
+      if (avatarError) {
+        // Non-fatal: keep registration going without avatar
+        avatarPath = null;
+      }
+    }
+
     const { error: userInsertError } = await supabase.from("users").insert({
       id: user_id,
       role: "student",
@@ -204,11 +223,14 @@ Deno.serve(async (req) => {
       year_level,
       section: section?.trim() || null,
       id_card_image_url: path,
+      profile_photo_url: avatarPath,
     });
 
     if (studentInsertError) {
       await supabase.from("users").delete().eq("id", user_id);
-      await supabase.storage.from("student-ids").remove([path]);
+      const toRemove = [path];
+      if (avatarPath) toRemove.push(avatarPath);
+      await supabase.storage.from("student-ids").remove(toRemove);
       return new Response(
         JSON.stringify({ error: studentInsertError.message }),
         {

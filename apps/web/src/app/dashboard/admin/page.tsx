@@ -5,6 +5,7 @@ import { CreateOrganizationForm } from "@/components/CreateOrganizationForm";
 import { CreateStaffForm } from "@/components/CreateStaffForm";
 import { StaffActions } from "@/components/StaffActions";
 import { StudentActions } from "@/components/StudentActions";
+import { PendingStudentsBatchActions } from "@/components/PendingStudentsBatchActions";
 import { StudentAchievementsPanel } from "@/components/StudentAchievementsPanel";
 import { AdminBingoOverview } from "@/components/bingo/AdminBingoOverview";
 
@@ -37,10 +38,12 @@ export default async function AdminPage() {
     .select("id, student_id, first_name, last_name, program, year_level, users(status)")
     .order("created_at", { ascending: false });
 
-  const pendingCount = (students ?? []).filter((s) => {
+  const pendingStudents = (students ?? []).filter((s) => {
     const userRow = Array.isArray(s.users) ? s.users[0] : s.users;
     return userRow?.status === "pending";
-  }).length;
+  });
+  const pendingCount = pendingStudents.length;
+  const pendingIds = pendingStudents.map((s) => s.id);
 
   const { data: achievements } = await supabase
     .from("student_achievements")
@@ -122,6 +125,7 @@ export default async function AdminPage() {
             </span>
           )}
         </h2>
+        <PendingStudentsBatchActions pendingIds={pendingIds} />
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
           <table className="w-full text-sm">
             <thead className="border-b border-slate-200 bg-slate-50 text-left">

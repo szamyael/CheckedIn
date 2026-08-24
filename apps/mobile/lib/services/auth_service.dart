@@ -144,6 +144,17 @@ class AuthService extends ChangeNotifier {
     final userId = signUp.user!.id;
 
     final bytes = await idCardImage.readAsBytes();
+    String? avatarBase64;
+    final avatarPath = draft.avatarImagePath;
+    if (avatarPath != null) {
+      try {
+        final avatarBytes = await File(avatarPath).readAsBytes();
+        avatarBase64 = base64Encode(avatarBytes);
+      } catch (_) {
+        avatarBase64 = null;
+      }
+    }
+
     final response = await _client.functions.invoke(
       'complete-student-registration',
       body: {
@@ -157,6 +168,7 @@ class AuthService extends ChangeNotifier {
         'year_level': draft.yearLevel,
         'section': draft.section,
         'image_base64': base64Encode(bytes),
+        if (avatarBase64 != null) 'avatar_base64': avatarBase64,
       },
     );
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   MapContainer,
   Marker,
@@ -21,6 +21,14 @@ const markerIcon = L.icon({
   popupAnchor: [1, -34],
   shadowSize: [41, 41],
 });
+
+type PlaceResult = {
+  latitude: number;
+  longitude: number;
+  label: string;
+  displayName: string;
+  type: string | null;
+};
 
 interface LeafletMapPickerProps {
   latitude: number;
@@ -48,7 +56,7 @@ function MapClickHandler({
 function Recenter({ lat, lng }: { lat: number; lng: number }) {
   const map = useMap();
   useEffect(() => {
-    map.setView([lat, lng], map.getZoom(), { animate: true });
+    map.setView([lat, lng], Math.max(map.getZoom(), 16), { animate: true });
   }, [lat, lng, map]);
   return null;
 }
@@ -62,47 +70,120 @@ export function LeafletMapPicker({
   const [searching, setSearching] = useState(false);
   const [locating, setLocating] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [results, setResults] = useState<PlaceResult[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
 
   const center = useMemo(
     () => [latitude, longitude] as [number, number],
     [latitude, longitude],
   );
 
-  async function searchPlace(e: React.FormEvent) {
-    e.preventDefault();
-    const q = search.trim();
-    if (!q) return;
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      if (!wrapRef.current?.contains(e.target as Node)) {
+        setShowResults(false);
+      }
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, []);
+
+  async function runSearch(query: string) {
+    const q = query.trim();
+    if (q.length < 2) {
+      setResults([]);
+      setShowResults(false);
+      return;
+    }
     setSearching(true);
     setSearchError(null);
     try {
-      const url = new URL("https://nominatim.openstreetmap.org/search");
-      url.searchParams.set("format", "json");
-      url.searchParams.set("q", q);
-      url.searchParams.set("limit", "1");
-      const res = await fetch(url.toString(), {
-        headers: { Accept: "application/json" },
-      });
-      if (!res.ok) throw new Error("Search failed");
-      const results = (await res.json()) as Array<{
-        lat: string;
-        lon: string;
-        display_name: string;
-      }>;
-      if (!results.length) {
+      const res = await fetch(
+        `/api/places/search?q=${encodeURIComponent(q)}&limit=8`,
+      );
+      const data = (await res.json()) as {
+        places?: PlaceResult[];
+        error?: string;
+      };
+      if (!res.ok) throw new Error(data.error || "Search failed");
+      const places = data.places ?? [];
+      setResults(places);
+      setShowResults(true);
+      if (places.length === 0) {
         setSearchError("No places found. Try a different search.");
-        return;
       }
-      const hit = results[0];
-      onLocationChange({
-        latitude: parseFloat(hit.lat),
-        longitude: parseFloat(hit.lon),
-        venueName: hit.display_name.split(",")[0]?.trim() || undefined,
-      });
-    } catch {
-      setSearchError("Could not search places. Check your connection.");
+    } catch (err) {
+      setResults([]);
+      setSearchError(
+        err instanceof Error
+          ? err.message
+          : "Could not search places. Check your connection.",
+      );
     } finally {
       setSearching(false);
     }
+  }
+
+  function onSearchChange(value: string) {
+    setSearch(value);
+    setSearchError(null);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => void runSearch(value), 350);
+  }
+
+  function selectPlace(place: PlaceResult) {
+    setSearch(place.label);
+    setShowResults(false);
+    setResults([]);
+    onLocationChange({
+      latitude: place.latitude,
+      longitude: place.longitude,
+      venueName: place.label,
+    });
+  }
+
+  function submitSearch(e: React.FormEvent) {
+    e.preventDefault();
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    void (async () => {
+      const q = search.trim();
+      if (q.length < 2) return;
+      setSearching(true);
+      setSearchError(null);
+      try {
+        const res = await fetch(
+          `/api/places/search?q=${encodeURIComponent(q)}&limit=8`,
+        );
+        const data = (await res.json()) as {
+          places?: PlaceResult[];
+          error?: string;
+        };
+        if (!res.ok) throw new Error(data.error || "Search failed");
+        const places = data.places ?? [];
+        setResults(places);
+        if (places.length === 0) {
+          setShowResults(false);
+          setSearchError("No places found. Try a different search.");
+          return;
+        }
+        if (places.length === 1) {
+          selectPlace(places[0]);
+          return;
+        }
+        setShowResults(true);
+      } catch (err) {
+        setResults([]);
+        setSearchError(
+          err instanceof Error
+            ? err.message
+            : "Could not search places. Check your connection.",
+        );
+      } finally {
+        setSearching(false);
+      }
+    })();
   }
 
   function useCurrentLocation() {
@@ -130,38 +211,61 @@ export function LeafletMapPicker({
 
   return (
     <div className="space-y-3">
-      <form onSubmit={searchPlace} className="flex flex-wrap gap-2">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search place or address…"
-          className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm"
-        />
-        <button
-          type="submit"
-          disabled={searching}
-          className="shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
-        >
-          {searching ? "Searching…" : "Search"}
-        </button>
-        <button
-          type="button"
-          onClick={useCurrentLocation}
-          disabled={locating}
-          className="shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
-        >
-          {locating ? "Locating…" : "Use my location"}
-        </button>
-      </form>
+      <div ref={wrapRef} className="relative">
+        <form onSubmit={submitSearch} className="flex flex-wrap gap-2">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
+            onFocus={() => {
+              if (results.length) setShowResults(true);
+            }}
+            placeholder="Search place, campus, or address…"
+            autoComplete="off"
+            className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          />
+          <button
+            type="submit"
+            disabled={searching}
+            className="shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
+          >
+            {searching ? "Searching…" : "Search"}
+          </button>
+          <button
+            type="button"
+            onClick={useCurrentLocation}
+            disabled={locating}
+            className="shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
+          >
+            {locating ? "Locating…" : "Use my location"}
+          </button>
+        </form>
 
-      {searchError && (
-        <p className="text-sm text-red-600">{searchError}</p>
-      )}
+        {showResults && results.length > 0 && (
+          <ul className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg">
+            {results.map((place) => (
+              <li key={`${place.latitude},${place.longitude},${place.displayName}`}>
+                <button
+                  type="button"
+                  onClick={() => selectPlace(place)}
+                  className="block w-full px-3 py-2 text-left text-sm hover:bg-teal-50"
+                >
+                  <span className="font-medium text-slate-900">{place.label}</span>
+                  <span className="mt-0.5 block truncate text-xs text-slate-500">
+                    {place.displayName}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {searchError && <p className="text-sm text-red-600">{searchError}</p>}
 
       <p className="text-xs text-slate-700">
-        Click the map or drag the pin to set the check-in center. Powered by
-        OpenStreetMap (no Google API key required).
+        Search for a place, then click a result to jump the map. You can also
+        click the map or drag the pin to fine-tune the check-in center.
       </p>
 
       <div className="h-64 w-full overflow-hidden rounded-lg border border-slate-200">

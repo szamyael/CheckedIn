@@ -12,6 +12,7 @@ import {
   normalizeStudentId,
 } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
+import { cropIdFaceToBase64 } from "@/lib/student/id-face-crop";
 import { isStudentOnboardingComplete } from "@/lib/student/onboarding";
 import { isStudentTermsAccepted } from "@/lib/student/terms";
 
@@ -25,6 +26,7 @@ type Draft = {
   section: string;
   yearLevel: number;
   imageBase64: string;
+  avatarBase64: string;
 };
 
 async function fileToBase64(file: File): Promise<string> {
@@ -50,6 +52,7 @@ export default function StudentRegisterPage() {
     section: "",
     yearLevel: 1,
     imageBase64: "",
+    avatarBase64: "",
   });
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -68,7 +71,7 @@ export default function StudentRegisterPage() {
   async function onIdFile(file: File | null) {
     if (!file) return;
     setError(null);
-    showLoader("Scanning ID…");
+      showLoader("Scanning ID…");
     try {
       const image_base64 = await fileToBase64(file);
       const supabase = createClient();
@@ -95,6 +98,10 @@ export default function StudentRegisterPage() {
           "Could not read a valid Student ID (0XXX-XXXX). Retake the photo.",
         );
       }
+
+      showLoader("Detecting ID photo…");
+      const avatar_base64 = (await cropIdFaceToBase64(image_base64)) ?? "";
+
       setDraft((d) => ({
         ...d,
         studentId: sid,
@@ -103,6 +110,7 @@ export default function StudentRegisterPage() {
         lastName: parsed.last_name ?? d.lastName,
         program: parsed.program ?? d.program,
         imageBase64: image_base64,
+        avatarBase64: avatar_base64,
       }));
       setStep(2);
     } catch (err) {
@@ -149,6 +157,7 @@ export default function StudentRegisterPage() {
             section: draft.section.trim() || null,
             year_level: draft.yearLevel,
             image_base64: draft.imageBase64,
+            avatar_base64: draft.avatarBase64 || null,
           },
         },
       );
@@ -217,6 +226,18 @@ export default function StudentRegisterPage() {
             setStep(3);
           }}
         >
+          <p className="text-sm text-slate-600">
+            We filled these from your ID. Edit any typos — only Student ID is locked.
+            {draft.avatarBase64 ? " Your ID photo was saved as your profile picture." : ""}
+          </p>
+          {draft.avatarBase64 && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={`data:image/jpeg;base64,${draft.avatarBase64}`}
+              alt="Detected ID photo"
+              className="mx-auto h-24 w-24 rounded-full object-cover ring-2 ring-teal-200"
+            />
+          )}
           <Field label="Student ID" value={draft.studentId} readOnly />
           <Field
             label="Email"

@@ -37,16 +37,35 @@ export function StudentActions({ student }: { student: StudentRow }) {
   }
 
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-wrap gap-2">
       {student.status === "pending" && (
-        <button
-          type="button"
-          disabled={loading}
-          onClick={() => setStatus("active")}
-          className="text-xs font-medium text-blue-600 hover:underline"
-        >
-          Approve
-        </button>
+        <>
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => setStatus("active")}
+            className="text-xs font-medium text-teal-600 hover:underline"
+          >
+            Approve
+          </button>
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => {
+              if (
+                !confirm(
+                  `Deny ${student.first_name} ${student.last_name}? Their account will be disabled.`,
+                )
+              ) {
+                return;
+              }
+              void setStatus("disabled");
+            }}
+            className="text-xs font-medium text-amber-700 hover:underline"
+          >
+            Deny
+          </button>
+        </>
       )}
       {student.status === "active" ? (
         <button

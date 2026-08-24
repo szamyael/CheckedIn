@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -77,6 +79,7 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final avatarPath = widget.draft.avatarImagePath;
     return Scaffold(
       appBar: AppBar(title: const Text('Confirm Details')),
       body: ListView(
@@ -85,8 +88,27 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
           const StudentPageTitle(
             title: 'Confirm details',
             subtitle:
-                'Verify the information from your ID. You can edit your name and program, but your Student ID cannot be changed.',
+                'We filled these from your ID scan. Edit anything that looks wrong — only your Student ID is locked.',
           ),
+          if (avatarPath != null) ...[
+            const SizedBox(height: 16),
+            Center(
+              child: ClipOval(
+                child: Image.file(
+                  File(avatarPath),
+                  width: 88,
+                  height: 88,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Profile photo from your student ID',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
           const SizedBox(height: 24),
           TextField(
             readOnly: true,
@@ -112,7 +134,12 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
           const SizedBox(height: 16),
           TextField(
             controller: _firstName,
-            decoration: const InputDecoration(labelText: 'First Name *'),
+            decoration: InputDecoration(
+              labelText: 'First Name *',
+              helperText: widget.draft.ocrSnapshot?.firstName != null
+                  ? 'Detected from your ID — edit if needed'
+                  : null,
+            ),
           ),
           const SizedBox(height: 16),
           TextField(
@@ -122,7 +149,12 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
           const SizedBox(height: 16),
           TextField(
             controller: _lastName,
-            decoration: const InputDecoration(labelText: 'Last Name *'),
+            decoration: InputDecoration(
+              labelText: 'Last Name *',
+              helperText: widget.draft.ocrSnapshot?.lastName != null
+                  ? 'Detected from your ID — edit if needed'
+                  : null,
+            ),
           ),
           const SizedBox(height: 16),
           TextField(

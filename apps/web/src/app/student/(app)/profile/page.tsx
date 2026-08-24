@@ -26,7 +26,9 @@ export default function StudentProfilePage() {
     year_level: number;
     section: string | null;
     reward_points: number;
+    profile_photo_url: string | null;
   } | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [badges, setBadges] = useState<Achievement[]>([]);
   const [history, setHistory] = useState<HistoryRow[]>([]);
 
@@ -41,11 +43,18 @@ export default function StudentProfilePage() {
       const { data: student } = await supabase
         .from("students")
         .select(
-          "student_id, first_name, last_name, program, year_level, section, reward_points",
+          "student_id, first_name, last_name, program, year_level, section, reward_points, profile_photo_url",
         )
         .eq("id", user.id)
         .single();
       setProfile(student);
+
+      if (student?.profile_photo_url) {
+        const { data: signed } = await supabase.storage
+          .from("student-ids")
+          .createSignedUrl(student.profile_photo_url, 3600);
+        setAvatarUrl(signed?.signedUrl ?? null);
+      }
 
       const { data: ach } = await supabase
         .from("student_achievements")
@@ -69,22 +78,40 @@ export default function StudentProfilePage() {
     return <p className="text-sm text-slate-500">Loading profile…</p>;
   }
 
+  const initials =
+    `${profile.first_name?.[0] ?? ""}${profile.last_name?.[0] ?? ""}`.toUpperCase() ||
+    "?";
+
   return (
     <div className="space-y-6">
       <StudentCard>
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-bold">
-              {profile.first_name} {profile.last_name}
-            </h1>
-            <p className="text-sm text-slate-500">{profile.student_id}</p>
-            <p className="mt-1 text-sm text-slate-600">
-              {profile.program} · Year {profile.year_level}
-              {profile.section ? ` · ${profile.section}` : ""}
-            </p>
-            <p className="mt-2 text-sm font-medium text-teal-600">
-              {profile.reward_points} reward points
-            </p>
+          <div className="flex items-start gap-3">
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={avatarUrl}
+                alt=""
+                className="h-16 w-16 rounded-full object-cover ring-2 ring-teal-100"
+              />
+            ) : (
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-teal-50 text-lg font-bold text-teal-800">
+                {initials}
+              </div>
+            )}
+            <div>
+              <h1 className="text-xl font-bold">
+                {profile.first_name} {profile.last_name}
+              </h1>
+              <p className="text-sm text-slate-500">{profile.student_id}</p>
+              <p className="mt-1 text-sm text-slate-600">
+                {profile.program} · Year {profile.year_level}
+                {profile.section ? ` · ${profile.section}` : ""}
+              </p>
+              <p className="mt-2 text-sm font-medium text-teal-600">
+                {profile.reward_points} reward points
+              </p>
+            </div>
           </div>
           <Link
             href="/student/profile/edit"
