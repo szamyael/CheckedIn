@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { QrScanner } from "@/components/student/QrScanner";
+import { PermissionBlockedCard } from "@/components/student/PermissionBlockedCard";
 import {
   StudentErrorBanner,
   StudentPageTitle,
@@ -10,6 +11,7 @@ import {
 } from "@/components/student/StudentUi";
 import { useLoader } from "@/components/LoaderProvider";
 import type { CheckInMeta } from "@/lib/student/api";
+import { isPermissionErrorMessage } from "@/lib/student/browser-permissions";
 import { clearFlow, saveFlow } from "@/lib/student/attendance-flow";
 import { createClient } from "@/lib/supabase/client";
 
@@ -17,6 +19,8 @@ export default function AttendanceScanPage() {
   const router = useRouter();
   const { showLoader, hideLoader } = useLoader();
   const [error, setError] = useState<string | null>(null);
+  const [cameraBlocked, setCameraBlocked] = useState(false);
+  const [scanKey, setScanKey] = useState(0);
   const [result, setResult] = useState<{ title: string; body: string } | null>(
     null,
   );
@@ -104,8 +108,26 @@ export default function AttendanceScanPage() {
   return (
     <div className="space-y-4">
       <StudentPageTitle title="Scan Event QR" />
-      <QrScanner onScan={(t) => void onScan(t)} onError={setError} />
-      {error && <StudentErrorBanner message={error} />}
+      {cameraBlocked ? (
+        <PermissionBlockedCard
+          permission="camera"
+          onRetry={() => {
+            setCameraBlocked(false);
+            setError(null);
+            setScanKey((k) => k + 1);
+          }}
+        />
+      ) : (
+        <QrScanner
+          key={scanKey}
+          onScan={(t) => void onScan(t)}
+          onError={(message) => {
+            setError(message);
+            if (isPermissionErrorMessage(message)) setCameraBlocked(true);
+          }}
+        />
+      )}
+      {error && !cameraBlocked && <StudentErrorBanner message={error} />}
       <p className="text-center text-xs text-slate-500">
         Point your camera at the event QR. Scan once to check in, or again after
         check-in to check out.

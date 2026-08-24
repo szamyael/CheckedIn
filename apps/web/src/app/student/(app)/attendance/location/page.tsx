@@ -3,9 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MapPin } from "lucide-react";
+import { PermissionBlockedCard } from "@/components/student/PermissionBlockedCard";
 import { useLoader } from "@/components/LoaderProvider";
 import type { CheckInMeta } from "@/lib/student/api";
 import { loadFlow, saveFlow } from "@/lib/student/attendance-flow";
+import {
+  ensureBrowserPermission,
+  isPermissionErrorMessage,
+} from "@/lib/student/browser-permissions";
 import { createClient } from "@/lib/supabase/client";
 
 function getPosition(): Promise<GeolocationPosition> {
@@ -27,13 +32,22 @@ export default function AttendanceLocationPage() {
   const { showLoader, hideLoader } = useLoader();
   const [error, setError] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
+  const [locationBlocked, setLocationBlocked] = useState(false);
 
   async function verify() {
     setError(null);
     setHint(null);
+    setLocationBlocked(false);
     const flow = loadFlow();
     if (!flow?.qrToken) {
       router.replace("/student/attendance/scan");
+      return;
+    }
+
+    const granted = await ensureBrowserPermission("location");
+    if (!granted) {
+      setLocationBlocked(true);
+      setError("Location is required to verify you are at the event venue.");
       return;
     }
 
@@ -74,11 +88,12 @@ export default function AttendanceLocationPage() {
       });
       router.push("/student/attendance/otp");
     } catch (err) {
-      setError(
+      const message =
         err instanceof Error
           ? err.message
-          : "Location verification failed. Allow location access and try again.",
-      );
+          : "Location verification failed. Allow location access and try again.";
+      setError(message);
+      if (isPermissionErrorMessage(message)) setLocationBlocked(true);
     } finally {
       hideLoader();
     }
@@ -99,6 +114,11 @@ export default function AttendanceLocationPage() {
         </p>
       )}
       {hint && <p className="mt-2 text-center text-xs text-red-500">{hint}</p>}
+      {locationBlocked && (
+        <div className="mt-4">
+          <PermissionBlockedCard permission="location" onRetry={() => void verify()} />
+        </div>
+      )}
       <button
         type="button"
         onClick={() => void verify()}

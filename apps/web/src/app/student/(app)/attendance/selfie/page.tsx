@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { PermissionBlockedCard } from "@/components/student/PermissionBlockedCard";
 import { useLoader } from "@/components/LoaderProvider";
 import {
   clearFlow,
@@ -16,6 +17,8 @@ export default function AttendanceSelfiePage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [flow, setFlow] = useState<AttendanceFlowState | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [cameraBlocked, setCameraBlocked] = useState(false);
+  const [cameraKey, setCameraKey] = useState(0);
   const [success, setSuccess] = useState<{
     title: string;
     points?: number;
@@ -47,7 +50,9 @@ export default function AttendanceSelfiePage() {
           videoRef.current.srcObject = stream;
           await videoRef.current.play();
         }
+        setCameraBlocked(false);
       } catch {
+        setCameraBlocked(true);
         setError("Camera permission denied. Allow camera access for selfie.");
       }
     }
@@ -57,7 +62,7 @@ export default function AttendanceSelfiePage() {
       cancelled = true;
       streamRef.current?.getTracks().forEach((t) => t.stop());
     };
-  }, [router]);
+  }, [router, cameraKey]);
 
   async function submit() {
     if (!flow || !videoRef.current) return;
@@ -187,20 +192,33 @@ export default function AttendanceSelfiePage() {
         {flow?.eventTitle ? ` for ${flow.eventTitle}` : ""}.
       </p>
       <div className="overflow-hidden rounded-2xl bg-black">
-        <video
-          ref={videoRef}
-          playsInline
-          muted
-          className="aspect-[3/4] w-full object-cover"
-        />
+        {!cameraBlocked ? (
+          <video
+            ref={videoRef}
+            playsInline
+            muted
+            className="aspect-[3/4] w-full object-cover"
+          />
+        ) : (
+          <div className="p-4">
+            <PermissionBlockedCard
+              permission="camera"
+              onRetry={() => {
+                setError(null);
+                setCameraKey((k) => k + 1);
+              }}
+            />
+          </div>
+        )}
       </div>
-      {error && (
+      {error && !cameraBlocked && (
         <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">
           {error}
         </p>
       )}
       <button
         type="button"
+        disabled={cameraBlocked}
         onClick={() => void submit()}
         className="mt-auto rounded-xl bg-teal-600 py-3 text-sm font-semibold text-white"
       >

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BrandMark } from "@/components/BrandLogo";
@@ -17,6 +17,8 @@ import {
   normalizeStudentId,
 } from "@/lib/constants";
 import { resolveStudentEmail } from "@/lib/student/api";
+import { isStudentOnboardingComplete } from "@/lib/student/onboarding";
+import { isStudentTermsAccepted } from "@/lib/student/terms";
 import { createClient } from "@/lib/supabase/client";
 
 export default function StudentLoginPage() {
@@ -25,6 +27,16 @@ export default function StudentLoginPage() {
   const [studentId, setStudentId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isStudentOnboardingComplete()) {
+      router.replace("/student/onboarding");
+      return;
+    }
+    if (!isStudentTermsAccepted()) {
+      router.replace("/student/terms");
+    }
+  }, [router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

@@ -9,7 +9,9 @@ import 'router.dart';
 import 'services/auth_service.dart';
 import 'services/connectivity_service.dart';
 import 'services/offline_sync_service.dart';
+import 'services/onboarding_service.dart';
 import 'services/session_timeout_service.dart';
+import 'services/terms_service.dart';
 import 'widgets/universal_loader.dart';
 
 Future<void> main() async {
@@ -23,10 +25,14 @@ Future<void> main() async {
   );
 
   final auth = AuthService.instance..init();
+  final onboarding = OnboardingService.instance;
+  final terms = TermsService.instance;
+  await onboarding.init();
+  await terms.init();
   await ConnectivityService.instance.init();
   await OfflineSyncService.instance.init();
 
-  runApp(CheckedInApp(router: createRouter(auth)));
+  runApp(CheckedInApp(router: createRouter(auth, onboarding, terms)));
 }
 
 class CheckedInApp extends StatelessWidget {

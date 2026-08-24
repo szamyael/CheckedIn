@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/attendance_service.dart';
+import '../../services/permission_service.dart';
+import '../../widgets/permission_gate.dart';
 import '../../widgets/student_ui.dart';
 import '../../widgets/universal_loader.dart';
 
@@ -23,6 +25,21 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
   String? _distanceHint;
 
   Future<void> _verifyLocation() async {
+    final granted = await PermissionService.instance.ensure(
+      context,
+      AppPermission.location,
+      showRationaleFirst: true,
+    );
+    if (!granted) {
+      if (mounted) {
+        setState(() {
+          _error =
+              'Location is required to verify you are at the event venue.';
+        });
+      }
+      return;
+    }
+
     setState(() {
       _checking = true;
       _error = null;
@@ -73,8 +90,17 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
         },
       );
     } catch (e) {
+      final message = e.toString().replaceFirst('Exception: ', '');
+      final isPermissionIssue = message.toLowerCase().contains('permission') ||
+          message.toLowerCase().contains('location services');
+      if (isPermissionIssue && mounted) {
+        await PermissionService.instance.showPermissionDeniedDialog(
+          context,
+          AppPermission.location,
+        );
+      }
       setState(() {
-        _error = e.toString().replaceFirst('Exception: ', '');
+        _error = message;
         _status = null;
       });
     } finally {
@@ -123,6 +149,14 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
                     ? _error!
                     : '$_error\n$_distanceHint',
               ),
+              if (_error!.toLowerCase().contains('permission') ||
+                  _error!.toLowerCase().contains('location')) ...[
+                const SizedBox(height: 12),
+                PermissionBlockedPanel(
+                  permission: AppPermission.location,
+                  onRetry: _verifyLocation,
+                ),
+              ],
             ],
             const Spacer(),
             FilledButton(

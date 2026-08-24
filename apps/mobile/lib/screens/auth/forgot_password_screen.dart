@@ -7,6 +7,8 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants.dart';
 import '../../core/student_id_formatter.dart';
 import '../../services/auth_service.dart';
+import '../../services/permission_service.dart';
+import '../../widgets/permission_gate.dart';
 import '../../widgets/student_ui.dart';
 import '../../widgets/universal_loader.dart';
 
@@ -24,23 +26,52 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   CameraController? _controller;
   File? _idCardImage;
   bool _loading = false;
+  bool _cameraReady = false;
+  bool _cameraBlocked = false;
   String? _error;
 
   @override
   void initState() {
     super.initState();
-    _initCamera();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _ensureCamera());
+  }
+
+  Future<void> _ensureCamera() async {
+    final granted = await PermissionService.instance.ensure(
+      context,
+      AppPermission.camera,
+    );
+    if (!mounted) return;
+    if (!granted) {
+      setState(() => _cameraBlocked = true);
+      return;
+    }
+    await _initCamera();
   }
 
   Future<void> _initCamera() async {
-    final cameras = await availableCameras();
-    final back = cameras.firstWhere(
-      (c) => c.lensDirection == CameraLensDirection.back,
-      orElse: () => cameras.first,
-    );
-    _controller = CameraController(back, ResolutionPreset.high);
-    await _controller!.initialize();
-    if (mounted) setState(() {});
+    try {
+      final cameras = await availableCameras();
+      final back = cameras.firstWhere(
+        (c) => c.lensDirection == CameraLensDirection.back,
+        orElse: () => cameras.first,
+      );
+      _controller = CameraController(back, ResolutionPreset.high);
+      await _controller!.initialize();
+      if (mounted) {
+        setState(() {
+          _cameraReady = true;
+          _cameraBlocked = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _cameraBlocked = true;
+          _error = 'Could not open camera. Allow camera access and try again.';
+        });
+      }
+    }
   }
 
   @override
@@ -109,12 +140,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   'Scan your student ID to verify your identity. We will send a reset code to the email on your account.',
             ),
             const SizedBox(height: 16),
-            if (_controller != null && _controller!.value.isInitialized)
+            if (_cameraReady && _controller != null)
               AspectRatio(
                 aspectRatio: _controller!.value.aspectRatio,
                 child: _idCardImage != null
                     ? Image.file(_idCardImage!, fit: BoxFit.cover)
                     : CameraPreview(_controller!),
+              )
+            else if (_cameraBlocked)
+              PermissionBlockedPanel(
+                permission: AppPermission.camera,
+                onRetry: () {
+                  setState(() {
+                    _cameraBlocked = false;
+                    _error = null;
+                  });
+                  _ensureCamera();
+                },
               )
             else
               const SizedBox(

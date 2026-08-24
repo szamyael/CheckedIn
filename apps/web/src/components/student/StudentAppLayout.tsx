@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { isStudentOnboardingComplete } from "@/lib/student/onboarding";
+import { isStudentTermsAccepted } from "@/lib/student/terms";
 import { StudentShell } from "@/components/student/StudentShell";
 
 /** Authenticated student chrome with bottom nav (Home / Events / Profile). */
@@ -18,6 +20,15 @@ export function StudentAppLayout({ children }: { children: React.ReactNode }) {
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
     async function boot() {
+      if (!isStudentOnboardingComplete()) {
+        router.replace("/student/onboarding");
+        return;
+      }
+      if (!isStudentTermsAccepted()) {
+        router.replace("/student/terms");
+        return;
+      }
+
       const {
         data: { user },
       } = await supabase.auth.getUser();

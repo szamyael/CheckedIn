@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BrandMark } from "@/components/BrandLogo";
+import { PermissionBlockedCard } from "@/components/student/PermissionBlockedCard";
 import { useLoader } from "@/components/LoaderProvider";
 import {
   formatStudentIdInput,
@@ -11,6 +12,8 @@ import {
   normalizeStudentId,
 } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
+import { isStudentOnboardingComplete } from "@/lib/student/onboarding";
+import { isStudentTermsAccepted } from "@/lib/student/terms";
 
 type Draft = {
   studentId: string;
@@ -50,6 +53,17 @@ export default function StudentRegisterPage() {
   });
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [cameraBlocked, setCameraBlocked] = useState(false);
+
+  useEffect(() => {
+    if (!isStudentOnboardingComplete()) {
+      router.replace("/student/onboarding");
+      return;
+    }
+    if (!isStudentTermsAccepted()) {
+      router.replace("/student/terms");
+    }
+  }, [router]);
 
   async function onIdFile(file: File | null) {
     if (!file) return;
@@ -168,13 +182,23 @@ export default function StudentRegisterPage() {
       {step === 1 && (
         <div className="mt-6 space-y-4">
           <p className="text-sm text-slate-600">
-            Upload or capture a photo of your student ID card.
+            Upload or capture a photo of your student ID card. Your browser will
+            ask for camera access if you choose to take a photo.
           </p>
+          {cameraBlocked && (
+            <PermissionBlockedCard
+              permission="camera"
+              onRetry={() => setCameraBlocked(false)}
+            />
+          )}
           <input
             type="file"
             accept="image/*"
             capture="environment"
-            onChange={(e) => void onIdFile(e.target.files?.[0] ?? null)}
+            onChange={(e) => {
+              setCameraBlocked(false);
+              void onIdFile(e.target.files?.[0] ?? null);
+            }}
             className="w-full text-sm"
           />
         </div>

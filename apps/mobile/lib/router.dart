@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import '../models/registration_draft.dart';
 import '../screens/attendance/attendance_otp_screen.dart';
@@ -13,6 +14,10 @@ import '../screens/auth/verify_email_screen.dart';
 import '../screens/auth/forgot_password_code_screen.dart';
 import '../screens/auth/forgot_password_screen.dart';
 import '../screens/auth/login_screen.dart';
+import '../screens/onboarding/onboarding_screen.dart';
+import '../screens/onboarding/terms_screen.dart';
+import '../services/onboarding_service.dart';
+import '../services/terms_service.dart';
 import '../screens/auth/register_confirm_screen.dart';
 import '../screens/auth/register_id_scan_screen.dart';
 import '../screens/auth/register_password_screen.dart';
@@ -20,17 +25,41 @@ import '../screens/notifications/notifications_screen.dart';
 import '../screens/shell/main_shell.dart';
 import '../services/auth_service.dart';
 
-GoRouter createRouter(AuthService auth) {
+GoRouter createRouter(
+  AuthService auth,
+  OnboardingService onboarding,
+  TermsService terms,
+) {
   return GoRouter(
-    refreshListenable: auth,
-    initialLocation: auth.isSignedIn
-        ? (auth.isEmailVerified ? '/home' : '/verify-email')
-        : '/login',
+    refreshListenable: Listenable.merge([auth, onboarding, terms]),
+    initialLocation: _initialLocation(auth, onboarding, terms),
     redirect: (context, state) {
+      if (!onboarding.isLoaded || !terms.isLoaded) return null;
+
       final hasSession = auth.isSignedIn;
       final verified = auth.isEmailVerified;
       final path = state.matchedLocation;
+
+      if (!onboarding.isComplete && path != '/onboarding') {
+        return '/onboarding';
+      }
+      if (onboarding.isComplete && !terms.isAccepted && path != '/terms') {
+        return '/terms';
+      }
+      if (onboarding.isComplete && path == '/onboarding') {
+        return hasSession
+            ? (verified ? '/home' : '/verify-email')
+            : '/login';
+      }
+      if (terms.isAccepted && path == '/terms') {
+        return hasSession
+            ? (verified ? '/home' : '/verify-email')
+            : '/login';
+      }
+
       final isAuthRoute = path == '/login' ||
+          path == '/onboarding' ||
+          path == '/terms' ||
           path == '/forgot-password' ||
           path == '/forgot-password/code' ||
           path == '/verify-email' ||
@@ -52,6 +81,14 @@ GoRouter createRouter(AuthService auth) {
       return null;
     },
     routes: [
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
+      ),
+      GoRoute(
+        path: '/terms',
+        builder: (context, state) => const TermsScreen(),
+      ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/verify-email',
@@ -168,4 +205,17 @@ GoRouter createRouter(AuthService auth) {
       ),
     ],
   );
+}
+
+String _initialLocation(
+  AuthService auth,
+  OnboardingService onboarding,
+  TermsService terms,
+) {
+  if (!onboarding.isComplete) return '/onboarding';
+  if (!terms.isAccepted) return '/terms';
+  if (auth.isSignedIn) {
+    return auth.isEmailVerified ? '/home' : '/verify-email';
+  }
+  return '/login';
 }
