@@ -13,6 +13,7 @@ interface CompleteRegistrationRequest {
   first_name: string;
   middle_name?: string | null;
   last_name: string;
+  name_extension?: string | null;
   program: string;
   year_level: number;
   section?: string | null;
@@ -51,6 +52,7 @@ Deno.serve(async (req) => {
       first_name,
       middle_name,
       last_name,
+      name_extension,
       program,
       year_level,
       section,
@@ -219,6 +221,7 @@ Deno.serve(async (req) => {
       first_name: first_name.trim(),
       middle_name: middle_name?.trim() || null,
       last_name: last_name.trim(),
+      name_extension: name_extension?.trim() || null,
       program: program.trim(),
       year_level,
       section: section?.trim() || null,

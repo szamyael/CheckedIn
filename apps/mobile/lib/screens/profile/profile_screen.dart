@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../models/registration_draft.dart';
 import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../widgets/student_ui.dart';
@@ -106,7 +107,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Expanded(
                             child: Text(
                               student != null
-                                  ? '${student['first_name']} ${student['last_name']}'
+                                  ? formatStudentDisplayName(
+                                      firstName:
+                                          student['first_name'] as String?,
+                                      middleName:
+                                          student['middle_name'] as String?,
+                                      lastName: student['last_name'] as String?,
+                                      nameExtension:
+                                          student['name_extension'] as String?,
+                                    )
                                   : 'Student',
                               style: Theme.of(context).textTheme.titleLarge,
                             ),

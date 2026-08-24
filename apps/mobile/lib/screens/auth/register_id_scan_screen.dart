@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants.dart';
-import '../../core/id_face_cropper.dart';
 import '../../models/registration_draft.dart';
 import '../../services/auth_service.dart';
 import '../../services/permission_service.dart';
@@ -99,17 +98,15 @@ class _RegisterIdScanScreenState extends State<RegisterIdScanScreen> {
         );
       }
 
-      final avatar = await IdFaceCropper.cropToTempFile(file);
-
       widget.draft
         ..studentId = parsed.studentId
         ..firstName = parsed.firstName
         ..middleName = parsed.middleName
         ..lastName = parsed.lastName
+        ..nameExtension = parsed.nameExtension
         ..program = parsed.program
         ..ocrSnapshot = parsed
-        ..idCardImagePath = photo.path
-        ..avatarImagePath = avatar?.path;
+        ..idCardImagePath = photo.path;
 
       if (!mounted) return;
       context.push('/register/confirm', extra: widget.draft);

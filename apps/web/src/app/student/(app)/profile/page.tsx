@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
+import { formatStudentDisplayName } from "@/lib/student/display-name";
 import { createClient } from "@/lib/supabase/client";
 import {
   StudentCard,
@@ -21,7 +22,9 @@ export default function StudentProfilePage() {
   const [profile, setProfile] = useState<{
     student_id: string;
     first_name: string;
+    middle_name: string | null;
     last_name: string;
+    name_extension: string | null;
     program: string;
     year_level: number;
     section: string | null;
@@ -43,7 +46,7 @@ export default function StudentProfilePage() {
       const { data: student } = await supabase
         .from("students")
         .select(
-          "student_id, first_name, last_name, program, year_level, section, reward_points, profile_photo_url",
+          "student_id, first_name, middle_name, last_name, name_extension, program, year_level, section, reward_points, profile_photo_url",
         )
         .eq("id", user.id)
         .single();
@@ -101,7 +104,7 @@ export default function StudentProfilePage() {
             )}
             <div>
               <h1 className="text-xl font-bold">
-                {profile.first_name} {profile.last_name}
+                {formatStudentDisplayName(profile)}
               </h1>
               <p className="text-sm text-slate-500">{profile.student_id}</p>
               <p className="mt-1 text-sm text-slate-600">

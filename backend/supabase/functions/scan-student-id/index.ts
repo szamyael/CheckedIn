@@ -8,11 +8,15 @@ interface VeryfiRequest {
   image_base64: string;
 }
 
-interface ParsedIdCard {
-  student_id: string | null;
+interface ParsedName {
   first_name: string | null;
   middle_name: string | null;
   last_name: string | null;
+  name_extension: string | null;
+}
+
+interface ParsedIdCard extends ParsedName {
+  student_id: string | null;
   program: string | null;
   raw: Record<string, unknown>;
 }
@@ -48,6 +52,30 @@ function titleCaseName(value: string): string {
     .join(" ");
 }
 
+function emptyName(): ParsedName {
+  return {
+    first_name: null,
+    middle_name: null,
+    last_name: null,
+    name_extension: null,
+  };
+}
+
+function isNameExtension(value: string): boolean {
+  return /^(jr\.?|sr\.?|ii|iii|iv|v|vi|vii|viii|ix|x|phd|ph\.?d\.?|md)$/i.test(
+    value.trim(),
+  );
+}
+
+function normalizeExtension(value: string): string {
+  const v = value.trim();
+  if (/^jr\.?$/i.test(v)) return "Jr.";
+  if (/^sr\.?$/i.test(v)) return "Sr.";
+  if (/^ph\.?d\.?$/i.test(v)) return "PhD";
+  if (/^(ii|iii|iv|v|vi|vii|viii|ix|x)$/i.test(v)) return v.toUpperCase();
+  return titleCaseName(v);
+}
+
 function isNoiseNameLine(line: string): boolean {
   const lower = line.toLowerCase();
   return (
@@ -59,120 +87,132 @@ function isNoiseNameLine(line: string): boolean {
   );
 }
 
+function isProgramLine(line: string): boolean {
+  return (
+    /(?:program|course|major|degree|strand)\s*[:\-]/i.test(line) ||
+    /\bB\.?\s*S\.?\s+[A-Za-z]/i.test(line)
+  );
+}
+
+function looksLikeNameLine(line: string): boolean {
+  if (isProgramLine(line) || isNoiseNameLine(line)) return false;
+  const cleaned = line.replace(/[,.]/g, " ").trim();
+  return /^[A-Za-zÑñ][A-Za-zÑñ'\-\s,]{2,}$/.test(line) &&
+    cleaned.split(/\s+/).length >= 2;
+}
+
 /**
- * Extract name parts from OCR text. Philippine student IDs commonly use:
- *   LASTNAME, FIRSTNAME MIDDLENAME
- *   Name: FIRSTNAME MIDDLENAME LASTNAME
- *   LASTNAME FIRSTNAME MIDDLENAME (all caps)
+ * ID name sits directly above course/program:
+ * Firstname, Middle Name, Last Name, Name Extensions
  */
-function extractNamesFromOcr(ocrText: string): {
-  first_name: string | null;
-  middle_name: string | null;
-  last_name: string | null;
-} {
-  const text = ocrText.replace(/\r/g, "\n");
-  const lines = text
+function extractNamesFromOcr(ocrText: string): ParsedName {
+  const lines = ocrText
+    .replace(/\r/g, "\n")
     .split("\n")
     .map((l) => l.replace(/\s+/g, " ").trim())
     .filter(Boolean);
 
-  // 1) Explicit label: Name / Full Name / Student Name
+  const programIndex = lines.findIndex((l) => isProgramLine(l));
+  if (programIndex > 0) {
+    for (let i = programIndex - 1; i >= 0; i--) {
+      if (looksLikeNameLine(lines[i])) {
+        return parseIdNameLine(lines[i]);
+      }
+    }
+  }
+
   for (const line of lines) {
     const labeled = line.match(
       /(?:full\s*name|student\s*name|name)\s*[:\-]\s*(.+)$/i,
     );
-    if (labeled?.[1] && !isNoiseNameLine(labeled[1])) {
-      return splitNameParts(labeled[1]);
+    if (labeled?.[1] && looksLikeNameLine(labeled[1])) {
+      return parseIdNameLine(labeled[1]);
     }
   }
 
-  // 2) LASTNAME, FIRSTNAME M.I. / FIRSTNAME MIDDLENAME
   for (const line of lines) {
-    if (isNoiseNameLine(line)) continue;
-    const comma = line.match(
-      /^([A-Za-zÑñ][A-Za-zÑñ'\-\s]{1,40}),\s*([A-Za-zÑñ][A-Za-zÑñ'\-\s]{1,60})$/,
-    );
-    if (comma) {
-      const last = titleCaseName(comma[1].trim());
-      const rest = comma[2].trim().split(/\s+/).filter(Boolean);
-      if (rest.length >= 1) {
-        return {
-          last_name: last,
-          first_name: titleCaseName(rest[0]),
-          middle_name:
-            rest.length > 1 ? titleCaseName(rest.slice(1).join(" ")) : null,
-        };
-      }
+    if (looksLikeNameLine(line) && line.includes(",")) {
+      return parseIdNameLine(line);
     }
   }
 
-  // 3) ALL-CAPS multi-word line that looks like a name (common on IDs)
-  const capsCandidates = lines.filter(
-    (l) =>
-      /^[A-ZÑ][A-ZÑ'\-\s]{4,}$/.test(l) &&
-      !isNoiseNameLine(l) &&
-      l.split(/\s+/).length >= 2 &&
-      l.split(/\s+/).length <= 5,
-  );
-  if (capsCandidates.length > 0) {
-    // Prefer the longest-looking name line near the top half of the card OCR
-    const pick =
-      capsCandidates.find((l) => l.includes(",")) ?? capsCandidates[0];
-    if (pick.includes(",")) {
-      const [last, rest] = pick.split(",").map((s) => s.trim());
-      const parts = rest.split(/\s+/).filter(Boolean);
-      return {
-        last_name: titleCaseName(last),
-        first_name: parts[0] ? titleCaseName(parts[0]) : null,
-        middle_name:
-          parts.length > 1 ? titleCaseName(parts.slice(1).join(" ")) : null,
-      };
-    }
-    return splitNameParts(pick);
-  }
-
-  // 4) Mixed-case multi-word line without digits
   for (const line of lines) {
-    if (isNoiseNameLine(line)) continue;
-    if (/^[A-Za-zÑñ][A-Za-zÑñ'\-\s]{4,}$/.test(line)) {
-      const parts = line.split(/\s+/);
-      if (parts.length >= 2 && parts.length <= 5) {
-        return splitNameParts(line);
-      }
-    }
+    if (looksLikeNameLine(line)) return parseIdNameLine(line);
   }
 
-  return { first_name: null, middle_name: null, last_name: null };
+  return emptyName();
 }
 
-function splitNameParts(raw: string): {
-  first_name: string | null;
-  middle_name: string | null;
-  last_name: string | null;
-} {
-  const cleaned = raw.replace(/[,]+/g, " ").replace(/\s+/g, " ").trim();
-  const parts = cleaned.split(/\s+/).filter(Boolean);
-  if (parts.length === 0) {
-    return { first_name: null, middle_name: null, last_name: null };
-  }
-  if (parts.length === 1) {
+function parseIdNameLine(raw: string): ParsedName {
+  const commaParts = raw
+    .split(",")
+    .map((p) => p.replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+
+  if (commaParts.length >= 4) {
     return {
-      first_name: titleCaseName(parts[0]),
-      middle_name: null,
-      last_name: null,
+      first_name: titleCaseName(commaParts[0]),
+      middle_name: titleCaseName(commaParts[1]),
+      last_name: titleCaseName(commaParts[2]),
+      name_extension: normalizeExtension(commaParts.slice(3).join(" ")),
     };
   }
-  if (parts.length === 2) {
+
+  if (commaParts.length === 3) {
+    if (isNameExtension(commaParts[2])) {
+      return {
+        first_name: titleCaseName(commaParts[0]),
+        middle_name: null,
+        last_name: titleCaseName(commaParts[1]),
+        name_extension: normalizeExtension(commaParts[2]),
+      };
+    }
     return {
-      first_name: titleCaseName(parts[0]),
+      first_name: titleCaseName(commaParts[0]),
+      middle_name: titleCaseName(commaParts[1]),
+      last_name: titleCaseName(commaParts[2]),
+      name_extension: null,
+    };
+  }
+
+  if (commaParts.length === 2) {
+    return {
+      first_name: titleCaseName(commaParts[0]),
       middle_name: null,
-      last_name: titleCaseName(parts[1]),
+      last_name: titleCaseName(commaParts[1]),
+      name_extension: null,
+    };
+  }
+
+  const tokens = raw.replace(/[,]+/g, " ").split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) return emptyName();
+
+  let extension: string | null = null;
+  if (tokens.length >= 3 && isNameExtension(tokens[tokens.length - 1])) {
+    extension = normalizeExtension(tokens.pop()!);
+  }
+
+  if (tokens.length === 1) {
+    return {
+      first_name: titleCaseName(tokens[0]),
+      middle_name: null,
+      last_name: null,
+      name_extension: extension,
+    };
+  }
+  if (tokens.length === 2) {
+    return {
+      first_name: titleCaseName(tokens[0]),
+      middle_name: null,
+      last_name: titleCaseName(tokens[1]),
+      name_extension: extension,
     };
   }
   return {
-    first_name: titleCaseName(parts[0]),
-    middle_name: titleCaseName(parts.slice(1, -1).join(" ")),
-    last_name: titleCaseName(parts[parts.length - 1]),
+    first_name: titleCaseName(tokens[0]),
+    middle_name: titleCaseName(tokens.slice(1, -1).join(" ")),
+    last_name: titleCaseName(tokens[tokens.length - 1]),
+    name_extension: extension,
   };
 }
 
@@ -245,7 +285,7 @@ function extractFromVeryfi(data: Record<string, unknown>): ParsedIdCard {
     (data.vendor as { name?: string } | undefined)?.name ??
     (data.bill_to as { name?: string } | undefined)?.name ??
     (typeof data.name === "string" ? data.name : null);
-  const fromVendor = vendor ? splitNameParts(vendor) : null;
+  const fromVendor = vendor ? parseIdNameLine(vendor) : emptyName();
 
   return {
     student_id: studentId,
@@ -253,19 +293,26 @@ function extractFromVeryfi(data: Record<string, unknown>): ParsedIdCard {
       customFields.first_name,
       customFields.given_name,
       fromText.first_name,
-      fromVendor?.first_name,
+      fromVendor.first_name,
     ),
     middle_name: firstNonEmpty(
       customFields.middle_name,
       fromText.middle_name,
-      fromVendor?.middle_name,
+      fromVendor.middle_name,
     ),
     last_name: firstNonEmpty(
       customFields.last_name,
       customFields.surname,
       customFields.family_name,
       fromText.last_name,
-      fromVendor?.last_name,
+      fromVendor.last_name,
+    ),
+    name_extension: firstNonEmpty(
+      customFields.name_extension,
+      customFields.suffix,
+      customFields.extension,
+      fromText.name_extension,
+      fromVendor.name_extension,
     ),
     program,
     raw: data,

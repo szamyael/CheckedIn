@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BrandMark } from "@/components/BrandLogo";
@@ -12,7 +12,6 @@ import {
   normalizeStudentId,
 } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
-import { cropIdFaceToBase64 } from "@/lib/student/id-face-crop";
 import { isStudentOnboardingComplete } from "@/lib/student/onboarding";
 import { isStudentTermsAccepted } from "@/lib/student/terms";
 
@@ -22,6 +21,7 @@ type Draft = {
   firstName: string;
   middleName: string;
   lastName: string;
+  nameExtension: string;
   program: string;
   section: string;
   yearLevel: number;
@@ -48,6 +48,7 @@ export default function StudentRegisterPage() {
     firstName: "",
     middleName: "",
     lastName: "",
+    nameExtension: "",
     program: "",
     section: "",
     yearLevel: 1,
@@ -57,6 +58,8 @@ export default function StudentRegisterPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [cameraBlocked, setCameraBlocked] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!isStudentOnboardingComplete()) {
@@ -85,6 +88,7 @@ export default function StudentRegisterPage() {
         first_name?: string;
         middle_name?: string;
         last_name?: string;
+        name_extension?: string;
         program?: string;
         error?: string;
       };
@@ -99,24 +103,32 @@ export default function StudentRegisterPage() {
         );
       }
 
-      showLoader("Detecting ID photo…");
-      const avatar_base64 = (await cropIdFaceToBase64(image_base64)) ?? "";
-
       setDraft((d) => ({
         ...d,
         studentId: sid,
         firstName: parsed.first_name ?? d.firstName,
         middleName: parsed.middle_name ?? d.middleName,
         lastName: parsed.last_name ?? d.lastName,
+        nameExtension: parsed.name_extension ?? d.nameExtension,
         program: parsed.program ?? d.program,
         imageBase64: image_base64,
-        avatarBase64: avatar_base64,
       }));
       setStep(2);
     } catch (err) {
       setError(err instanceof Error ? err.message : "ID scan failed");
     } finally {
       hideLoader();
+    }
+  }
+
+  async function onAvatarFile(file: File | null) {
+    if (!file) return;
+    setError(null);
+    try {
+      const avatarBase64 = await fileToBase64(file);
+      setDraft((d) => ({ ...d, avatarBase64 }));
+    } catch {
+      setError("Could not read that photo. Try another image.");
     }
   }
 
@@ -153,6 +165,7 @@ export default function StudentRegisterPage() {
             first_name: draft.firstName.trim(),
             middle_name: draft.middleName.trim() || null,
             last_name: draft.lastName.trim(),
+            name_extension: draft.nameExtension.trim() || null,
             program: draft.program.trim(),
             section: draft.section.trim() || null,
             year_level: draft.yearLevel,
@@ -227,17 +240,76 @@ export default function StudentRegisterPage() {
           }}
         >
           <p className="text-sm text-slate-600">
-            We filled these from your ID. Edit any typos — only Student ID is locked.
-            {draft.avatarBase64 ? " Your ID photo was saved as your profile picture." : ""}
+            Names are filled from your ID as First, Middle, Last, Extension
+            (the line above your course). Edit typos if needed. Student ID is
+            locked.
           </p>
-          {draft.avatarBase64 && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={`data:image/jpeg;base64,${draft.avatarBase64}`}
-              alt="Detected ID photo"
-              className="mx-auto h-24 w-24 rounded-full object-cover ring-2 ring-teal-200"
+          <div className="rounded-2xl border border-slate-200 p-4 text-center">
+            {draft.avatarBase64 ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={`data:image/jpeg;base64,${draft.avatarBase64}`}
+                alt="Profile"
+                className="mx-auto h-24 w-24 rounded-full object-cover ring-2 ring-teal-200"
+              />
+            ) : (
+              <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-teal-50 text-sm text-teal-800">
+                No photo
+              </div>
+            )}
+            <p className="mt-3 text-sm font-medium text-slate-900">
+              Profile picture (optional)
+            </p>
+            <p className="mt-1 text-xs text-slate-500">
+              Take a photo or upload one from your device.
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => cameraInputRef.current?.click()}
+                className="rounded-xl border border-slate-200 py-2 text-sm font-medium text-slate-700"
+              >
+                Take photo
+              </button>
+              <button
+                type="button"
+                onClick={() => uploadInputRef.current?.click()}
+                className="rounded-xl border border-slate-200 py-2 text-sm font-medium text-slate-700"
+              >
+                Upload
+              </button>
+            </div>
+            {draft.avatarBase64 && (
+              <button
+                type="button"
+                onClick={() => setDraft((d) => ({ ...d, avatarBase64: "" }))}
+                className="mt-2 text-xs text-slate-500 underline"
+              >
+                Remove photo
+              </button>
+            )}
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="user"
+              className="hidden"
+              onChange={(e) => {
+                void onAvatarFile(e.target.files?.[0] ?? null);
+                e.target.value = "";
+              }}
             />
-          )}
+            <input
+              ref={uploadInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                void onAvatarFile(e.target.files?.[0] ?? null);
+                e.target.value = "";
+              }}
+            />
+          </div>
           <Field label="Student ID" value={draft.studentId} readOnly />
           <Field
             label="Email"
@@ -262,6 +334,11 @@ export default function StudentRegisterPage() {
             value={draft.lastName}
             onChange={(v) => setDraft((d) => ({ ...d, lastName: v }))}
             required
+          />
+          <Field
+            label="Name extension"
+            value={draft.nameExtension}
+            onChange={(v) => setDraft((d) => ({ ...d, nameExtension: v }))}
           />
           <Field
             label="Program"

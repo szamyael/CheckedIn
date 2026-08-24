@@ -8,6 +8,7 @@ import { StudentActions } from "@/components/StudentActions";
 import { PendingStudentsBatchActions } from "@/components/PendingStudentsBatchActions";
 import { StudentAchievementsPanel } from "@/components/StudentAchievementsPanel";
 import { AdminBingoOverview } from "@/components/bingo/AdminBingoOverview";
+import { formatStudentDisplayName } from "@/lib/student/display-name";
 
 export default async function AdminPage() {
   const supabase = await createClient();
@@ -35,7 +36,7 @@ export default async function AdminPage() {
 
   const { data: students } = await supabase
     .from("students")
-    .select("id, student_id, first_name, last_name, program, year_level, users(status)")
+    .select("id, student_id, first_name, middle_name, last_name, name_extension, program, year_level, users(status)")
     .order("created_at", { ascending: false });
 
   const pendingStudents = (students ?? []).filter((s) => {
@@ -144,7 +145,14 @@ export default async function AdminPage() {
                 return (
                   <tr key={s.id} className="border-b border-slate-100">
                     <td className="px-4 py-3 font-mono text-xs">{s.student_id}</td>
-                    <td className="px-4 py-3">{s.first_name} {s.last_name}</td>
+                    <td className="px-4 py-3">
+                      {formatStudentDisplayName({
+                        first_name: s.first_name,
+                        middle_name: s.middle_name,
+                        last_name: s.last_name,
+                        name_extension: s.name_extension,
+                      })}
+                    </td>
                     <td className="px-4 py-3 text-slate-700">{s.program}</td>
                     <td className="px-4 py-3">{s.year_level ?? "—"}</td>
                     <td className="px-4 py-3 capitalize">

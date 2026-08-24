@@ -67,7 +67,9 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>NSCameraUsageDescription</key>
-	<string>Camera access is required to scan your student ID, event QR codes, and take attendance selfies.</string>
+	<string>Camera access is required to scan your student ID, event QR codes, take a profile photo, and capture attendance selfies.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Photo library access is used if you choose to upload a profile picture during registration.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Location is required to verify you are at the event venue for attendance.</string>
 </dict>

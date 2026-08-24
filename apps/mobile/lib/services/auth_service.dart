@@ -164,6 +164,7 @@ class AuthService extends ChangeNotifier {
         'first_name': draft.firstName,
         'middle_name': draft.middleName,
         'last_name': draft.lastName,
+        'name_extension': draft.nameExtension,
         'program': draft.program,
         'year_level': draft.yearLevel,
         'section': draft.section,
