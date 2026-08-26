@@ -76,14 +76,24 @@ function normalizeExtension(value: string): string {
   return titleCaseName(v);
 }
 
+const ADDRESS_STOPWORDS =
+  /\b(province|city|municipality|barangay|brgy\.?|street|st\.|avenue|ave\.|road|rd\.|purok|sitio|zone|district|region|postal|zip|country|philippines|philippine|address|residence|born|birth|birthday|sex|gender|nationality|civil|status|valid|expires?|signature|republic|department|ministry|school|university|college|campus|institute|polytechnic|academy|student\s*id|id\s*no|course|program|year|section|strand)\b/i;
+
+const GEOGRAPHIC_PHRASES =
+  /\b(province\s+of|city\s+of|municipality\s+of|town\s+of|barangay\s+of)\b/i;
+
+const PH_PLACE_NAMES =
+  /\b(laguna|manila|quezon|cavite|batangas|rizal|bulacan|pampanga|cebu|davao|iloilo|negros|pangasinan|nueva\s+ecija|zamboanga|cagayan|isabela|bataan|tarlac|benguet|baguio|calamba|san\s+pedro|santa\s+rosa|binan|biñan|cabuyao|los\s+baños|makati|pasig|taguig|pasay|paranaque|parañaque|marikina|antipolo|caloocan)\b/i;
+
 function isNoiseNameLine(line: string): boolean {
   const lower = line.toLowerCase();
   return (
-    /student\s*id|school|university|college|campus|program|course|year|section|birth|address|nationality|sex|gender|valid|expire|signature|republic|philippines|department|ministry/.test(
-      lower,
-    ) ||
+    ADDRESS_STOPWORDS.test(lower) ||
+    GEOGRAPHIC_PHRASES.test(lower) ||
     /\d{3,}/.test(line) ||
-    line.length < 3
+    line.length < 3 ||
+    // Tiny connector words alone (Of, De, Del) are never a full name line
+    /^(of|de|del|da|la|las|los|san|santa|sto\.?|sta\.?)$/i.test(line.trim())
   );
 }
 
@@ -96,9 +106,39 @@ function isProgramLine(line: string): boolean {
 
 function looksLikeNameLine(line: string): boolean {
   if (isProgramLine(line) || isNoiseNameLine(line)) return false;
+  // Reject address-like "X of Y" / place-heavy lines even if they pass alphabet checks
+  if (GEOGRAPHIC_PHRASES.test(line) || PH_PLACE_NAMES.test(line)) return false;
   const cleaned = line.replace(/[,.]/g, " ").trim();
-  return /^[A-Za-zÑñ][A-Za-zÑñ'\-\s,]{2,}$/.test(line) &&
-    cleaned.split(/\s+/).length >= 2;
+  const tokens = cleaned.split(/\s+/).filter(Boolean);
+  if (tokens.length < 2 || tokens.length > 6) return false;
+  if (!/^[A-Za-zÑñ][A-Za-zÑñ'\-\s,]{2,}$/.test(line)) return false;
+  // Prefer person names: avoid lines that are mostly geographic stopwords
+  const stopCount = tokens.filter((t) =>
+    /^(of|the|de|del|da|la|las|los|province|city|municipality|barangay)$/i.test(t)
+  ).length;
+  if (stopCount >= 1 && tokens.length <= 3) return false;
+  return true;
+}
+
+/** Higher score = more likely the ID name line above the program. */
+function scoreNameCandidate(line: string, distanceFromProgram: number): number {
+  let score = 0;
+  if (!looksLikeNameLine(line)) return -100;
+
+  // Prefer proximity to the program line (0 = immediately above)
+  score += Math.max(0, 12 - distanceFromProgram * 4);
+
+  if (line.includes(",")) score += 8;
+  if (/^[A-ZÑ][A-ZÑ'\-\s,]{4,}$/.test(line)) score += 6; // ALL CAPS common on IDs
+  if (/,/.test(line) && line.split(",").length >= 3) score += 4;
+
+  const tokens = line.replace(/[,.]/g, " ").trim().split(/\s+/);
+  if (tokens.length >= 3 && tokens.length <= 5) score += 3;
+
+  if (PH_PLACE_NAMES.test(line) || GEOGRAPHIC_PHRASES.test(line)) score -= 50;
+  if (ADDRESS_STOPWORDS.test(line)) score -= 40;
+
+  return score;
 }
 
 /**
@@ -113,32 +153,42 @@ function extractNamesFromOcr(ocrText: string): ParsedName {
     .filter(Boolean);
 
   const programIndex = lines.findIndex((l) => isProgramLine(l));
-  if (programIndex > 0) {
-    for (let i = programIndex - 1; i >= 0; i--) {
-      if (looksLikeNameLine(lines[i])) {
-        return parseIdNameLine(lines[i]);
-      }
-    }
-  }
 
+  // 1) Prefer labeled name fields
   for (const line of lines) {
     const labeled = line.match(
-      /(?:full\s*name|student\s*name|name)\s*[:\-]\s*(.+)$/i,
+      /(?:full\s*name|student\s*name|\bname)\s*[:\-]\s*(.+)$/i,
     );
     if (labeled?.[1] && looksLikeNameLine(labeled[1])) {
       return parseIdNameLine(labeled[1]);
     }
   }
 
-  for (const line of lines) {
-    if (looksLikeNameLine(line) && line.includes(",")) {
-      return parseIdNameLine(line);
+  // 2) Strong preference: line(s) immediately above the program (within 3 lines)
+  if (programIndex > 0) {
+    let best: { line: string; score: number } | null = null;
+    const start = Math.max(0, programIndex - 3);
+    for (let i = programIndex - 1; i >= start; i--) {
+      const distance = programIndex - i;
+      const score = scoreNameCandidate(lines[i], distance);
+      if (score < 0) continue;
+      if (!best || score > best.score) {
+        best = { line: lines[i], score };
+      }
     }
+    if (best) return parseIdNameLine(best.line);
   }
 
+  // 3) Fallback: best scored name-like line anywhere (still reject address noise)
+  let bestGlobal: { line: string; score: number } | null = null;
   for (const line of lines) {
-    if (looksLikeNameLine(line)) return parseIdNameLine(line);
+    const score = scoreNameCandidate(line, 5);
+    if (score < 4) continue;
+    if (!bestGlobal || score > bestGlobal.score) {
+      bestGlobal = { line, score };
+    }
   }
+  if (bestGlobal) return parseIdNameLine(bestGlobal.line);
 
   return emptyName();
 }
@@ -280,13 +330,18 @@ function extractFromVeryfi(data: Record<string, unknown>): ParsedIdCard {
   const program = extractProgram(fields, customFields);
   const fromText = extractNamesFromOcr(fields);
 
-  // Veryfi sometimes puts a full name in vendor / bill_to / name fields
-  const vendor =
+  // Veryfi sometimes puts a full name in vendor / bill_to / name fields —
+  // ignore those when they look like address / school noise.
+  const vendorRaw =
     (data.vendor as { name?: string } | undefined)?.name ??
     (data.bill_to as { name?: string } | undefined)?.name ??
     (typeof data.name === "string" ? data.name : null);
-  const fromVendor = vendor ? parseIdNameLine(vendor) : emptyName();
+  const fromVendor =
+    vendorRaw && looksLikeNameLine(vendorRaw)
+      ? parseIdNameLine(vendorRaw)
+      : emptyName();
 
+  // Prefer OCR text extraction (name above program) over vendor heuristics
   return {
     student_id: studentId,
     first_name: firstNonEmpty(
