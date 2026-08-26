@@ -12,6 +12,7 @@ import {
   normalizeStudentId,
 } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
+import { compressImageToJpegBase64 } from "@/lib/student/compress-image";
 import { isStudentOnboardingComplete } from "@/lib/student/onboarding";
 import { isStudentTermsAccepted } from "@/lib/student/terms";
 
@@ -28,14 +29,6 @@ type Draft = {
   imageBase64: string;
   avatarBase64: string;
 };
-
-async function fileToBase64(file: File): Promise<string> {
-  const buffer = await file.arrayBuffer();
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-  return btoa(binary);
-}
 
 export default function StudentRegisterPage() {
   const router = useRouter();
@@ -74,15 +67,24 @@ export default function StudentRegisterPage() {
   async function onIdFile(file: File | null) {
     if (!file) return;
     setError(null);
-      showLoader("Scanning ID…");
+    showLoader("Scanning ID…");
     try {
-      const image_base64 = await fileToBase64(file);
+      const image_base64 = await compressImageToJpegBase64(file, {
+        maxSide: 1280,
+        quality: 0.78,
+      });
       const supabase = createClient();
       const { data, error: fnError } = await supabase.functions.invoke(
         "scan-student-id",
         { body: { image_base64 } },
       );
-      if (fnError) throw new Error(fnError.message);
+      if (fnError) {
+        const details =
+          data && typeof data === "object" && "error" in data
+            ? String((data as { error?: string }).error)
+            : fnError.message;
+        throw new Error(details || "ID scan failed");
+      }
       const parsed = data as {
         student_id?: string;
         first_name?: string;
@@ -125,7 +127,10 @@ export default function StudentRegisterPage() {
     if (!file) return;
     setError(null);
     try {
-      const avatarBase64 = await fileToBase64(file);
+      const avatarBase64 = await compressImageToJpegBase64(file, {
+        maxSide: 640,
+        quality: 0.82,
+      });
       setDraft((d) => ({ ...d, avatarBase64 }));
     } catch {
       setError("Could not read that photo. Try another image.");
@@ -141,6 +146,10 @@ export default function StudentRegisterPage() {
     }
     if (password !== confirm) {
       setError("Passwords do not match.");
+      return;
+    }
+    if (!draft.imageBase64) {
+      setError("ID card photo missing. Go back and scan your ID again.");
       return;
     }
     showLoader("Creating account…");
@@ -162,26 +171,36 @@ export default function StudentRegisterPage() {
             user_id: userId,
             email: draft.email.trim(),
             student_id: draft.studentId,
-            first_name: draft.firstName.trim(),
-            middle_name: draft.middleName.trim() || null,
-            last_name: draft.lastName.trim(),
-            name_extension: draft.nameExtension.trim() || null,
-            program: draft.program.trim(),
-            section: draft.section.trim() || null,
+            first_name: (draft.firstName ?? "").trim(),
+            middle_name: (draft.middleName ?? "").trim() || null,
+            last_name: (draft.lastName ?? "").trim(),
+            name_extension: (draft.nameExtension ?? "").trim() || null,
+            program: (draft.program ?? "").trim(),
+            section: (draft.section ?? "").trim() || null,
             year_level: draft.yearLevel,
             image_base64: draft.imageBase64,
             avatar_base64: draft.avatarBase64 || null,
           },
         },
       );
-      if (fnError) throw new Error(fnError.message);
-      const payload = data as { error?: string };
+      if (fnError) {
+        const details =
+          data && typeof data === "object" && "error" in data
+            ? String((data as { error?: string }).error)
+            : fnError.message;
+        throw new Error(details || "Could not complete registration");
+      }
+      const payload = data as { error?: string; success?: boolean };
       if (payload?.error) throw new Error(payload.error);
 
-      await supabase.auth.resend({
-        type: "signup",
-        email: draft.email.trim(),
-      });
+      try {
+        await supabase.auth.resend({
+          type: "signup",
+          email: draft.email.trim(),
+        });
+      } catch {
+        // Account is already created; verification email may already be sent.
+      }
 
       router.push(
         `/student/verify-email?email=${encodeURIComponent(draft.email.trim())}`,

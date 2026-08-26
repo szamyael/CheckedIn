@@ -30,12 +30,19 @@ function normalizeStudentId(value: string | null | undefined): string | null {
 }
 
 function decodeBase64Image(base64: string): Uint8Array {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
+  const pure = base64
+    .replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, "")
+    .replace(/\s+/g, "");
+  try {
+    const binary = atob(pure);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+  } catch {
+    throw new Error("Invalid image data. Retake or re-upload the photo.");
   }
-  return bytes;
 }
 
 Deno.serve(async (req) => {
@@ -67,7 +74,8 @@ Deno.serve(async (req) => {
       !first_name ||
       !last_name ||
       !program ||
-      !year_level ||
+      year_level == null ||
+      year_level === undefined ||
       !image_base64
     ) {
       return new Response(
@@ -79,10 +87,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    const normalizedId = normalizeStudentId(student_id);
-    if (!normalizedId) {
+    const year = Number(year_level);
+    if (!Number.isFinite(year) || year < 1 || year > 5) {
       return new Response(
-        JSON.stringify({ error: "Invalid student ID format" }),
+        JSON.stringify({ error: "Year level must be between 1 and 5" }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -90,9 +98,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (year_level < 1 || year_level > 5) {
+    const normalizedId = normalizeStudentId(student_id);
+    if (!normalizedId) {
       return new Response(
-        JSON.stringify({ error: "Year level must be between 1 and 5" }),
+        JSON.stringify({ error: "Invalid student ID format" }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -223,7 +232,7 @@ Deno.serve(async (req) => {
       last_name: last_name.trim(),
       name_extension: name_extension?.trim() || null,
       program: program.trim(),
-      year_level,
+      year_level: year,
       section: section?.trim() || null,
       id_card_image_url: path,
       profile_photo_url: avatarPath,

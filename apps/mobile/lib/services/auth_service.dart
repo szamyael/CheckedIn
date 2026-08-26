@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/constants.dart';
 import '../core/ocr_matching.dart';
+import '../core/registration_image_compressor.dart';
 import '../models/registration_draft.dart';
 import 'connectivity_service.dart';
 import 'local_cache_service.dart';
@@ -143,12 +144,20 @@ class AuthService extends ChangeNotifier {
 
     final userId = signUp.user!.id;
 
-    final bytes = await idCardImage.readAsBytes();
+    final compressedId = await RegistrationImageCompressor.compressFile(
+      idCardImage,
+      maxSide: 1280,
+      quality: 78,
+    );
     String? avatarBase64;
     final avatarPath = draft.avatarImagePath;
-    if (avatarPath != null) {
+    if (avatarPath != null && avatarPath.isNotEmpty) {
       try {
-        final avatarBytes = await File(avatarPath).readAsBytes();
+        final avatarBytes = await RegistrationImageCompressor.compressFile(
+          File(avatarPath),
+          maxSide: 640,
+          quality: 82,
+        );
         avatarBase64 = base64Encode(avatarBytes);
       } catch (_) {
         avatarBase64 = null;
@@ -161,21 +170,31 @@ class AuthService extends ChangeNotifier {
         'user_id': userId,
         'email': email,
         'student_id': draft.studentId,
-        'first_name': draft.firstName,
-        'middle_name': draft.middleName,
-        'last_name': draft.lastName,
-        'name_extension': draft.nameExtension,
-        'program': draft.program,
+        'first_name': draft.firstName?.trim(),
+        'middle_name': draft.middleName?.trim(),
+        'last_name': draft.lastName?.trim(),
+        'name_extension': draft.nameExtension?.trim(),
+        'program': draft.program?.trim(),
         'year_level': draft.yearLevel,
-        'section': draft.section,
-        'image_base64': base64Encode(bytes),
+        'section': draft.section?.trim(),
+        'image_base64': base64Encode(compressedId),
         if (avatarBase64 != null) 'avatar_base64': avatarBase64,
       },
     );
 
     if (response.status != 200) {
-      final err = response.data is Map ? response.data['error'] : null;
-      throw Exception(err ?? 'Failed to complete registration (${response.status})');
+      final data = response.data;
+      String? err;
+      if (data is Map) {
+        err = data['error'] as String?;
+      }
+      throw Exception(
+        err ?? 'Failed to complete registration (${response.status})',
+      );
+    }
+
+    if (response.data is Map && (response.data as Map)['error'] != null) {
+      throw Exception((response.data as Map)['error'].toString());
     }
 
     final needsVerification = signUp.user!.emailConfirmedAt == null;

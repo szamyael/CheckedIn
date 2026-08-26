@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../models/registration_draft.dart';
-import '../../core/ocr_matching.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/student_ui.dart';
+import '../../widgets/universal_loader.dart';
 
 class RegisterPasswordScreen extends StatefulWidget {
   final RegistrationDraft draft;
@@ -45,24 +45,24 @@ class _RegisterPasswordScreenState extends State<RegisterPasswordScreen> {
       return;
     }
 
+    final idPath = widget.draft.idCardImagePath;
+    if (idPath == null || idPath.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('ID card photo missing. Restart registration and scan again.'),
+        ),
+      );
+      return;
+    }
+
     setState(() => _loading = true);
+    UniversalLoaderController.instance.show('Creating account…');
 
     try {
-      final idFile = File(widget.draft.idCardImagePath!);
-
-      // Verify the card still shows the same student ID.
-      final idCheck = await _auth.scanStudentId(idFile);
-      if (!OcrMatching.studentIdMatches(idCheck.studentId, widget.draft.studentId)) {
+      final idFile = File(idPath);
+      if (!await idFile.exists()) {
         throw Exception(
-          'Student ID on the card does not match. Please restart registration and scan again.',
-        );
-      }
-
-      // Compare user entries to the original OCR snapshot (not a second full parse).
-      final snapshot = widget.draft.ocrSnapshot;
-      if (snapshot != null && !_auth.fieldsMatchOcr(snapshot, widget.draft)) {
-        throw Exception(
-          'Student ID on the card does not match. Please restart registration and scan again.',
+          'ID card photo missing. Restart registration and scan again.',
         );
       }
 
@@ -89,6 +89,7 @@ class _RegisterPasswordScreenState extends State<RegisterPasswordScreen> {
         ),
       );
     } finally {
+      UniversalLoaderController.instance.hide();
       if (mounted) setState(() => _loading = false);
     }
   }
@@ -122,7 +123,7 @@ class _RegisterPasswordScreenState extends State<RegisterPasswordScreen> {
             const Spacer(),
             FilledButton(
               onPressed: _loading ? null : _register,
-              child: Text(_loading ? 'Creating account…' : 'Complete Registration'),
+              child: Text(_loading ? 'Creating account…' : 'Create account'),
             ),
           ],
         ),
