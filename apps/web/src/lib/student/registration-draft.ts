@@ -12,6 +12,7 @@ export type RegistrationDraft = {
   yearLevel: number;
   imageBase64: string;
   avatarBase64: string;
+  avatarFromId: boolean;
 };
 
 export const emptyRegistrationDraft = (): RegistrationDraft => ({
@@ -26,6 +27,7 @@ export const emptyRegistrationDraft = (): RegistrationDraft => ({
   yearLevel: 1,
   imageBase64: "",
   avatarBase64: "",
+  avatarFromId: false,
 });
 
 export function loadRegistrationDraft(): RegistrationDraft | null {
@@ -35,7 +37,7 @@ export function loadRegistrationDraft(): RegistrationDraft | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<RegistrationDraft>;
     if (!parsed.studentId || !parsed.imageBase64) return null;
-    return { ...emptyRegistrationDraft(), ...parsed };
+    return { ...emptyRegistrationDraft(), ...parsed, avatarFromId: Boolean(parsed.avatarFromId) };
   } catch {
     return null;
   }

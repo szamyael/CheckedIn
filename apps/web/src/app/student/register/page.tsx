@@ -13,6 +13,7 @@ import {
 } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
 import { compressImageToJpegBase64 } from "@/lib/student/compress-image";
+import { cropIdFaceToBase64 } from "@/lib/student/id-face-crop";
 import { isStudentOnboardingComplete } from "@/lib/student/onboarding";
 import {
   clearRegistrationDraft,
@@ -130,6 +131,8 @@ export default function StudentRegisterPage() {
         );
       }
 
+      const avatarBase64 = await cropIdFaceToBase64(image_base64);
+
       const nextDraft: RegistrationDraft = {
         ...emptyRegistrationDraft(),
         studentId: sid,
@@ -139,6 +142,8 @@ export default function StudentRegisterPage() {
         nameExtension: parsed.name_extension ?? "",
         program: parsed.program ?? "",
         imageBase64: image_base64,
+        avatarBase64: avatarBase64 ?? "",
+        avatarFromId: Boolean(avatarBase64),
       };
       setDraft(nextDraft);
       saveRegistrationDraft(nextDraft, 2);
@@ -159,7 +164,7 @@ export default function StudentRegisterPage() {
         maxSide: 640,
         quality: 0.82,
       });
-      setDraft((d) => ({ ...d, avatarBase64 }));
+      setDraft((d) => ({ ...d, avatarBase64, avatarFromId: false }));
     } catch {
       setError("Could not read that photo. Try another image.");
     }
@@ -307,9 +312,8 @@ export default function StudentRegisterPage() {
           }}
         >
           <p className="text-sm text-slate-600">
-            Names are filled from your ID as First, Middle, Last, Extension
-            (the line above your course). Edit typos if needed. Student ID is
-            locked.
+            Names are read from the line above your course/program (e.g. Juan
+            T. Tamad). Edit typos if needed. Student ID is locked.
           </p>
           <div className="rounded-2xl border border-slate-200 p-4 text-center">
             {draft.avatarBase64 ? (
@@ -328,7 +332,9 @@ export default function StudentRegisterPage() {
               Profile picture (optional)
             </p>
             <p className="mt-1 text-xs text-slate-500">
-              Take a photo or upload one from your device.
+              {draft.avatarFromId
+                ? "Cropped from your ID photo. You can replace it below."
+                : "Take a photo or upload one from your device."}
             </p>
             <div className="mt-3 grid grid-cols-2 gap-2">
               <button
@@ -349,7 +355,13 @@ export default function StudentRegisterPage() {
             {draft.avatarBase64 && (
               <button
                 type="button"
-                onClick={() => setDraft((d) => ({ ...d, avatarBase64: "" }))}
+                onClick={() =>
+                  setDraft((d) => ({
+                    ...d,
+                    avatarBase64: "",
+                    avatarFromId: false,
+                  }))
+                }
                 className="mt-2 text-xs text-slate-500 underline"
               >
                 Remove photo
@@ -395,6 +407,7 @@ export default function StudentRegisterPage() {
             label="Middle name"
             value={draft.middleName}
             onChange={(v) => setDraft((d) => ({ ...d, middleName: v }))}
+            placeholder="e.g. T."
           />
           <Field
             label="Last name"
@@ -522,6 +535,7 @@ function Field({
   required,
   readOnly,
   autoComplete,
+  placeholder,
 }: {
   label: string;
   value: string;
@@ -530,6 +544,7 @@ function Field({
   required?: boolean;
   readOnly?: boolean;
   autoComplete?: string;
+  placeholder?: string;
 }) {
   return (
     <div>
@@ -539,6 +554,7 @@ function Field({
         required={required}
         readOnly={readOnly}
         autoComplete={autoComplete}
+        placeholder={placeholder}
         value={value}
         onChange={(e) => {
           if (!onChange) return;

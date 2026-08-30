@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { PermissionBlockedCard } from "@/components/student/PermissionBlockedCard";
 
+/** Portrait ID card frame (width : height). */
+const PORTRAIT_RATIO = 3 / 4;
+
 export function IdCardCameraCapture({
   onCapture,
   disabled,
@@ -28,7 +31,11 @@ export function IdCardCameraCapture({
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: "environment" } },
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1080 },
+            height: { ideal: 1440 },
+          },
           audio: false,
         });
         if (cancelled) {
@@ -62,20 +69,23 @@ export function IdCardCameraCapture({
     if (!videoRef.current || disabled || !ready) return;
 
     const video = videoRef.current;
+    const { sx, sy, sw, sh } = portraitCropRegion(
+      video.videoWidth,
+      video.videoHeight,
+    );
+
     const canvas = document.createElement("canvas");
-    canvas.width = video.videoWidth || 1280;
-    canvas.height = video.videoHeight || 720;
+    canvas.width = sw;
+    canvas.height = sh;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, sw, sh);
     canvas.toBlob(
       (blob) => {
         if (!blob) return;
         streamRef.current?.getTracks().forEach((track) => track.stop());
-        onCapture(
-          new File([blob], "student-id.jpg", { type: "image/jpeg" }),
-        );
+        onCapture(new File([blob], "student-id.jpg", { type: "image/jpeg" }));
       },
       "image/jpeg",
       0.92,
@@ -84,17 +94,17 @@ export function IdCardCameraCapture({
 
   return (
     <div className="space-y-4">
-      <div className="relative overflow-hidden rounded-2xl bg-black">
+      <div className="relative mx-auto w-full max-w-xs overflow-hidden rounded-2xl bg-black">
         {!cameraBlocked ? (
           <>
             <video
               ref={videoRef}
               playsInline
               muted
-              className="aspect-[3/2] w-full object-cover"
+              className="aspect-[3/4] w-full object-cover"
             />
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-5">
-              <div className="h-[62%] w-full max-w-sm rounded-xl border-2 border-dashed border-white/85" />
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-4">
+              <div className="h-[78%] w-[88%] rounded-xl border-2 border-dashed border-white/85" />
             </div>
             {!ready && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-sm text-white">
@@ -116,7 +126,8 @@ export function IdCardCameraCapture({
       </div>
 
       <p className="text-center text-xs text-slate-500">
-        Fit your student ID inside the frame. Keep the card flat and avoid glare.
+        Hold your phone upright. Fit the ID inside the frame with your name
+        above the yellow course/program line.
       </p>
 
       <button
@@ -129,4 +140,28 @@ export function IdCardCameraCapture({
       </button>
     </div>
   );
+}
+
+function portraitCropRegion(videoWidth: number, videoHeight: number) {
+  const vw = videoWidth || 720;
+  const vh = videoHeight || 960;
+  const currentRatio = vw / vh;
+
+  if (currentRatio > PORTRAIT_RATIO) {
+    const sw = Math.round(vh * PORTRAIT_RATIO);
+    return {
+      sx: Math.round((vw - sw) / 2),
+      sy: 0,
+      sw,
+      sh: vh,
+    };
+  }
+
+  const sh = Math.round(vw / PORTRAIT_RATIO);
+  return {
+    sx: 0,
+    sy: Math.round((vh - sh) / 2),
+    sw: vw,
+    sh,
+  };
 }

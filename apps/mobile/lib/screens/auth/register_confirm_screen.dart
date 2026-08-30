@@ -75,7 +75,10 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
         preferredCameraDevice: CameraDevice.front,
       );
       if (file == null || !mounted) return;
-      setState(() => widget.draft.avatarImagePath = file.path);
+      setState(() {
+        widget.draft.avatarImagePath = file.path;
+        widget.draft.avatarFromId = false;
+      });
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -131,8 +134,8 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
           const StudentPageTitle(
             title: 'Confirm details',
             subtitle:
-                'Names are filled from your ID as First, Middle, Last, Extension '
-                '(the line above your course). Edit typos if needed. Student ID is locked.',
+                'Names are read from the line above your course/program '
+                '(e.g. Juan T. Tamad). Edit typos if needed. Student ID is locked.',
           ),
           const SizedBox(height: 20),
           Center(
@@ -185,8 +188,10 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
           if (avatarPath != null) ...[
             const SizedBox(height: 8),
             TextButton(
-              onPressed: () =>
-                  setState(() => widget.draft.avatarImagePath = null),
+              onPressed: () => setState(() {
+                widget.draft.avatarImagePath = null;
+                widget.draft.avatarFromId = false;
+              }),
               child: const Text('Remove photo'),
             ),
           ],

@@ -39,6 +39,7 @@ class RegistrationDraft {
   int? yearLevel;
   String? idCardImagePath;
   String? avatarImagePath;
+  bool avatarFromId = false;
   ParsedStudentId? ocrSnapshot;
 
   bool get hasRequiredFields =>

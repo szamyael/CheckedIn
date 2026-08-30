@@ -2,9 +2,11 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants.dart';
+import '../../core/id_face_cropper.dart';
 import '../../models/registration_draft.dart';
 import '../../services/auth_service.dart';
 import '../../services/permission_service.dart';
@@ -54,8 +56,14 @@ class _RegisterIdScanScreenState extends State<RegisterIdScanScreen> {
         (c) => c.lensDirection == CameraLensDirection.back,
         orElse: () => cameras.first,
       );
-      _controller = CameraController(back, ResolutionPreset.high);
+      _controller = CameraController(
+        back,
+        ResolutionPreset.high,
+        enableAudio: false,
+        imageFormatGroup: ImageFormatGroup.jpeg,
+      );
       await _controller!.initialize();
+      await _controller!.lockCaptureOrientation(DeviceOrientation.portraitUp);
       if (mounted) {
         setState(() {
           _cameraReady = true;
@@ -98,6 +106,8 @@ class _RegisterIdScanScreenState extends State<RegisterIdScanScreen> {
         );
       }
 
+      final avatarFile = await IdFaceCropper.cropToTempFile(file);
+
       widget.draft
         ..studentId = parsed.studentId
         ..firstName = parsed.firstName
@@ -106,7 +116,9 @@ class _RegisterIdScanScreenState extends State<RegisterIdScanScreen> {
         ..nameExtension = parsed.nameExtension
         ..program = parsed.program
         ..ocrSnapshot = parsed
-        ..idCardImagePath = photo.path;
+        ..idCardImagePath = photo.path
+        ..avatarImagePath = avatarFile?.path
+        ..avatarFromId = avatarFile != null;
 
       if (!mounted) return;
       context.push('/register/confirm', extra: widget.draft);
@@ -126,20 +138,49 @@ class _RegisterIdScanScreenState extends State<RegisterIdScanScreen> {
       body: Column(
         children: [
           Expanded(
-            child: _cameraReady && _controller != null
-                ? CameraPreview(_controller!)
-                : _cameraBlocked
-                    ? PermissionBlockedPanel(
-                        permission: AppPermission.camera,
-                        onRetry: () {
-                          setState(() {
-                            _cameraBlocked = false;
-                            _error = null;
-                          });
-                          _ensureCamera();
-                        },
-                      )
-                    : const Center(child: CircularProgressIndicator()),
+            child: Center(
+              child: _cameraReady && _controller != null
+                  ? Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        AspectRatio(
+                          aspectRatio: 3 / 4,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: _buildPortraitPreview(),
+                          ),
+                        ),
+                        Positioned.fill(
+                          child: IgnorePointer(
+                            child: Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.85),
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : _cameraBlocked
+                      ? PermissionBlockedPanel(
+                          permission: AppPermission.camera,
+                          onRetry: () {
+                            setState(() {
+                              _cameraBlocked = false;
+                              _error = null;
+                            });
+                            _ensureCamera();
+                          },
+                        )
+                      : const CircularProgressIndicator(),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(24),
@@ -147,7 +188,8 @@ class _RegisterIdScanScreenState extends State<RegisterIdScanScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Position your student ID in the frame. Veryfi will extract your ID number, name, and program.',
+                  'Hold your phone upright. Fit the ID in the frame with your name '
+                  'above the yellow course/program line.',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
@@ -164,6 +206,26 @@ class _RegisterIdScanScreenState extends State<RegisterIdScanScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPortraitPreview() {
+    final controller = _controller!;
+    final previewSize = controller.value.previewSize;
+    if (previewSize == null) {
+      return CameraPreview(controller);
+    }
+
+    return OverflowBox(
+      alignment: Alignment.center,
+      child: FittedBox(
+        fit: BoxFit.cover,
+        child: SizedBox(
+          width: previewSize.height,
+          height: previewSize.width,
+          child: CameraPreview(controller),
+        ),
       ),
     );
   }

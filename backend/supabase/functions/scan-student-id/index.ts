@@ -98,47 +98,121 @@ function isNoiseNameLine(line: string): boolean {
 }
 
 function isProgramLine(line: string): boolean {
+  if (looksLikePersonNameLine(line)) return false;
   return (
     /(?:program|course|major|degree|strand)\s*[:\-]/i.test(line) ||
-    /\bB\.?\s*S\.?\s+[A-Za-z]/i.test(line)
+    /\bB\.?\s*S\.?\s+[A-Za-z]/i.test(line) ||
+    /\b(BSIT|BSIS|BSCS|BSEd|BEED|AB|MMA)\b/i.test(line) ||
+    /\b(information technology|computer science|accountancy|hospitality|tourism|criminology|psychology|engineering|education|business administration)\b/i.test(
+      line,
+    )
   );
 }
 
-function looksLikeNameLine(line: string): boolean {
-  if (isProgramLine(line) || isNoiseNameLine(line)) return false;
-  // Reject address-like "X of Y" / place-heavy lines even if they pass alphabet checks
+/** Person name line (not program/address). Supports "Juan T. Tamad". */
+function looksLikePersonNameLine(line: string): boolean {
+  if (isNoiseNameLine(line)) return false;
+  if (parseMiddleInitialName(line)) return true;
   if (GEOGRAPHIC_PHRASES.test(line) || PH_PLACE_NAMES.test(line)) return false;
+
   const cleaned = line.replace(/[,.]/g, " ").trim();
   const tokens = cleaned.split(/\s+/).filter(Boolean);
   if (tokens.length < 2 || tokens.length > 6) return false;
-  if (!/^[A-Za-zÑñ][A-Za-zÑñ'\-\s,]{2,}$/.test(line)) return false;
-  // Prefer person names: avoid lines that are mostly geographic stopwords
+  if (!/^[A-Za-zÑñ][A-Za-zÑñ'\-\s,.]{2,}$/.test(line)) return false;
+
   const stopCount = tokens.filter((t) =>
-    /^(of|the|de|del|da|la|las|los|province|city|municipality|barangay)$/i.test(t)
+    /^(of|the|de|del|da|la|las|los|province|city|municipality|barangay)$/i.test(
+      t,
+    )
   ).length;
   if (stopCount >= 1 && tokens.length <= 3) return false;
   return true;
 }
 
-/** Higher score = more likely the ID name line above the program. */
+function looksLikeNameLine(line: string): boolean {
+  if (isProgramLine(line) || isNoiseNameLine(line)) return false;
+  return looksLikePersonNameLine(line);
+}
+
+/** Higher score = more likely the ID name line directly above the program/course. */
 function scoreNameCandidate(line: string, distanceFromProgram: number): number {
   let score = 0;
   if (!looksLikeNameLine(line)) return -100;
 
-  // Prefer proximity to the program line (0 = immediately above)
-  score += Math.max(0, 12 - distanceFromProgram * 4);
+  // Strongest signal: line immediately above the yellow program/course row
+  if (distanceFromProgram === 1) score += 20;
+  score += Math.max(0, 14 - distanceFromProgram * 5);
 
-  if (line.includes(",")) score += 8;
-  if (/^[A-ZÑ][A-ZÑ'\-\s,]{4,}$/.test(line)) score += 6; // ALL CAPS common on IDs
-  if (/,/.test(line) && line.split(",").length >= 3) score += 4;
+  if (parseMiddleInitialName(line)) score += 15;
+  if (line.includes(",")) score += 6;
+  if (/^[A-ZÑ][A-ZÑ'\-\s,.]{4,}$/.test(line)) score += 5;
 
   const tokens = line.replace(/[,.]/g, " ").trim().split(/\s+/);
-  if (tokens.length >= 3 && tokens.length <= 5) score += 3;
+  if (tokens.length === 3) score += 4;
 
   if (PH_PLACE_NAMES.test(line) || GEOGRAPHIC_PHRASES.test(line)) score -= 50;
   if (ADDRESS_STOPWORDS.test(line)) score -= 40;
 
   return score;
+}
+
+/**
+ * Typical ID layout: name on the line above the yellow course/program.
+ * Format: First name, Middle initial, Last name — e.g. "Juan T. Tamad"
+ */
+function parseMiddleInitialName(raw: string): ParsedName | null {
+  const line = raw.replace(/\s+/g, " ").trim();
+  const match = line.match(
+    /^([A-Za-zÑñ][A-Za-zÑñ' \-]*?)\s+([A-Za-zÑñ](?:\.[A-Za-zÑñ]\.?)?)\s+([A-Za-zÑñ][A-Za-zÑñ' \-]+?)(?:\s+((?:Jr\.?|Sr\.?|II|III|IV|V|VI|VII|VIII|IX|X|PhD|Ph\.?D\.?)))?$/i,
+  );
+  if (!match) return null;
+
+  let middle = match[2].trim();
+  if (!middle.endsWith(".")) middle = `${middle.charAt(0).toUpperCase()}.`;
+  else middle = middle.charAt(0).toUpperCase() + middle.slice(1);
+
+  return {
+    first_name: titleCaseName(match[1]),
+    middle_name: middle,
+    last_name: titleCaseName(match[3]),
+    name_extension: match[4] ? normalizeExtension(match[4]) : null,
+  };
+}
+
+function extractOrderedLinesFromVeryfi(
+  data: Record<string, unknown>,
+): string[] | null {
+  const meta = data.meta as
+    | { pages?: Array<{ lines?: Array<{ text?: string; bbox?: number[] }> }> }
+    | undefined;
+  const pages = meta?.pages;
+  if (!pages?.length) return null;
+
+  const rows: Array<{ text: string; y: number }> = [];
+  for (const page of pages) {
+    for (const line of page.lines ?? []) {
+      const text = line.text?.replace(/\s+/g, " ").trim();
+      if (!text) continue;
+      const bbox = line.bbox ?? [];
+      const y = typeof bbox[1] === "number" ? bbox[1] : rows.length;
+      rows.push({ text, y });
+    }
+  }
+  if (!rows.length) return null;
+  rows.sort((a, b) => a.y - b.y);
+  return rows.map((r) => r.text);
+}
+
+function extractNamesFromLineList(lines: string[]): ParsedName {
+  const programIndex = lines.findIndex((l) => isProgramLine(l));
+  if (programIndex > 0) {
+    for (let i = programIndex - 1; i >= Math.max(0, programIndex - 2); i--) {
+      const candidate = lines[i];
+      const parsed = parseIdNameLine(candidate);
+      if (parsed.first_name && parsed.last_name) return parsed;
+    }
+  }
+  return emptyName();
 }
 
 /**
@@ -164,8 +238,13 @@ function extractNamesFromOcr(ocrText: string): ParsedName {
     }
   }
 
-  // 2) Strong preference: line(s) immediately above the program (within 3 lines)
+  // 2) Strong preference: line immediately above the program/course (yellow row)
   if (programIndex > 0) {
+    const immediate = lines[programIndex - 1];
+    if (looksLikeNameLine(immediate)) {
+      return parseIdNameLine(immediate);
+    }
+
     let best: { line: string; score: number } | null = null;
     const start = Math.max(0, programIndex - 3);
     for (let i = programIndex - 1; i >= start; i--) {
@@ -194,7 +273,11 @@ function extractNamesFromOcr(ocrText: string): ParsedName {
 }
 
 function parseIdNameLine(raw: string): ParsedName {
-  const commaParts = raw
+  const trimmed = raw.replace(/\s+/g, " ").trim();
+  const middleInitial = parseMiddleInitialName(trimmed);
+  if (middleInitial) return middleInitial;
+
+  const commaParts = trimmed
     .split(",")
     .map((p) => p.replace(/\s+/g, " ").trim())
     .filter(Boolean);
@@ -328,6 +411,10 @@ function extractFromVeryfi(data: Record<string, unknown>): ParsedIdCard {
     normalizeStudentId(fields.match(/0\d{3}[-\s]?\d{4}/)?.[0] ?? null);
 
   const program = extractProgram(fields, customFields);
+  const structuredLines = extractOrderedLinesFromVeryfi(data);
+  const fromStructured = structuredLines
+    ? extractNamesFromLineList(structuredLines)
+    : emptyName();
   const fromText = extractNamesFromOcr(fields);
 
   // Veryfi sometimes puts a full name in vendor / bill_to / name fields —
@@ -341,17 +428,19 @@ function extractFromVeryfi(data: Record<string, unknown>): ParsedIdCard {
       ? parseIdNameLine(vendorRaw)
       : emptyName();
 
-  // Prefer OCR text extraction (name above program) over vendor heuristics
+  // Prefer structured lines, then OCR text (name above program), then vendor
   return {
     student_id: studentId,
     first_name: firstNonEmpty(
       customFields.first_name,
       customFields.given_name,
+      fromStructured.first_name,
       fromText.first_name,
       fromVendor.first_name,
     ),
     middle_name: firstNonEmpty(
       customFields.middle_name,
+      fromStructured.middle_name,
       fromText.middle_name,
       fromVendor.middle_name,
     ),
@@ -359,6 +448,7 @@ function extractFromVeryfi(data: Record<string, unknown>): ParsedIdCard {
       customFields.last_name,
       customFields.surname,
       customFields.family_name,
+      fromStructured.last_name,
       fromText.last_name,
       fromVendor.last_name,
     ),
@@ -366,6 +456,7 @@ function extractFromVeryfi(data: Record<string, unknown>): ParsedIdCard {
       customFields.name_extension,
       customFields.suffix,
       customFields.extension,
+      fromStructured.name_extension,
       fromText.name_extension,
       fromVendor.name_extension,
     ),
