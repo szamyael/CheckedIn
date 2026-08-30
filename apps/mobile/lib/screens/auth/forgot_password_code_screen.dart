@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../core/constants.dart';
 
 import '../../services/auth_service.dart';
 import '../../widgets/student_ui.dart';
@@ -117,9 +120,13 @@ class _ForgotPasswordCodeScreenState extends State<ForgotPasswordCodeScreen> {
               controller: _codeController,
               decoration: const InputDecoration(
                 labelText: 'Reset code',
-                hintText: '6-digit code',
+                hintText: '8-digit code',
               ),
               keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(AppConstants.emailOtpLength),
+              ],
               textInputAction: TextInputAction.next,
             ),
             const SizedBox(height: 12),

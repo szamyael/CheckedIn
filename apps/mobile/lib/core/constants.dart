@@ -3,6 +3,9 @@ class AppConstants {
   static const studentIdPattern = r'^0\d{3}-\d{4}$';
   static const studentEmailDomain = '@student.checkedin.local';
 
+  /// Supabase email OTP length (signup, password reset).
+  static const emailOtpLength = 8;
+
   static String studentAuthEmail(String studentId) {
     return '${studentId.toLowerCase()}$studentEmailDomain';
   }

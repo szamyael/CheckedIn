@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BrandMark } from "@/components/BrandLogo";
 import { useLoader } from "@/components/LoaderProvider";
+import { EMAIL_OTP_LENGTH } from "@/lib/constants";
+import { formPlaceholders } from "@/lib/form-placeholders";
 import { createClient } from "@/lib/supabase/client";
 
 export default function VerifyEmailInner() {
@@ -63,7 +65,7 @@ export default function VerifyEmailInner() {
       </div>
       <h1 className="text-xl font-bold">Verify email</h1>
       <p className="mt-2 text-sm text-slate-600">
-        Enter the 6-digit code sent to{" "}
+        Enter the {EMAIL_OTP_LENGTH}-digit code sent to{" "}
         <span className="font-medium text-slate-800">{email || "your email"}</span>
         .
       </p>
@@ -72,9 +74,9 @@ export default function VerifyEmailInner() {
           inputMode="numeric"
           value={code}
           onChange={(e) =>
-            setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+            setCode(e.target.value.replace(/\D/g, "").slice(0, EMAIL_OTP_LENGTH))
           }
-          placeholder="000000"
+          placeholder={formPlaceholders.verificationCode}
           className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-center text-xl tracking-[0.4em]"
           required
         />

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../core/constants.dart';
 
 import '../../services/auth_service.dart';
 import '../../widgets/student_ui.dart';
@@ -101,16 +104,20 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
             StudentPageTitle(
               title: 'Verify email',
               subtitle:
-                  'We sent a 6-digit verification code to $_displayEmail. Enter it below to activate your account.',
+                  'We sent an ${AppConstants.emailOtpLength}-digit verification code to $_displayEmail. Enter it below to activate your account.',
             ),
             const SizedBox(height: 24),
             TextField(
               controller: _codeController,
               decoration: const InputDecoration(
                 labelText: 'Verification code',
-                hintText: '6-digit code',
+                hintText: '8-digit code',
               ),
               keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(AppConstants.emailOtpLength),
+              ],
               textInputAction: TextInputAction.done,
               onSubmitted: (_) => _verify(),
             ),

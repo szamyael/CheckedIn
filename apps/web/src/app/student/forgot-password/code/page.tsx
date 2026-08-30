@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { BrandMark } from "@/components/BrandLogo";
 import { useLoader } from "@/components/LoaderProvider";
 import { formPlaceholders } from "@/lib/form-placeholders";
+import { EMAIL_OTP_LENGTH } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
 
 function ResetCodeForm() {
@@ -67,7 +68,7 @@ function ResetCodeForm() {
           inputMode="numeric"
           value={code}
           onChange={(e) =>
-            setCode(e.target.value.replace(/\D/g, "").slice(0, 8))
+            setCode(e.target.value.replace(/\D/g, "").slice(0, EMAIL_OTP_LENGTH))
           }
           placeholder={formPlaceholders.verificationCode}
           className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm"

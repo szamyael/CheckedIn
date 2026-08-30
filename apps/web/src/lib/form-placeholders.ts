@@ -18,7 +18,7 @@ export const formPlaceholders = {
   notificationTitle: "Announcement title",
   notificationBody: "Message to all recipients",
   staffEmail: "staff@school.edu",
-  verificationCode: "000000",
+  verificationCode: "00000000",
   feedback: "Share your experience…",
   searchStudent: "Search by name or ID",
 } as const;
