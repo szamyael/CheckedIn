@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { formPlaceholders } from "@/lib/form-placeholders";
+import { useAsyncAction } from "@/lib/useAsyncAction";
 
 interface Organization {
   id: string;
@@ -10,14 +12,13 @@ interface Organization {
 
 export function CreateStaffForm({ organizations }: { organizations: Organization[] }) {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const run = useAsyncAction();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [role, setRole] = useState("faculty");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setLoading(true);
     setError(null);
     setSuccess(false);
 
@@ -32,24 +33,28 @@ export function CreateStaffForm({ organizations }: { organizations: Organization
       organization_id: form.get("organization_id") || null,
     };
 
-    const res = await fetch("/api/admin/create-staff", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    try {
+      const res = await run("Creating staff account…", () =>
+        fetch("/api/admin/create-staff", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }),
+      );
 
-    const data = await res.json();
-    setLoading(false);
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Failed to create account");
+        return;
+      }
 
-    if (!res.ok) {
-      setError(data.error ?? "Failed to create account");
-      return;
+      setSuccess(true);
+      router.refresh();
+      (e.target as HTMLFormElement).reset();
+      setRole("faculty");
+    } catch {
+      setError("Failed to create account");
     }
-
-    setSuccess(true);
-    router.refresh();
-    (e.target as HTMLFormElement).reset();
-    setRole("faculty");
   }
 
   return (
@@ -65,6 +70,7 @@ export function CreateStaffForm({ organizations }: { organizations: Organization
           <input
             name="first_name"
             required
+            placeholder={formPlaceholders.firstName}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
           />
         </div>
@@ -73,6 +79,7 @@ export function CreateStaffForm({ organizations }: { organizations: Organization
           <input
             name="last_name"
             required
+            placeholder={formPlaceholders.lastName}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
           />
         </div>
@@ -84,6 +91,7 @@ export function CreateStaffForm({ organizations }: { organizations: Organization
           name="email"
           type="email"
           required
+          placeholder={formPlaceholders.staffEmail}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
         />
       </div>
@@ -95,6 +103,7 @@ export function CreateStaffForm({ organizations }: { organizations: Organization
           type="password"
           required
           minLength={8}
+          placeholder={formPlaceholders.password}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
         />
       </div>
@@ -143,6 +152,7 @@ export function CreateStaffForm({ organizations }: { organizations: Organization
         <label className="mb-1 block text-sm font-medium">Department</label>
         <input
           name="department"
+          placeholder={formPlaceholders.department}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
         />
       </div>
@@ -154,10 +164,9 @@ export function CreateStaffForm({ organizations }: { organizations: Organization
 
       <button
         type="submit"
-        disabled={loading}
-        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
       >
-        {loading ? "Creating…" : "Create Account"}
+        Create Account
       </button>
     </form>
   );

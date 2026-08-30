@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../services/profile_service.dart';
 import '../../widgets/student_ui.dart';
+import '../../widgets/universal_loader.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -50,6 +51,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Future<void> _save() async {
     setState(() => _saving = true);
+    UniversalLoaderController.instance.show('Saving profile…');
     try {
       await _profile.updateProfile(
         firstName: _firstName.text.trim(),
@@ -69,6 +71,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
       );
     } finally {
+      UniversalLoaderController.instance.hide();
       if (mounted) setState(() => _saving = false);
     }
   }
@@ -91,22 +94,34 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           const SizedBox(height: 24),
           TextField(
             controller: _firstName,
-            decoration: const InputDecoration(labelText: 'First name'),
+            decoration: const InputDecoration(
+              labelText: 'First name',
+              hintText: 'Juan',
+            ),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _lastName,
-            decoration: const InputDecoration(labelText: 'Last name'),
+            decoration: const InputDecoration(
+              labelText: 'Last name',
+              hintText: 'Tamad',
+            ),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _program,
-            decoration: const InputDecoration(labelText: 'Program'),
+            decoration: const InputDecoration(
+              labelText: 'Program',
+              hintText: 'BS Information Technology',
+            ),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _section,
-            decoration: const InputDecoration(labelText: 'Section'),
+            decoration: const InputDecoration(
+              labelText: 'Section',
+              hintText: 'A',
+            ),
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<int>(

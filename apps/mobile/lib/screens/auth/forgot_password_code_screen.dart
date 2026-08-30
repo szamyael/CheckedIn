@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../services/auth_service.dart';
 import '../../widgets/student_ui.dart';
+import '../../widgets/universal_loader.dart';
 
 class ForgotPasswordCodeScreen extends StatefulWidget {
   final String email;
@@ -42,6 +43,7 @@ class _ForgotPasswordCodeScreenState extends State<ForgotPasswordCodeScreen> {
       _resending = true;
       _error = null;
     });
+    UniversalLoaderController.instance.show('Sending code…');
 
     try {
       await _auth.sendPasswordResetCode(widget.email);
@@ -52,6 +54,7 @@ class _ForgotPasswordCodeScreenState extends State<ForgotPasswordCodeScreen> {
     } catch (e) {
       setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
     } finally {
+      UniversalLoaderController.instance.hide();
       if (mounted) setState(() => _resending = false);
     }
   }
@@ -61,6 +64,7 @@ class _ForgotPasswordCodeScreenState extends State<ForgotPasswordCodeScreen> {
       _loading = true;
       _error = null;
     });
+    UniversalLoaderController.instance.show('Updating password…');
 
     try {
       if (_codeController.text.trim().isEmpty) {
@@ -89,6 +93,7 @@ class _ForgotPasswordCodeScreenState extends State<ForgotPasswordCodeScreen> {
     } catch (e) {
       setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
     } finally {
+      UniversalLoaderController.instance.hide();
       if (mounted) setState(() => _loading = false);
     }
   }
@@ -120,14 +125,20 @@ class _ForgotPasswordCodeScreenState extends State<ForgotPasswordCodeScreen> {
             const SizedBox(height: 12),
             TextField(
               controller: _passwordController,
-              decoration: const InputDecoration(labelText: 'New password'),
+              decoration: const InputDecoration(
+                labelText: 'New password',
+                hintText: 'At least 8 characters',
+              ),
               obscureText: true,
               textInputAction: TextInputAction.next,
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _confirmController,
-              decoration: const InputDecoration(labelText: 'Confirm password'),
+              decoration: const InputDecoration(
+                labelText: 'Confirm password',
+                hintText: 'Re-enter your password',
+              ),
               obscureText: true,
               textInputAction: TextInputAction.done,
               onSubmitted: (_) => _reset(),

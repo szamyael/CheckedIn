@@ -2,15 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { formPlaceholders } from "@/lib/form-placeholders";
+import { useAsyncAction } from "@/lib/useAsyncAction";
 
 export function BootstrapAdminForm() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const run = useAsyncAction();
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setLoading(true);
     setError(null);
 
     const form = new FormData(e.currentTarget);
@@ -21,22 +22,26 @@ export function BootstrapAdminForm() {
       last_name: form.get("last_name"),
     };
 
-    const res = await fetch("/api/admin/bootstrap", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    try {
+      const res = await run("Creating admin account…", () =>
+        fetch("/api/admin/bootstrap", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }),
+      );
 
-    const data = await res.json();
-    setLoading(false);
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Failed to create admin account");
+        return;
+      }
 
-    if (!res.ok) {
-      setError(data.error ?? "Failed to create admin account");
-      return;
+      router.refresh();
+      (e.target as HTMLFormElement).reset();
+    } catch {
+      setError("Failed to create admin account");
     }
-
-    router.refresh();
-    (e.target as HTMLFormElement).reset();
   }
 
   return (
@@ -60,6 +65,7 @@ export function BootstrapAdminForm() {
           <input
             name="first_name"
             required
+            placeholder={formPlaceholders.firstName}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
           />
         </div>
@@ -68,6 +74,7 @@ export function BootstrapAdminForm() {
           <input
             name="last_name"
             required
+            placeholder={formPlaceholders.lastName}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
           />
         </div>
@@ -79,6 +86,7 @@ export function BootstrapAdminForm() {
           name="email"
           type="email"
           required
+          placeholder={formPlaceholders.email}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
         />
       </div>
@@ -90,6 +98,7 @@ export function BootstrapAdminForm() {
           type="password"
           required
           minLength={8}
+          placeholder={formPlaceholders.password}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
         />
       </div>
@@ -98,10 +107,9 @@ export function BootstrapAdminForm() {
 
       <button
         type="submit"
-        disabled={loading}
-        className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-medium text-white hover:bg-amber-800 disabled:opacity-50"
+        className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-medium text-white hover:bg-amber-800"
       >
-        {loading ? "Creating…" : "Create Admin Account"}
+        Create Admin Account
       </button>
     </form>
   );

@@ -2,41 +2,40 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useLoader } from "@/components/LoaderProvider";
+import { formPlaceholders } from "@/lib/form-placeholders";
+import { useAsyncAction } from "@/lib/useAsyncAction";
 import { createClient } from "@/lib/supabase/client";
 
 export default function ForgotPasswordPage() {
-  const { showLoader, hideLoader } = useLoader();
+  const run = useAsyncAction();
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setMessage(null);
-    setLoading(true);
-    showLoader("Sending reset link…");
 
     try {
-      const supabase = createClient();
-      const redirectTo = `${window.location.origin}/auth/callback?next=/auth/reset-password`;
+      await run("Sending reset link…", async () => {
+        const supabase = createClient();
+        const redirectTo = `${window.location.origin}/auth/callback?next=/auth/reset-password`;
 
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-        email,
-        { redirectTo },
-      );
+        const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+          email,
+          { redirectTo },
+        );
 
-      if (resetError) {
-        setError(resetError.message);
-        return;
-      }
+        if (resetError) {
+          setError(resetError.message);
+          return;
+        }
 
-      setMessage("Check your email for a password reset link.");
-    } finally {
-      setLoading(false);
-      hideLoader();
+        setMessage("Check your email for a password reset link.");
+      });
+    } catch {
+      setError("Failed to send reset link. Please try again.");
     }
   }
 
@@ -58,6 +57,7 @@ export default function ForgotPasswordPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              placeholder={formPlaceholders.staffEmail}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
           </div>
@@ -75,10 +75,9 @@ export default function ForgotPasswordPage() {
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
           >
-            {loading ? "Sending…" : "Send reset link"}
+            Send reset link
           </button>
         </form>
 

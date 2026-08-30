@@ -1,33 +1,33 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useAsyncAction } from "@/lib/useAsyncAction";
 import type { Event } from "@/lib/types";
 
 export function EventApprovalPanel({ events }: { events: Event[] }) {
   const router = useRouter();
+  const run = useAsyncAction();
   const pending = events.filter((e) => e.status === "pending_approval");
-  const [loadingId, setLoadingId] = useState<string | null>(null);
 
   if (pending.length === 0) return null;
 
   async function review(eventId: string, approve: boolean) {
-    setLoadingId(eventId);
-    const supabase = createClient();
-    const { error } = await supabase
-      .from("events")
-      .update({ status: approve ? "published" : "cancelled" })
-      .eq("id", eventId);
+    await run(approve ? "Approving event…" : "Rejecting event…", async () => {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("events")
+        .update({ status: approve ? "published" : "cancelled" })
+        .eq("id", eventId);
 
-    if (!error) {
-      await supabase.rpc("log_audit", {
-        p_action: approve ? "approve_event" : "reject_event",
-        p_entity_type: "event",
-        p_entity_id: eventId,
-      });
-    }
-    setLoadingId(null);
+      if (!error) {
+        await supabase.rpc("log_audit", {
+          p_action: approve ? "approve_event" : "reject_event",
+          p_entity_type: "event",
+          p_entity_id: eventId,
+        });
+      }
+    });
     router.refresh();
   }
 
@@ -50,17 +50,15 @@ export function EventApprovalPanel({ events }: { events: Event[] }) {
             <div className="flex gap-2">
               <button
                 type="button"
-                disabled={loadingId === event.id}
-                onClick={() => review(event.id, true)}
-                className="rounded-lg bg-green-600 px-3 py-1.5 text-sm text-white hover:bg-green-700 disabled:opacity-50"
+                onClick={() => void review(event.id, true)}
+                className="rounded-lg bg-green-600 px-3 py-1.5 text-sm text-white hover:bg-green-700"
               >
                 Approve
               </button>
               <button
                 type="button"
-                disabled={loadingId === event.id}
-                onClick={() => review(event.id, false)}
-                className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"
+                onClick={() => void review(event.id, false)}
+                className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50"
               >
                 Reject
               </button>

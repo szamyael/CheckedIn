@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { formPlaceholders } from "@/lib/form-placeholders";
+import { useAsyncAction } from "@/lib/useAsyncAction";
 import { createClient } from "@/lib/supabase/client";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
+  const run = useAsyncAction();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -25,18 +27,22 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    setLoading(true);
-    const supabase = createClient();
-    const { error: updateError } = await supabase.auth.updateUser({ password });
-    setLoading(false);
+    try {
+      await run("Updating password…", async () => {
+        const supabase = createClient();
+        const { error: updateError } = await supabase.auth.updateUser({ password });
 
-    if (updateError) {
-      setError(updateError.message);
-      return;
+        if (updateError) {
+          setError(updateError.message);
+          return;
+        }
+
+        router.push("/login");
+        router.refresh();
+      });
+    } catch {
+      setError("Failed to update password. Please try again.");
     }
-
-    router.push("/login");
-    router.refresh();
   }
 
   return (
@@ -57,6 +63,7 @@ export default function ResetPasswordPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder={formPlaceholders.password}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
           </div>
@@ -69,6 +76,7 @@ export default function ResetPasswordPage() {
               required
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
+              placeholder={formPlaceholders.confirmPassword}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
           </div>
@@ -81,10 +89,9 @@ export default function ResetPasswordPage() {
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
           >
-            {loading ? "Updating…" : "Update password"}
+            Update password
           </button>
         </form>
       </div>

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../services/auth_service.dart';
 import '../../widgets/student_ui.dart';
+import '../../widgets/universal_loader.dart';
 
 class VerifyEmailScreen extends StatefulWidget {
   final String email;
@@ -41,6 +42,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
       _resending = true;
       _error = null;
     });
+    UniversalLoaderController.instance.show('Sending code…');
 
     try {
       await _auth.resendEmailVerificationCode(widget.email);
@@ -51,6 +53,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     } catch (e) {
       setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
     } finally {
+      UniversalLoaderController.instance.hide();
       if (mounted) setState(() => _resending = false);
     }
   }
@@ -60,6 +63,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
       _loading = true;
       _error = null;
     });
+    UniversalLoaderController.instance.show('Verifying email…');
 
     try {
       if (_codeController.text.trim().isEmpty) {
@@ -80,6 +84,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     } catch (e) {
       setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
     } finally {
+      UniversalLoaderController.instance.hide();
       if (mounted) setState(() => _loading = false);
     }
   }

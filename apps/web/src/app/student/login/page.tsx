@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BrandMark } from "@/components/BrandLogo";
 import { useLoader } from "@/components/LoaderProvider";
+import { formPlaceholders } from "@/lib/form-placeholders";
 import {
   StudentErrorBanner,
   studentInputClass,
@@ -150,7 +151,7 @@ export default function StudentLoginPage() {
               required
               value={studentId}
               onChange={(e) => setStudentId(formatStudentIdInput(e.target.value))}
-              placeholder="0123-4567"
+              placeholder={formPlaceholders.studentId}
               className={studentInputClass}
             />
           </div>
@@ -164,6 +165,7 @@ export default function StudentLoginPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder={formPlaceholders.password}
               className={studentInputClass}
             />
           </div>

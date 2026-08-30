@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BrandMark } from "@/components/BrandLogo";
 import { useLoader } from "@/components/LoaderProvider";
+import { formPlaceholders } from "@/lib/form-placeholders";
 import {
   formatStudentIdInput,
   isValidStudentId,
@@ -93,7 +94,7 @@ function ForgotPasswordForm() {
             inputMode="numeric"
             value={studentId}
             onChange={(e) => setStudentId(formatStudentIdInput(e.target.value))}
-            placeholder="0123-4567"
+            placeholder={formPlaceholders.studentId}
             className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm"
             required
           />

@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { formPlaceholders } from "@/lib/form-placeholders";
+import { useAsyncAction } from "@/lib/useAsyncAction";
 import {
   EventLocationPicker,
   type EventLocation,
@@ -11,7 +13,7 @@ import { DEFAULT_MAP_CENTER } from "@/lib/campus-locations";
 
 export function CreateEventForm() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const run = useAsyncAction();
   const [error, setError] = useState<string | null>(null);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -52,94 +54,91 @@ export function CreateEventForm() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setLoading(true);
     setError(null);
 
     if (userRole === "faculty") {
       setError(
         "Faculty accounts cannot create events. Organizations manage the event calendar.",
       );
-      setLoading(false);
       return;
     }
 
     if (userRole !== "org_member" && userRole !== "admin") {
       setError("Only organization accounts can create events.");
-      setLoading(false);
       return;
     }
 
     if (!location.venueName.trim()) {
       setError("Venue name is required.");
-      setLoading(false);
       return;
     }
 
-    const supabase = createClient();
     const form = new FormData(e.currentTarget);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
 
-    if (!user) {
-      setError("Not authenticated");
-      setLoading(false);
-      return;
+    try {
+      await run("Creating event…", async () => {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) throw new Error("Not authenticated");
+
+        const startsAt = new Date(form.get("starts_at") as string).toISOString();
+        const endsAt = new Date(form.get("ends_at") as string).toISOString();
+        const attendanceStarts = new Date(
+          form.get("attendance_starts_at") as string,
+        ).toISOString();
+        const attendanceEnds = new Date(
+          form.get("attendance_ends_at") as string,
+        ).toISOString();
+
+        const { data: settings } = await supabase
+          .from("system_settings")
+          .select("default_requires_otp")
+          .eq("id", 1)
+          .maybeSingle();
+
+        const statusInput = form.get("status") as string;
+        const status =
+          userRole === "org_member" && statusInput === "published"
+            ? "pending_approval"
+            : statusInput;
+
+        const { error: insertError } = await supabase.from("events").insert({
+          title: form.get("title") as string,
+          description: (form.get("description") as string) || null,
+          venue_name: location.venueName.trim(),
+          latitude: location.latitude,
+          longitude: location.longitude,
+          location_radius_m: parseInt(
+            form.get("location_radius_m") as string,
+            10,
+          ),
+          starts_at: startsAt,
+          ends_at: endsAt,
+          attendance_starts_at: attendanceStarts,
+          attendance_ends_at: attendanceEnds,
+          qr_expires_at: attendanceEnds,
+          status,
+          requires_otp: settings?.default_requires_otp ?? false,
+          created_by: user.id,
+          organization_id: organizationId,
+        });
+
+        if (insertError) throw new Error(insertError.message);
+      });
+
+      router.refresh();
+      (e.target as HTMLFormElement).reset();
+      setLocation({
+        venueName: "",
+        latitude: DEFAULT_MAP_CENTER.lat,
+        longitude: DEFAULT_MAP_CENTER.lng,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not create event");
     }
-
-    const startsAt = new Date(form.get("starts_at") as string).toISOString();
-    const endsAt = new Date(form.get("ends_at") as string).toISOString();
-    const attendanceStarts = new Date(
-      form.get("attendance_starts_at") as string,
-    ).toISOString();
-    const attendanceEnds = new Date(
-      form.get("attendance_ends_at") as string,
-    ).toISOString();
-
-    const { data: settings } = await supabase
-      .from("system_settings")
-      .select("default_requires_otp")
-      .eq("id", 1)
-      .maybeSingle();
-
-    const statusInput = form.get("status") as string;
-    const status =
-      userRole === "org_member" && statusInput === "published"
-        ? "pending_approval"
-        : statusInput;
-
-    const { error: insertError } = await supabase.from("events").insert({
-      title: form.get("title") as string,
-      description: (form.get("description") as string) || null,
-      venue_name: location.venueName.trim(),
-      latitude: location.latitude,
-      longitude: location.longitude,
-      location_radius_m: parseInt(form.get("location_radius_m") as string, 10),
-      starts_at: startsAt,
-      ends_at: endsAt,
-      attendance_starts_at: attendanceStarts,
-      attendance_ends_at: attendanceEnds,
-      qr_expires_at: attendanceEnds,
-      status,
-      requires_otp: settings?.default_requires_otp ?? false,
-      created_by: user.id,
-      organization_id: organizationId,
-    });
-
-    setLoading(false);
-
-    if (insertError) {
-      setError(insertError.message);
-      return;
-    }
-
-    router.refresh();
-    (e.target as HTMLFormElement).reset();
-    setLocation({
-      venueName: "",
-      latitude: DEFAULT_MAP_CENTER.lat,
-      longitude: DEFAULT_MAP_CENTER.lng,
-    });
   }
 
   if (userRole === "faculty") {
@@ -168,6 +167,7 @@ export function CreateEventForm() {
           <input
             name="title"
             required
+            placeholder={formPlaceholders.eventTitle}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
           />
         </div>
@@ -177,6 +177,7 @@ export function CreateEventForm() {
           <textarea
             name="description"
             rows={2}
+            placeholder={formPlaceholders.eventDescription}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
           />
         </div>
@@ -265,10 +266,9 @@ export function CreateEventForm() {
 
       <button
         type="submit"
-        disabled={loading}
-        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
       >
-        {loading ? "Creating…" : "Create Event"}
+        Create Event
       </button>
     </form>
   );

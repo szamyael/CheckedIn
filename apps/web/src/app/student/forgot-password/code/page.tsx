@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BrandMark } from "@/components/BrandLogo";
 import { useLoader } from "@/components/LoaderProvider";
+import { formPlaceholders } from "@/lib/form-placeholders";
 import { createClient } from "@/lib/supabase/client";
 
 function ResetCodeForm() {
@@ -68,7 +69,7 @@ function ResetCodeForm() {
           onChange={(e) =>
             setCode(e.target.value.replace(/\D/g, "").slice(0, 8))
           }
-          placeholder="Reset code"
+          placeholder={formPlaceholders.verificationCode}
           className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm"
           required
         />
@@ -76,7 +77,7 @@ function ResetCodeForm() {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="New password"
+          placeholder={formPlaceholders.password}
           className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm"
           required
         />
@@ -84,7 +85,7 @@ function ResetCodeForm() {
           type="password"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
-          placeholder="Confirm password"
+          placeholder={formPlaceholders.confirmPassword}
           className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm"
           required
         />

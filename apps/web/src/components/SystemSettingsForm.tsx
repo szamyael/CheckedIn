@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useAsyncAction } from "@/lib/useAsyncAction";
 
 interface Settings {
   otp_expiry_seconds: number;
@@ -12,9 +13,9 @@ interface Settings {
 }
 
 export function SystemSettingsForm() {
+  const run = useAsyncAction();
   const [settings, setSettings] = useState<Settings | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -30,26 +31,29 @@ export function SystemSettingsForm() {
   async function save(e: React.FormEvent) {
     e.preventDefault();
     if (!settings) return;
-    setSaving(true);
     setMessage(null);
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    const { error } = await supabase
-      .from("system_settings")
-      .update({ ...settings, updated_by: user?.id, updated_at: new Date().toISOString() })
-      .eq("id", 1);
 
-    if (!error) {
-      await supabase.rpc("log_audit", {
-        p_action: "update_system_settings",
-        p_entity_type: "system_settings",
-        p_entity_id: null,
+    try {
+      await run("Saving settings…", async () => {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        const { error } = await supabase
+          .from("system_settings")
+          .update({ ...settings, updated_by: user?.id, updated_at: new Date().toISOString() })
+          .eq("id", 1);
+
+        if (error) throw new Error(error.message);
+
+        await supabase.rpc("log_audit", {
+          p_action: "update_system_settings",
+          p_entity_type: "system_settings",
+          p_entity_id: null,
+        });
+        setMessage("Settings saved.");
       });
-      setMessage("Settings saved.");
-    } else {
-      setMessage(error.message);
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : "Failed to save settings");
     }
-    setSaving(false);
   }
 
   if (loading) return <p className="text-sm text-slate-600">Loading settings…</p>;
@@ -123,10 +127,9 @@ export function SystemSettingsForm() {
 
       <button
         type="submit"
-        disabled={saving}
-        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
       >
-        {saving ? "Saving…" : "Save settings"}
+        Save settings
       </button>
     </form>
   );

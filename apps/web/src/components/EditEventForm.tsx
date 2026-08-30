@@ -7,10 +7,12 @@ import {
   EventLocationPicker,
   type EventLocation,
 } from "@/components/EventLocationPicker";
+import { formPlaceholders } from "@/lib/form-placeholders";
+import { useAsyncAction } from "@/lib/useAsyncAction";
 
 export function EditEventForm({ event }: { event: Event }) {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const run = useAsyncAction();
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [location, setLocation] = useState<EventLocation>({
@@ -27,46 +29,46 @@ export function EditEventForm({ event }: { event: Event }) {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setLoading(true);
     setError(null);
 
     if (!location.venueName.trim()) {
       setError("Venue name is required.");
-      setLoading(false);
       return;
     }
 
     const form = new FormData(e.currentTarget);
-    const { createClient } = await import("@/lib/supabase/client");
-    const supabase = createClient();
 
-    const { error: updateError } = await supabase
-      .from("events")
-      .update({
-        title: form.get("title") as string,
-        description: (form.get("description") as string) || null,
-        venue_name: location.venueName.trim(),
-        latitude: location.latitude,
-        longitude: location.longitude,
-        location_radius_m: parseInt(form.get("location_radius_m") as string, 10),
-        starts_at: new Date(form.get("starts_at") as string).toISOString(),
-        ends_at: new Date(form.get("ends_at") as string).toISOString(),
-        attendance_starts_at: new Date(form.get("attendance_starts_at") as string).toISOString(),
-        attendance_ends_at: new Date(form.get("attendance_ends_at") as string).toISOString(),
-        qr_expires_at: new Date(form.get("attendance_ends_at") as string).toISOString(),
-        status: form.get("status") as string,
-      })
-      .eq("id", event.id);
+    try {
+      await run("Saving event…", async () => {
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
 
-    setLoading(false);
+        const { error: updateError } = await supabase
+          .from("events")
+          .update({
+            title: form.get("title") as string,
+            description: (form.get("description") as string) || null,
+            venue_name: location.venueName.trim(),
+            latitude: location.latitude,
+            longitude: location.longitude,
+            location_radius_m: parseInt(form.get("location_radius_m") as string, 10),
+            starts_at: new Date(form.get("starts_at") as string).toISOString(),
+            ends_at: new Date(form.get("ends_at") as string).toISOString(),
+            attendance_starts_at: new Date(form.get("attendance_starts_at") as string).toISOString(),
+            attendance_ends_at: new Date(form.get("attendance_ends_at") as string).toISOString(),
+            qr_expires_at: new Date(form.get("attendance_ends_at") as string).toISOString(),
+            status: form.get("status") as string,
+          })
+          .eq("id", event.id);
 
-    if (updateError) {
-      setError(updateError.message);
-      return;
+        if (updateError) throw new Error(updateError.message);
+      });
+
+      setOpen(false);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save event");
     }
-
-    setOpen(false);
-    router.refresh();
   }
 
   if (!open) {
@@ -83,8 +85,8 @@ export function EditEventForm({ event }: { event: Event }) {
 
   return (
     <form onSubmit={handleSubmit} className="mt-4 space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
-      <input name="title" defaultValue={event.title} required className="w-full rounded border px-2 py-1 text-sm" placeholder="Title" />
-      <textarea name="description" defaultValue={event.description ?? ""} rows={2} className="w-full rounded border px-2 py-1 text-sm" placeholder="Description" />
+      <input name="title" defaultValue={event.title} required className="w-full rounded border px-2 py-1 text-sm" placeholder={formPlaceholders.eventTitle} />
+      <textarea name="description" defaultValue={event.description ?? ""} rows={2} className="w-full rounded border px-2 py-1 text-sm" placeholder={formPlaceholders.eventDescription} />
       <EventLocationPicker value={location} onChange={setLocation} compact />
       <input name="location_radius_m" type="number" defaultValue={event.location_radius_m} min={10} max={5000} className="w-full rounded border px-2 py-1 text-sm" placeholder="Radius (m)" />
       <input name="starts_at" type="datetime-local" defaultValue={toLocalInput(event.starts_at)} required className="w-full rounded border px-2 py-1 text-sm" />
@@ -99,8 +101,8 @@ export function EditEventForm({ event }: { event: Event }) {
       </select>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <div className="flex gap-2">
-        <button type="submit" disabled={loading} className="rounded bg-blue-600 px-3 py-1 text-sm text-white">
-          {loading ? "Saving…" : "Save"}
+        <button type="submit" className="rounded bg-blue-600 px-3 py-1 text-sm text-white">
+          Save
         </button>
         <button type="button" onClick={() => setOpen(false)} className="rounded border px-3 py-1 text-sm">
           Cancel

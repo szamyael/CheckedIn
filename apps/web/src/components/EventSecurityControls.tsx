@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { EventQrCode } from "@/components/EventQrCode";
+import { useAsyncAction } from "@/lib/useAsyncAction";
 import type { Event } from "@/lib/types";
 
 interface EventSecurityControlsProps {
@@ -12,43 +13,51 @@ interface EventSecurityControlsProps {
 
 export function EventSecurityControls({ event }: EventSecurityControlsProps) {
   const router = useRouter();
-  const [loading, setLoading] = useState<"otp" | "qr" | null>(null);
+  const run = useAsyncAction();
   const [otp, setOtp] = useState<{ code: string; expiresAt: string } | null>(null);
   const [qrToken, setQrToken] = useState(event.qr_token);
   const [error, setError] = useState<string | null>(null);
 
   async function generateOtp() {
-    setLoading("otp");
     setError(null);
-    const supabase = createClient();
-    const { data, error: fnError } = await supabase.functions.invoke(
-      "generate-event-otp",
-      { body: { event_id: event.id } },
-    );
-    setLoading(null);
-    if (fnError || data?.error) {
-      setError(data?.error ?? fnError?.message ?? "Failed to generate OTP");
-      return;
+    try {
+      const data = await run("Generating OTP…", async () => {
+        const supabase = createClient();
+        const { data, error: fnError } = await supabase.functions.invoke(
+          "generate-event-otp",
+          { body: { event_id: event.id } },
+        );
+        if (fnError || data?.error) {
+          throw new Error(data?.error ?? fnError?.message ?? "Failed to generate OTP");
+        }
+        return data;
+      });
+      setOtp({ code: data.code, expiresAt: data.expires_at });
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to generate OTP");
     }
-    setOtp({ code: data.code, expiresAt: data.expires_at });
-    router.refresh();
   }
 
   async function rotateQr() {
-    setLoading("qr");
     setError(null);
-    const supabase = createClient();
-    const { data, error: fnError } = await supabase.functions.invoke(
-      "rotate-event-qr",
-      { body: { event_id: event.id } },
-    );
-    setLoading(null);
-    if (fnError || data?.error) {
-      setError(data?.error ?? fnError?.message ?? "Failed to rotate QR");
-      return;
+    try {
+      const data = await run("Rotating QR code…", async () => {
+        const supabase = createClient();
+        const { data, error: fnError } = await supabase.functions.invoke(
+          "rotate-event-qr",
+          { body: { event_id: event.id } },
+        );
+        if (fnError || data?.error) {
+          throw new Error(data?.error ?? fnError?.message ?? "Failed to rotate QR");
+        }
+        return data;
+      });
+      setQrToken(data.qr_token);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to rotate QR");
     }
-    setQrToken(data.qr_token);
-    router.refresh();
   }
 
   if (event.status !== "published") return null;
@@ -61,19 +70,17 @@ export function EventSecurityControls({ event }: EventSecurityControlsProps) {
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          onClick={generateOtp}
-          disabled={loading !== null}
-          className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+          onClick={() => void generateOtp()}
+          className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700"
         >
-          {loading === "otp" ? "Generating…" : "Generate attendance OTP"}
+          Generate attendance OTP
         </button>
         <button
           type="button"
-          onClick={rotateQr}
-          disabled={loading !== null}
-          className="rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-900 disabled:opacity-50"
+          onClick={() => void rotateQr()}
+          className="rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-900"
         >
-          {loading === "qr" ? "Rotating…" : "Rotate QR code"}
+          Rotate QR code
         </button>
       </div>
       {event.requires_otp && (

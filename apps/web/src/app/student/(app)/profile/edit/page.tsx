@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useLoader } from "@/components/LoaderProvider";
+import { formPlaceholders } from "@/lib/form-placeholders";
+import { useAsyncAction } from "@/lib/useAsyncAction";
 import { createClient } from "@/lib/supabase/client";
 import {
   StudentErrorBanner,
@@ -14,7 +15,7 @@ import {
 
 export default function EditStudentProfilePage() {
   const router = useRouter();
-  const { showLoader, hideLoader } = useLoader();
+  const run = useAsyncAction();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [program, setProgram] = useState("");
@@ -48,29 +49,28 @@ export default function EditStudentProfilePage() {
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    showLoader("Saving…");
     try {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not signed in");
-      const { error: updErr } = await supabase
-        .from("students")
-        .update({
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
-          program: program.trim(),
-          section: section.trim() || null,
-          year_level: yearLevel,
-        })
-        .eq("id", user.id);
-      if (updErr) throw updErr;
-      router.push("/student/profile");
+      await run("Saving profile…", async () => {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) throw new Error("Not signed in");
+        const { error: updErr } = await supabase
+          .from("students")
+          .update({
+            first_name: firstName.trim(),
+            last_name: lastName.trim(),
+            program: program.trim(),
+            section: section.trim() || null,
+            year_level: yearLevel,
+          })
+          .eq("id", user.id);
+        if (updErr) throw updErr;
+        router.push("/student/profile");
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
-    } finally {
-      hideLoader();
     }
   }
 
@@ -86,18 +86,19 @@ export default function EditStudentProfilePage() {
       <form onSubmit={save} className="space-y-3">
         {(
           [
-            ["First name", firstName, setFirstName],
-            ["Last name", lastName, setLastName],
-            ["Program", program, setProgram],
-            ["Section", section, setSection],
+            ["First name", firstName, setFirstName, formPlaceholders.firstName],
+            ["Last name", lastName, setLastName, formPlaceholders.lastName],
+            ["Program", program, setProgram, formPlaceholders.program],
+            ["Section", section, setSection, formPlaceholders.section],
           ] as const
-        ).map(([label, value, setter]) => (
+        ).map(([label, value, setter, placeholder]) => (
           <div key={label}>
             <label className="mb-1 block text-sm font-medium">{label}</label>
             <input
               required={label !== "Section"}
               value={value}
               onChange={(e) => setter(e.target.value)}
+              placeholder={placeholder}
               className={studentInputClass}
             />
           </div>

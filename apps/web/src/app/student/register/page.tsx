@@ -24,6 +24,7 @@ import {
   saveRegistrationDraft,
   type RegistrationDraft,
 } from "@/lib/student/registration-draft";
+import { formPlaceholders } from "@/lib/form-placeholders";
 import { isStudentTermsAccepted } from "@/lib/student/terms";
 
 export default function StudentRegisterPage() {
@@ -396,40 +397,46 @@ export default function StudentRegisterPage() {
             onChange={(v) => setDraft((d) => ({ ...d, email: v }))}
             type="email"
             required
+            placeholder={formPlaceholders.email}
           />
           <Field
             label="First name"
             value={draft.firstName}
             onChange={(v) => setDraft((d) => ({ ...d, firstName: v }))}
             required
+            placeholder={formPlaceholders.firstName}
           />
           <Field
             label="Middle name"
             value={draft.middleName}
             onChange={(v) => setDraft((d) => ({ ...d, middleName: v }))}
-            placeholder="e.g. T."
+            placeholder={formPlaceholders.middleName}
           />
           <Field
             label="Last name"
             value={draft.lastName}
             onChange={(v) => setDraft((d) => ({ ...d, lastName: v }))}
             required
+            placeholder={formPlaceholders.lastName}
           />
           <Field
             label="Name extension"
             value={draft.nameExtension}
             onChange={(v) => setDraft((d) => ({ ...d, nameExtension: v }))}
+            placeholder={formPlaceholders.nameExtension}
           />
           <Field
             label="Program"
             value={draft.program}
             onChange={(v) => setDraft((d) => ({ ...d, program: v }))}
             required
+            placeholder={formPlaceholders.program}
           />
           <Field
             label="Section"
             value={draft.section}
             onChange={(v) => setDraft((d) => ({ ...d, section: v }))}
+            placeholder={formPlaceholders.section}
           />
           <div>
             <label className="mb-1 block text-sm font-medium">Year level</label>
@@ -478,6 +485,7 @@ export default function StudentRegisterPage() {
             type="password"
             required
             autoComplete="new-password"
+            placeholder={formPlaceholders.password}
           />
           <Field
             label="Confirm password"
@@ -486,6 +494,7 @@ export default function StudentRegisterPage() {
             type="password"
             required
             autoComplete="new-password"
+            placeholder={formPlaceholders.confirmPassword}
           />
           <button
             type="button"

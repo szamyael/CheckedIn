@@ -12,6 +12,7 @@ import '../../services/auth_service.dart';
 import '../../services/permission_service.dart';
 import '../../widgets/permission_gate.dart';
 import '../../widgets/student_ui.dart';
+import '../../widgets/universal_loader.dart';
 
 class RegisterIdScanScreen extends StatefulWidget {
   final RegistrationDraft draft;
@@ -93,6 +94,7 @@ class _RegisterIdScanScreenState extends State<RegisterIdScanScreen> {
       _processing = true;
       _error = null;
     });
+    UniversalLoaderController.instance.show('Scanning ID…');
 
     try {
       final photo = await _controller!.takePicture();
@@ -127,6 +129,7 @@ class _RegisterIdScanScreenState extends State<RegisterIdScanScreen> {
         _error = e.toString().replaceFirst('Exception: ', '');
       });
     } finally {
+      UniversalLoaderController.instance.hide();
       if (mounted) setState(() => _processing = false);
     }
   }

@@ -8,6 +8,7 @@ import '../../models/registration_draft.dart';
 import '../../services/auth_service.dart';
 import '../../services/permission_service.dart';
 import '../../widgets/student_ui.dart';
+import '../../widgets/universal_loader.dart';
 
 class RegisterConfirmScreen extends StatefulWidget {
   final RegistrationDraft draft;
@@ -66,6 +67,7 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
     }
 
     setState(() => _pickingPhoto = true);
+    UniversalLoaderController.instance.show('Processing photo…');
     try {
       final file = await _picker.pickImage(
         source: source,
@@ -87,6 +89,7 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
         ),
       );
     } finally {
+      UniversalLoaderController.instance.hide();
       if (mounted) setState(() => _pickingPhoto = false);
     }
   }
@@ -210,7 +213,7 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
             controller: _email,
             decoration: const InputDecoration(
               labelText: 'Email address *',
-              hintText: 'you@example.com',
+              hintText: 'you@school.edu',
               helperText:
                   'Used for password reset. You will still sign in with your student ID.',
             ),
@@ -223,6 +226,7 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
             controller: _firstName,
             decoration: InputDecoration(
               labelText: 'First Name *',
+              hintText: 'Juan',
               helperText: widget.draft.ocrSnapshot?.firstName != null
                   ? 'Detected from your ID — edit if needed'
                   : null,
@@ -231,13 +235,17 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
           const SizedBox(height: 16),
           TextField(
             controller: _middleName,
-            decoration: const InputDecoration(labelText: 'Middle Name'),
+            decoration: const InputDecoration(
+              labelText: 'Middle Name',
+              hintText: 'T.',
+            ),
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _lastName,
             decoration: InputDecoration(
               labelText: 'Last Name *',
+              hintText: 'Tamad',
               helperText: widget.draft.ocrSnapshot?.lastName != null
                   ? 'Detected from your ID — edit if needed'
                   : null,
@@ -268,7 +276,7 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
             controller: _section,
             decoration: const InputDecoration(
               labelText: 'Section',
-              hintText: 'e.g. A',
+              hintText: 'A',
             ),
             textInputAction: TextInputAction.next,
           ),

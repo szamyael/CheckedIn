@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAsyncAction } from "@/lib/useAsyncAction";
 
 interface StudentRow {
   id: string;
@@ -15,24 +15,26 @@ interface StudentRow {
 
 export function StudentActions({ student }: { student: StudentRow }) {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const run = useAsyncAction();
 
   async function setStatus(status: string) {
-    setLoading(true);
-    await fetch(`/api/admin/users/${student.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
-    setLoading(false);
+    await run("Updating student…", () =>
+      fetch(`/api/admin/users/${student.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      }),
+    );
     router.refresh();
   }
 
   async function remove() {
-    if (!confirm(`Remove student ${student.first_name} ${student.last_name}?`)) return;
-    setLoading(true);
-    await fetch(`/api/admin/users/${student.id}`, { method: "DELETE" });
-    setLoading(false);
+    if (!confirm(`Remove student ${student.first_name} ${student.last_name}?`)) {
+      return;
+    }
+    await run("Removing student…", () =>
+      fetch(`/api/admin/users/${student.id}`, { method: "DELETE" }),
+    );
     router.refresh();
   }
 
@@ -42,15 +44,13 @@ export function StudentActions({ student }: { student: StudentRow }) {
         <>
           <button
             type="button"
-            disabled={loading}
-            onClick={() => setStatus("active")}
+            onClick={() => void setStatus("active")}
             className="text-xs font-medium text-teal-600 hover:underline"
           >
             Approve
           </button>
           <button
             type="button"
-            disabled={loading}
             onClick={() => {
               if (
                 !confirm(
@@ -61,36 +61,34 @@ export function StudentActions({ student }: { student: StudentRow }) {
               }
               void setStatus("disabled");
             }}
-            className="text-xs font-medium text-amber-700 hover:underline"
+            className="text-xs font-medium text-red-600 hover:underline"
           >
             Deny
           </button>
         </>
       )}
-      {student.status === "active" ? (
+      {student.status === "active" && (
         <button
           type="button"
-          disabled={loading}
-          onClick={() => setStatus("disabled")}
-          className="text-xs text-amber-600 hover:underline"
+          onClick={() => void setStatus("disabled")}
+          className="text-xs font-medium text-amber-600 hover:underline"
         >
-          Suspend
+          Disable
         </button>
-      ) : student.status !== "pending" ? (
+      )}
+      {student.status === "disabled" && (
         <button
           type="button"
-          disabled={loading}
-          onClick={() => setStatus("active")}
-          className="text-xs text-green-600 hover:underline"
+          onClick={() => void setStatus("active")}
+          className="text-xs font-medium text-teal-600 hover:underline"
         >
-          Activate
+          Re-enable
         </button>
-      ) : null}
+      )}
       <button
         type="button"
-        disabled={loading}
-        onClick={remove}
-        className="text-xs text-red-600 hover:underline"
+        onClick={() => void remove()}
+        className="text-xs font-medium text-red-600 hover:underline"
       >
         Remove
       </button>

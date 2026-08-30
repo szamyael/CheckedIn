@@ -5,67 +5,66 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BootstrapGate } from "@/components/BootstrapGate";
 import { BrandMark } from "@/components/BrandLogo";
-import { useLoader } from "@/components/LoaderProvider";
 import { PhoneStudentRedirect } from "@/components/student/PhoneStudentRedirect";
+import { formPlaceholders } from "@/lib/form-placeholders";
+import { useAsyncAction } from "@/lib/useAsyncAction";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { showLoader, hideLoader } = useLoader();
+  const run = useAsyncAction();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setLoading(true);
-    showLoader("Signing in…");
 
     try {
-      const supabase = createClient();
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      await run("Signing in…", async () => {
+        const supabase = createClient();
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (signInError) {
+          setError(signInError.message);
+          return;
+        }
+
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        const { data: profile } = await supabase
+          .from("users")
+          .select("status, role")
+          .eq("id", user!.id)
+          .single();
+
+        if (profile?.status === "disabled") {
+          await supabase.auth.signOut();
+          setError("This account has been disabled.");
+          return;
+        }
+
+        if (profile?.status === "pending") {
+          await supabase.auth.signOut();
+          setError("Your account is pending admin approval.");
+          return;
+        }
+
+        if (profile?.role === "student") {
+          router.push("/student");
+        } else {
+          router.push("/dashboard");
+        }
+        router.refresh();
       });
-
-      if (signInError) {
-        setError(signInError.message);
-        return;
-      }
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      const { data: profile } = await supabase
-        .from("users")
-        .select("status, role")
-        .eq("id", user!.id)
-        .single();
-
-      if (profile?.status === "disabled") {
-        await supabase.auth.signOut();
-        setError("This account has been disabled.");
-        return;
-      }
-
-      if (profile?.status === "pending") {
-        await supabase.auth.signOut();
-        setError("Your account is pending admin approval.");
-        return;
-      }
-
-      if (profile?.role === "student") {
-        router.push("/student");
-      } else {
-        router.push("/dashboard");
-      }
-      router.refresh();
-    } finally {
-      setLoading(false);
-      hideLoader();
+    } catch {
+      setError("Sign in failed. Please try again.");
     }
   }
 
@@ -95,7 +94,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
-                placeholder="you@university.edu"
+                placeholder={formPlaceholders.email}
               />
             </div>
 
@@ -109,6 +108,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
+                placeholder={formPlaceholders.password}
               />
             </div>
 
@@ -120,10 +120,9 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full rounded-lg bg-teal-600 py-2.5 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+              className="w-full rounded-lg bg-teal-600 py-2.5 text-sm font-medium text-white hover:bg-teal-500"
             >
-              {loading ? "Signing in…" : "Sign in"}
+              Sign in
             </button>
 
             <p className="text-center text-sm">

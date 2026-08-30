@@ -2,16 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { formPlaceholders } from "@/lib/form-placeholders";
+import { useAsyncAction } from "@/lib/useAsyncAction";
 
 export function CreateOrganizationForm() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const run = useAsyncAction();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setLoading(true);
     setError(null);
     setSuccess(false);
 
@@ -21,23 +22,27 @@ export function CreateOrganizationForm() {
       description: form.get("description") || null,
     };
 
-    const res = await fetch("/api/admin/create-organization", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    try {
+      const res = await run("Creating organization…", () =>
+        fetch("/api/admin/create-organization", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }),
+      );
 
-    const data = await res.json();
-    setLoading(false);
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Failed to create organization");
+        return;
+      }
 
-    if (!res.ok) {
-      setError(data.error ?? "Failed to create organization");
-      return;
+      setSuccess(true);
+      router.refresh();
+      (e.target as HTMLFormElement).reset();
+    } catch {
+      setError("Failed to create organization");
     }
-
-    setSuccess(true);
-    router.refresh();
-    (e.target as HTMLFormElement).reset();
   }
 
   return (
@@ -52,6 +57,7 @@ export function CreateOrganizationForm() {
         <input
           name="name"
           required
+          placeholder={formPlaceholders.organizationName}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
         />
       </div>
@@ -61,6 +67,7 @@ export function CreateOrganizationForm() {
         <textarea
           name="description"
           rows={2}
+          placeholder={formPlaceholders.eventDescription}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
         />
       </div>
@@ -72,10 +79,9 @@ export function CreateOrganizationForm() {
 
       <button
         type="submit"
-        disabled={loading}
-        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
       >
-        {loading ? "Creating…" : "Create Organization"}
+        Create Organization
       </button>
     </form>
   );
