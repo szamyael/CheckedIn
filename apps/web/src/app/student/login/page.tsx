@@ -27,6 +27,7 @@ export default function StudentLoginPage() {
   const [studentId, setStudentId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [openingRegister, setOpeningRegister] = useState(false);
 
   useEffect(() => {
     if (!isStudentOnboardingComplete()) {
@@ -37,6 +38,21 @@ export default function StudentLoginPage() {
       router.replace("/student/terms");
     }
   }, [router]);
+
+  async function goToRegister() {
+    if (openingRegister) return;
+    setOpeningRegister(true);
+    setError(null);
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      router.push("/student/register");
+    } catch {
+      setError("Could not open registration. Please try again.");
+    } finally {
+      setOpeningRegister(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -114,12 +130,12 @@ export default function StudentLoginPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-white px-6 py-10">
-      <div className="flex flex-1 flex-col justify-center">
+    <div className="mx-auto min-h-dvh w-full max-w-md overflow-y-auto bg-white px-6 py-8">
+      <div className="flex min-h-full flex-col justify-center py-4">
         <div className="mb-6 flex justify-center">
           <BrandMark size={140} />
         </div>
-        <p className="mb-10 text-center text-sm text-slate-500">
+        <p className="mb-8 text-center text-sm text-slate-500">
           Student Attendance
         </p>
 
@@ -159,19 +175,24 @@ export default function StudentLoginPage() {
           </button>
         </form>
 
-        <div className="mt-4 space-y-2 text-center text-sm">
+        <div className="mt-4 space-y-3 text-center text-sm">
           <Link
             href="/student/forgot-password"
             className="block text-teal-600 hover:underline"
           >
             Forgot password?
           </Link>
-          <Link href="/student/register" className={studentSecondaryButtonClass}>
-            Create Account
-          </Link>
+          <button
+            type="button"
+            disabled={openingRegister}
+            onClick={() => void goToRegister()}
+            className={`${studentSecondaryButtonClass} touch-manipulation disabled:opacity-60`}
+          >
+            {openingRegister ? "Opening registration…" : "Create Account"}
+          </button>
           <Link
             href="/login"
-            className="block pt-4 text-xs text-slate-400 hover:underline"
+            className="block pt-2 text-xs text-slate-400 hover:underline"
           >
             Staff portal
           </Link>

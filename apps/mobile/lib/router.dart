@@ -71,7 +71,7 @@ GoRouter createRouter(
           path == '/profile/edit' ||
           path == '/notifications';
 
-      if (hasSession && !verified && path != '/verify-email') {
+      if (hasSession && !verified && path != '/verify-email' && !path.startsWith('/register')) {
         return '/verify-email';
       }
 

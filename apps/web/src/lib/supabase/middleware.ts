@@ -12,6 +12,8 @@ const PUBLIC_PATHS = [
   "/student/register",
   "/student/forgot-password",
   "/student/verify-email",
+  "/student/onboarding",
+  "/student/terms",
 ];
 
 function isPublicPath(path: string): boolean {
@@ -22,7 +24,9 @@ function isPublicPath(path: string): boolean {
       path.startsWith("/student/login") ||
       path.startsWith("/student/register") ||
       path.startsWith("/student/forgot-password") ||
-      path.startsWith("/student/verify-email"),
+      path.startsWith("/student/verify-email") ||
+      path.startsWith("/student/onboarding") ||
+      path.startsWith("/student/terms"),
   );
 }
 
@@ -31,7 +35,9 @@ function isStudentAuthPath(path: string): boolean {
     path.startsWith("/student/login") ||
     path.startsWith("/student/register") ||
     path.startsWith("/student/forgot-password") ||
-    path.startsWith("/student/verify-email")
+    path.startsWith("/student/verify-email") ||
+    path.startsWith("/student/onboarding") ||
+    path.startsWith("/student/terms")
   );
 }
 
@@ -96,9 +102,17 @@ export async function updateSession(request: NextRequest) {
     const isStudent = role === "student";
 
     if (path === "/login" || path === "/student/login") {
-      const url = request.nextUrl.clone();
-      url.pathname = isStudent ? "/student" : "/dashboard";
-      return NextResponse.redirect(url);
+      if (isStudent) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/student";
+        return NextResponse.redirect(url);
+      }
+      if (profile?.role && profile.role !== "student") {
+        const url = request.nextUrl.clone();
+        url.pathname = "/dashboard";
+        return NextResponse.redirect(url);
+      }
+      // Auth cookie without a profile row (failed registration): allow login/register.
     }
 
     if (isStudent && isStaffDashboardPath(path)) {
@@ -113,7 +127,12 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    if (isStudent && isStudentAuthPath(path) && path !== "/student/verify-email") {
+    if (
+      isStudent &&
+      isStudentAuthPath(path) &&
+      path !== "/student/verify-email" &&
+      path !== "/student/register"
+    ) {
       const url = request.nextUrl.clone();
       url.pathname = "/student";
       return NextResponse.redirect(url);

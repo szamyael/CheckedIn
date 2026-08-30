@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BrandMark } from "@/components/BrandLogo";
-import { PermissionBlockedCard } from "@/components/student/PermissionBlockedCard";
+import { IdCardCameraCapture } from "@/components/student/IdCardCameraCapture";
 import { useLoader } from "@/components/LoaderProvider";
 import {
   formatStudentIdInput,
@@ -14,59 +14,88 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { compressImageToJpegBase64 } from "@/lib/student/compress-image";
 import { isStudentOnboardingComplete } from "@/lib/student/onboarding";
+import {
+  clearRegistrationDraft,
+  emptyRegistrationDraft,
+  loadRegistrationDraft,
+  loadRegistrationStep,
+  readFunctionError,
+  saveRegistrationDraft,
+  type RegistrationDraft,
+} from "@/lib/student/registration-draft";
 import { isStudentTermsAccepted } from "@/lib/student/terms";
-
-type Draft = {
-  studentId: string;
-  email: string;
-  firstName: string;
-  middleName: string;
-  lastName: string;
-  nameExtension: string;
-  program: string;
-  section: string;
-  yearLevel: number;
-  imageBase64: string;
-  avatarBase64: string;
-};
 
 export default function StudentRegisterPage() {
   const router = useRouter();
   const { showLoader, hideLoader } = useLoader();
   const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [draft, setDraft] = useState<Draft>({
-    studentId: "",
-    email: "",
-    firstName: "",
-    middleName: "",
-    lastName: "",
-    nameExtension: "",
-    program: "",
-    section: "",
-    yearLevel: 1,
-    imageBase64: "",
-    avatarBase64: "",
-  });
+  const [draft, setDraft] = useState<RegistrationDraft>(emptyRegistrationDraft);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [cameraBlocked, setCameraBlocked] = useState(false);
+  const [scanningId, setScanningId] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
+  const errorRef = useRef<HTMLParagraphElement>(null);
 
   useEffect(() => {
+    const saved = loadRegistrationDraft();
+    if (saved) {
+      setDraft(saved);
+      setStep(loadRegistrationStep());
+    }
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
     if (!isStudentOnboardingComplete()) {
       router.replace("/student/onboarding");
       return;
     }
     if (!isStudentTermsAccepted()) {
       router.replace("/student/terms");
+      return;
     }
-  }, [router]);
+
+    async function clearOrphanAuth() {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("users")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (!profile) {
+        await supabase.auth.signOut();
+      }
+    }
+
+    void clearOrphanAuth();
+  }, [router, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated || step === 1) return;
+    saveRegistrationDraft(draft, step);
+  }, [draft, step, hydrated]);
+
+  useEffect(() => {
+    if (error) {
+      errorRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [error]);
 
   async function onIdFile(file: File | null) {
     if (!file) return;
     setError(null);
+    setScanningId(true);
     showLoader("Scanning ID…");
     try {
       const image_base64 = await compressImageToJpegBase64(file, {
@@ -79,11 +108,7 @@ export default function StudentRegisterPage() {
         { body: { image_base64 } },
       );
       if (fnError) {
-        const details =
-          data && typeof data === "object" && "error" in data
-            ? String((data as { error?: string }).error)
-            : fnError.message;
-        throw new Error(details || "ID scan failed");
+        throw new Error(await readFunctionError(fnError, data));
       }
       const parsed = data as {
         student_id?: string;
@@ -105,20 +130,23 @@ export default function StudentRegisterPage() {
         );
       }
 
-      setDraft((d) => ({
-        ...d,
+      const nextDraft: RegistrationDraft = {
+        ...emptyRegistrationDraft(),
         studentId: sid,
-        firstName: parsed.first_name ?? d.firstName,
-        middleName: parsed.middle_name ?? d.middleName,
-        lastName: parsed.last_name ?? d.lastName,
-        nameExtension: parsed.name_extension ?? d.nameExtension,
-        program: parsed.program ?? d.program,
+        firstName: parsed.first_name ?? "",
+        middleName: parsed.middle_name ?? "",
+        lastName: parsed.last_name ?? "",
+        nameExtension: parsed.name_extension ?? "",
+        program: parsed.program ?? "",
         imageBase64: image_base64,
-      }));
+      };
+      setDraft(nextDraft);
+      saveRegistrationDraft(nextDraft, 2);
       setStep(2);
     } catch (err) {
       setError(err instanceof Error ? err.message : "ID scan failed");
     } finally {
+      setScanningId(false);
       hideLoader();
     }
   }
@@ -139,6 +167,8 @@ export default function StudentRegisterPage() {
 
   async function completeRegistration(e: React.FormEvent) {
     e.preventDefault();
+    if (submitting) return;
+
     setError(null);
     if (password.length < 8) {
       setError("Password must be at least 8 characters.");
@@ -152,24 +182,42 @@ export default function StudentRegisterPage() {
       setError("ID card photo missing. Go back and scan your ID again.");
       return;
     }
+
+    setSubmitting(true);
     showLoader("Creating account…");
+    const email = draft.email.trim().toLowerCase();
+
     try {
       const supabase = createClient();
       const { data: signUpData, error: signUpError } =
         await supabase.auth.signUp({
-          email: draft.email.trim(),
+          email,
           password,
         });
       if (signUpError) throw signUpError;
-      const userId = signUpData.user?.id;
-      if (!userId) throw new Error("Registration failed");
+
+      const user = signUpData.user;
+      if (!user?.id) {
+        throw new Error("Registration failed. Please try again.");
+      }
+      if (!user.identities?.length) {
+        throw new Error(
+          "This email is already registered. Sign in or use forgot password.",
+        );
+      }
+
+      const userId = user.id;
+
+      // Clear the session immediately so middleware cannot redirect away from
+      // this page while the registration edge function runs (matches mobile).
+      await supabase.auth.signOut();
 
       const { data, error: fnError } = await supabase.functions.invoke(
         "complete-student-registration",
         {
           body: {
             user_id: userId,
-            email: draft.email.trim(),
+            email,
             student_id: draft.studentId,
             first_name: (draft.firstName ?? "").trim(),
             middle_name: (draft.middleName ?? "").trim() || null,
@@ -184,11 +232,7 @@ export default function StudentRegisterPage() {
         },
       );
       if (fnError) {
-        const details =
-          data && typeof data === "object" && "error" in data
-            ? String((data as { error?: string }).error)
-            : fnError.message;
-        throw new Error(details || "Could not complete registration");
+        throw new Error(await readFunctionError(fnError, data));
       }
       const payload = data as { error?: string; success?: boolean };
       if (payload?.error) throw new Error(payload.error);
@@ -196,20 +240,30 @@ export default function StudentRegisterPage() {
       try {
         await supabase.auth.resend({
           type: "signup",
-          email: draft.email.trim(),
+          email,
         });
       } catch {
         // Account is already created; verification email may already be sent.
       }
 
-      router.push(
-        `/student/verify-email?email=${encodeURIComponent(draft.email.trim())}`,
+      clearRegistrationDraft();
+      router.replace(
+        `/student/verify-email?email=${encodeURIComponent(email)}`,
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
+      setSubmitting(false);
       hideLoader();
     }
+  }
+
+  if (!hydrated) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-white">
+        <div className="h-9 w-9 animate-spin rounded-full border-[3px] border-teal-500/30 border-t-teal-500" />
+      </div>
+    );
   }
 
   return (
@@ -223,24 +277,12 @@ export default function StudentRegisterPage() {
       {step === 1 && (
         <div className="mt-6 space-y-4">
           <p className="text-sm text-slate-600">
-            Upload or capture a photo of your student ID card. Your browser will
-            ask for camera access if you choose to take a photo.
+            Use your camera to capture a clear photo of your student ID card.
+            Your browser will ask for camera access.
           </p>
-          {cameraBlocked && (
-            <PermissionBlockedCard
-              permission="camera"
-              onRetry={() => setCameraBlocked(false)}
-            />
-          )}
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={(e) => {
-              setCameraBlocked(false);
-              void onIdFile(e.target.files?.[0] ?? null);
-            }}
-            className="w-full text-sm"
+          <IdCardCameraCapture
+            disabled={scanningId}
+            onCapture={(file) => void onIdFile(file)}
           />
         </div>
       )}
@@ -250,11 +292,17 @@ export default function StudentRegisterPage() {
           className="mt-6 space-y-3"
           onSubmit={(e) => {
             e.preventDefault();
-            if (!draft.email.trim() || !draft.firstName.trim() || !draft.lastName.trim() || !draft.program.trim()) {
+            if (
+              !draft.email.trim() ||
+              !draft.firstName.trim() ||
+              !draft.lastName.trim() ||
+              !draft.program.trim()
+            ) {
               setError("Fill in all required fields.");
               return;
             }
             setError(null);
+            saveRegistrationDraft(draft, 3);
             setStep(3);
           }}
         >
@@ -387,6 +435,16 @@ export default function StudentRegisterPage() {
             </select>
           </div>
           <button
+            type="button"
+            onClick={() => {
+              setError(null);
+              setStep(1);
+            }}
+            className="w-full rounded-xl border border-slate-200 py-3 text-sm font-medium text-slate-700"
+          >
+            Back to ID scan
+          </button>
+          <button
             type="submit"
             className="w-full rounded-xl bg-teal-600 py-3 text-sm font-semibold text-white"
           >
@@ -396,7 +454,7 @@ export default function StudentRegisterPage() {
       )}
 
       {step === 3 && (
-        <form className="mt-6 space-y-3" onSubmit={completeRegistration}>
+        <form className="mt-6 space-y-3" onSubmit={(e) => void completeRegistration(e)}>
           <p className="text-sm text-slate-600">
             Set a password for Student ID {draft.studentId}.
           </p>
@@ -406,6 +464,7 @@ export default function StudentRegisterPage() {
             onChange={setPassword}
             type="password"
             required
+            autoComplete="new-password"
           />
           <Field
             label="Confirm password"
@@ -413,18 +472,34 @@ export default function StudentRegisterPage() {
             onChange={setConfirm}
             type="password"
             required
+            autoComplete="new-password"
           />
           <button
-            type="submit"
-            className="w-full rounded-xl bg-teal-600 py-3 text-sm font-semibold text-white"
+            type="button"
+            onClick={() => {
+              setError(null);
+              setStep(2);
+            }}
+            disabled={submitting}
+            className="w-full rounded-xl border border-slate-200 py-3 text-sm font-medium text-slate-700 disabled:opacity-50"
           >
-            Create account
+            Back
+          </button>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full rounded-xl bg-teal-600 py-3 text-sm font-semibold text-white disabled:opacity-60"
+          >
+            {submitting ? "Creating account…" : "Create account"}
           </button>
         </form>
       )}
 
       {error && (
-        <p className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">
+        <p
+          ref={errorRef}
+          className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600"
+        >
           {error}
         </p>
       )}
@@ -446,6 +521,7 @@ function Field({
   type = "text",
   required,
   readOnly,
+  autoComplete,
 }: {
   label: string;
   value: string;
@@ -453,6 +529,7 @@ function Field({
   type?: string;
   required?: boolean;
   readOnly?: boolean;
+  autoComplete?: string;
 }) {
   return (
     <div>
@@ -461,6 +538,7 @@ function Field({
         type={type}
         required={required}
         readOnly={readOnly}
+        autoComplete={autoComplete}
         value={value}
         onChange={(e) => {
           if (!onChange) return;

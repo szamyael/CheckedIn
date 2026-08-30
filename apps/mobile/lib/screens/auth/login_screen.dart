@@ -123,7 +123,9 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 12),
           StudentSecondaryButton(
             label: 'Create Account',
-            onPressed: () {
+            onPressed: () async {
+              await _auth.signOut();
+              if (!context.mounted) return;
               context.push('/register/id-scan', extra: RegistrationDraft());
             },
           ),
