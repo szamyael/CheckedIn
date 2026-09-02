@@ -68,17 +68,60 @@ export async function insertBingoCard(
     is_active: false,
   };
 
+  // Try inserting with status column first (migration 027 applied)
   let result = await supabase
     .from("bingo_cards")
     .insert({ ...base, status: "draft" as const })
     .select()
     .single();
 
-  if (result.error && isMissingColumnError(result.error.message, "status")) {
-    result = await supabase.from("bingo_cards").insert(base).select().single();
+  if (result.error) {
+    // If status column is missing, fall back to old schema (pre-migration 027)
+    if (isMissingColumnError(result.error.message, "status")) {
+      result = await supabase.from("bingo_cards").insert(base).select().single();
+    }
+    
+    // If still an error after fallback, provide diagnostic context
+    if (result.error) {
+      const errorMsg = result.error.message || "";
+      const errorDetails = {
+        message: errorMsg,
+        hint: "Try these troubleshooting steps:",
+        tips: [] as string[],
+      };
+      
+      // Provide specific guidance based on error type
+      if (errorMsg.toLowerCase().includes("permission denied") || 
+          errorMsg.toLowerCase().includes("row-level security") ||
+          errorMsg.toLowerCase().includes("rls")) {
+        errorDetails.tips.push(
+          "1. Verify your user role is 'org_member' or 'admin'",
+          "2. Ensure your account is properly linked to the organization",
+          "3. Check that the organization_id is correct"
+        );
+      }
+      if (errorMsg.toLowerCase().includes("column") || 
+          errorMsg.toLowerCase().includes("schema")) {
+        errorDetails.tips.push(
+          "1. Run database migrations (check migration 027_bingo_card_status.sql)",
+          "2. Verify the bingo_cards table exists and has the expected columns"
+        );
+      }
+      if (!errorDetails.tips.length) {
+        errorDetails.tips.push(
+          "1. Check browser console and server logs for more details",
+          "2. Ensure Supabase project is accessible",
+          "3. Verify bingo_cards table exists"
+        );
+      }
+      
+      const fullError = new Error(
+        `Failed to create bingo card: ${errorMsg}\n${errorDetails.tips.join("\n")}`
+      );
+      throw fullError;
+    }
   }
 
-  if (result.error) throw result.error;
   return normalizeBingoCardRow(result.data as Record<string, unknown>);
 }
 

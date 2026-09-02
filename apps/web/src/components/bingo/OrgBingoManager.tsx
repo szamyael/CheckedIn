@@ -264,11 +264,34 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
       await reload();
     } catch (err) {
       const message = getSupabaseErrorMessage(err);
-      if (message.toLowerCase().includes("row-level security")) {
+      
+      // Check for RLS permission errors
+      if (message.toLowerCase().includes("row-level security") ||
+          message.toLowerCase().includes("permission denied")) {
         setError(
-          "Permission denied. Make sure your account is linked to this organization.",
+          "Permission denied. Make sure:\n" +
+          "• Your account is linked to this organization\n" +
+          "• You have the correct role (org_member or admin)\n" +
+          "• Contact your organization admin if the issue persists\n\n" +
+          `Details: ${message}`
         );
-      } else {
+      }
+      // Check for schema/migration errors
+      else if (message.toLowerCase().includes("column") ||
+               message.toLowerCase().includes("schema cache")) {
+        setError(
+          "Database schema issue. This usually means:\n" +
+          "• Database migrations haven't been fully applied\n" +
+          "• The bingo_cards table is missing the status column\n" +
+          "• Contact your administrator to run: migration 027_bingo_card_status.sql\n\n" +
+          `Details: ${message}`
+        );
+      }
+      // Display any troubleshooting tips from insertBingoCard
+      else if (message.includes("Try these troubleshooting steps")) {
+        setError(message);
+      }
+      else {
         setError(message || "Could not create card");
       }
     } finally {
