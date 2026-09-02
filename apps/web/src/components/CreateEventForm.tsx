@@ -9,7 +9,13 @@ import {
   EventLocationPicker,
   type EventLocation,
 } from "@/components/EventLocationPicker";
+import { EventScheduleFieldsInput } from "@/components/EventScheduleFields";
 import { DEFAULT_MAP_CENTER } from "@/lib/campus-locations";
+import {
+  defaultEventSchedule,
+  scheduleFieldsToIso,
+  validateEventSchedule,
+} from "@/lib/event-form";
 
 export function CreateEventForm() {
   const router = useRouter();
@@ -17,11 +23,25 @@ export function CreateEventForm() {
   const [error, setError] = useState<string | null>(null);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
+
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [locationRadiusM, setLocationRadiusM] = useState(100);
+  const [status, setStatus] = useState("published");
+  const [schedule, setSchedule] = useState(defaultEventSchedule);
+  const [attendanceCustomized, setAttendanceCustomized] = useState(false);
+
   const [location, setLocation] = useState<EventLocation>({
     venueName: "",
     latitude: DEFAULT_MAP_CENTER.lat,
     longitude: DEFAULT_MAP_CENTER.lng,
   });
+
+  const scheduleValidation = validateEventSchedule(schedule);
+  const canSubmit =
+    title.trim().length > 0 &&
+    location.venueName.trim().length > 0 &&
+    scheduleValidation.valid;
 
   useEffect(() => {
     async function loadProfile() {
@@ -52,6 +72,20 @@ export function CreateEventForm() {
     void loadProfile();
   }, []);
 
+  function resetForm() {
+    setTitle("");
+    setDescription("");
+    setLocationRadiusM(100);
+    setStatus("published");
+    setSchedule(defaultEventSchedule());
+    setAttendanceCustomized(false);
+    setLocation({
+      venueName: "",
+      latitude: DEFAULT_MAP_CENTER.lat,
+      longitude: DEFAULT_MAP_CENTER.lng,
+    });
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
@@ -73,7 +107,10 @@ export function CreateEventForm() {
       return;
     }
 
-    const form = new FormData(e.currentTarget);
+    if (!scheduleValidation.valid) {
+      setError(scheduleValidation.errors[0] ?? "Fix schedule errors before saving.");
+      return;
+    }
 
     try {
       await run("Creating event…", async () => {
@@ -84,43 +121,28 @@ export function CreateEventForm() {
 
         if (!user) throw new Error("Not authenticated");
 
-        const startsAt = new Date(form.get("starts_at") as string).toISOString();
-        const endsAt = new Date(form.get("ends_at") as string).toISOString();
-        const attendanceStarts = new Date(
-          form.get("attendance_starts_at") as string,
-        ).toISOString();
-        const attendanceEnds = new Date(
-          form.get("attendance_ends_at") as string,
-        ).toISOString();
-
         const { data: settings } = await supabase
           .from("system_settings")
           .select("default_requires_otp")
           .eq("id", 1)
           .maybeSingle();
 
-        const statusInput = form.get("status") as string;
-        const status =
-          userRole === "org_member" && statusInput === "published"
+        const resolvedStatus =
+          userRole === "org_member" && status === "published"
             ? "pending_approval"
-            : statusInput;
+            : status;
+
+        const times = scheduleFieldsToIso(schedule);
 
         const { error: insertError } = await supabase.from("events").insert({
-          title: form.get("title") as string,
-          description: (form.get("description") as string) || null,
+          title: title.trim(),
+          description: description.trim() || null,
           venue_name: location.venueName.trim(),
           latitude: location.latitude,
           longitude: location.longitude,
-          location_radius_m: parseInt(
-            form.get("location_radius_m") as string,
-            10,
-          ),
-          starts_at: startsAt,
-          ends_at: endsAt,
-          attendance_starts_at: attendanceStarts,
-          attendance_ends_at: attendanceEnds,
-          qr_expires_at: attendanceEnds,
-          status,
+          location_radius_m: locationRadiusM,
+          ...times,
+          status: resolvedStatus,
           requires_otp: settings?.default_requires_otp ?? false,
           created_by: user.id,
           organization_id: organizationId,
@@ -130,12 +152,7 @@ export function CreateEventForm() {
       });
 
       router.refresh();
-      (e.target as HTMLFormElement).reset();
-      setLocation({
-        venueName: "",
-        latitude: DEFAULT_MAP_CENTER.lat,
-        longitude: DEFAULT_MAP_CENTER.lng,
-      });
+      resetForm();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create event");
     }
@@ -165,7 +182,8 @@ export function CreateEventForm() {
             Title
           </label>
           <input
-            name="title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
             required
             placeholder={formPlaceholders.eventTitle}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
@@ -175,7 +193,8 @@ export function CreateEventForm() {
         <div className="sm:col-span-2">
           <label className="mb-1 block text-sm font-medium">Description</label>
           <textarea
-            name="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
             rows={2}
             placeholder={formPlaceholders.eventDescription}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
@@ -191,9 +210,13 @@ export function CreateEventForm() {
             Check-in radius (meters)
           </label>
           <input
-            name="location_radius_m"
             type="number"
-            defaultValue={100}
+            value={locationRadiusM}
+            onChange={(e) =>
+              setLocationRadiusM(
+                Math.min(5000, Math.max(10, parseInt(e.target.value, 10) || 10)),
+              )
+            }
             min={10}
             max={5000}
             required
@@ -204,8 +227,8 @@ export function CreateEventForm() {
         <div>
           <label className="mb-1 block text-sm font-medium">Status</label>
           <select
-            name="status"
-            defaultValue="published"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
           >
             <option value="draft">Draft</option>
@@ -217,47 +240,12 @@ export function CreateEventForm() {
           </select>
         </div>
 
-        <div>
-          <label className="mb-1 block text-sm font-medium">Event Starts</label>
-          <input
-            name="starts_at"
-            type="datetime-local"
-            required
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-          />
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium">Event Ends</label>
-          <input
-            name="ends_at"
-            type="datetime-local"
-            required
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-          />
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium">
-            Attendance Opens
-          </label>
-          <input
-            name="attendance_starts_at"
-            type="datetime-local"
-            required
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-          />
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium">
-            Attendance Closes (QR expires)
-          </label>
-          <input
-            name="attendance_ends_at"
-            type="datetime-local"
-            required
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+        <div className="sm:col-span-2">
+          <EventScheduleFieldsInput
+            value={schedule}
+            onChange={setSchedule}
+            attendanceCustomized={attendanceCustomized}
+            onAttendanceCustomizedChange={setAttendanceCustomized}
           />
         </div>
       </div>
@@ -266,7 +254,8 @@ export function CreateEventForm() {
 
       <button
         type="submit"
-        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        disabled={!canSubmit}
+        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
       >
         Create Event
       </button>

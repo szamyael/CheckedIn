@@ -7,25 +7,63 @@ import {
   EventLocationPicker,
   type EventLocation,
 } from "@/components/EventLocationPicker";
+import { EventScheduleFieldsInput } from "@/components/EventScheduleFields";
 import { formPlaceholders } from "@/lib/form-placeholders";
 import { useAsyncAction } from "@/lib/useAsyncAction";
+import {
+  scheduleFieldsToIso,
+  toLocalDatetimeInputValue,
+  validateEventSchedule,
+  type EventScheduleFields,
+} from "@/lib/event-form";
+
+function initialSchedule(event: Event): EventScheduleFields {
+  return {
+    startsAt: toLocalDatetimeInputValue(event.starts_at),
+    endsAt: toLocalDatetimeInputValue(event.ends_at),
+    attendanceStartsAt: toLocalDatetimeInputValue(
+      event.attendance_starts_at ?? event.starts_at,
+    ),
+    attendanceEndsAt: toLocalDatetimeInputValue(
+      event.attendance_ends_at ?? event.ends_at,
+    ),
+  };
+}
+
+function attendanceIsCustom(event: Event): boolean {
+  const schedule = initialSchedule(event);
+  return (
+    schedule.attendanceStartsAt !== schedule.startsAt ||
+    schedule.attendanceEndsAt !== schedule.endsAt
+  );
+}
 
 export function EditEventForm({ event }: { event: Event }) {
   const router = useRouter();
   const run = useAsyncAction();
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+
+  const [title, setTitle] = useState(event.title);
+  const [description, setDescription] = useState(event.description ?? "");
+  const [locationRadiusM, setLocationRadiusM] = useState(event.location_radius_m);
+  const [eventStatus, setEventStatus] = useState(event.status);
+  const [schedule, setSchedule] = useState(() => initialSchedule(event));
+  const [attendanceCustomized, setAttendanceCustomized] = useState(() =>
+    attendanceIsCustom(event),
+  );
+
   const [location, setLocation] = useState<EventLocation>({
     venueName: event.venue_name,
     latitude: event.latitude,
     longitude: event.longitude,
   });
 
-  function toLocalInput(iso: string) {
-    const d = new Date(iso);
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  }
+  const scheduleValidation = validateEventSchedule(schedule);
+  const canSubmit =
+    title.trim().length > 0 &&
+    location.venueName.trim().length > 0 &&
+    scheduleValidation.valid;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -36,28 +74,28 @@ export function EditEventForm({ event }: { event: Event }) {
       return;
     }
 
-    const form = new FormData(e.currentTarget);
+    if (!scheduleValidation.valid) {
+      setError(scheduleValidation.errors[0] ?? "Fix schedule errors before saving.");
+      return;
+    }
 
     try {
       await run("Saving event…", async () => {
         const { createClient } = await import("@/lib/supabase/client");
         const supabase = createClient();
+        const times = scheduleFieldsToIso(schedule);
 
         const { error: updateError } = await supabase
           .from("events")
           .update({
-            title: form.get("title") as string,
-            description: (form.get("description") as string) || null,
+            title: title.trim(),
+            description: description.trim() || null,
             venue_name: location.venueName.trim(),
             latitude: location.latitude,
             longitude: location.longitude,
-            location_radius_m: parseInt(form.get("location_radius_m") as string, 10),
-            starts_at: new Date(form.get("starts_at") as string).toISOString(),
-            ends_at: new Date(form.get("ends_at") as string).toISOString(),
-            attendance_starts_at: new Date(form.get("attendance_starts_at") as string).toISOString(),
-            attendance_ends_at: new Date(form.get("attendance_ends_at") as string).toISOString(),
-            qr_expires_at: new Date(form.get("attendance_ends_at") as string).toISOString(),
-            status: form.get("status") as string,
+            location_radius_m: locationRadiusM,
+            ...times,
+            status: eventStatus,
           })
           .eq("id", event.id);
 
@@ -85,15 +123,46 @@ export function EditEventForm({ event }: { event: Event }) {
 
   return (
     <form onSubmit={handleSubmit} className="mt-4 space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
-      <input name="title" defaultValue={event.title} required className="w-full rounded border px-2 py-1 text-sm" placeholder={formPlaceholders.eventTitle} />
-      <textarea name="description" defaultValue={event.description ?? ""} rows={2} className="w-full rounded border px-2 py-1 text-sm" placeholder={formPlaceholders.eventDescription} />
+      <input
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        required
+        className="w-full rounded border px-2 py-1 text-sm"
+        placeholder={formPlaceholders.eventTitle}
+      />
+      <textarea
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        rows={2}
+        className="w-full rounded border px-2 py-1 text-sm"
+        placeholder={formPlaceholders.eventDescription}
+      />
       <EventLocationPicker value={location} onChange={setLocation} compact />
-      <input name="location_radius_m" type="number" defaultValue={event.location_radius_m} min={10} max={5000} className="w-full rounded border px-2 py-1 text-sm" placeholder="Radius (m)" />
-      <input name="starts_at" type="datetime-local" defaultValue={toLocalInput(event.starts_at)} required className="w-full rounded border px-2 py-1 text-sm" />
-      <input name="ends_at" type="datetime-local" defaultValue={toLocalInput(event.ends_at)} required className="w-full rounded border px-2 py-1 text-sm" />
-      <input name="attendance_starts_at" type="datetime-local" defaultValue={toLocalInput(event.attendance_starts_at ?? event.starts_at)} required className="w-full rounded border px-2 py-1 text-sm" />
-      <input name="attendance_ends_at" type="datetime-local" defaultValue={toLocalInput(event.attendance_ends_at ?? event.ends_at)} required className="w-full rounded border px-2 py-1 text-sm" />
-      <select name="status" defaultValue={event.status} className="w-full rounded border px-2 py-1 text-sm">
+      <input
+        type="number"
+        value={locationRadiusM}
+        onChange={(e) =>
+          setLocationRadiusM(
+            Math.min(5000, Math.max(10, parseInt(e.target.value, 10) || 10)),
+          )
+        }
+        min={10}
+        max={5000}
+        className="w-full rounded border px-2 py-1 text-sm"
+        placeholder="Radius (m)"
+      />
+      <EventScheduleFieldsInput
+        value={schedule}
+        onChange={setSchedule}
+        attendanceCustomized={attendanceCustomized}
+        onAttendanceCustomizedChange={setAttendanceCustomized}
+        compact
+      />
+      <select
+        value={eventStatus}
+        onChange={(e) => setEventStatus(e.target.value as Event["status"])}
+        className="w-full rounded border px-2 py-1 text-sm"
+      >
         <option value="draft">Draft</option>
         <option value="published">Published</option>
         <option value="cancelled">Cancelled</option>
@@ -101,7 +170,11 @@ export function EditEventForm({ event }: { event: Event }) {
       </select>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <div className="flex gap-2">
-        <button type="submit" className="rounded bg-blue-600 px-3 py-1 text-sm text-white">
+        <button
+          type="submit"
+          disabled={!canSubmit}
+          className="rounded bg-blue-600 px-3 py-1 text-sm text-white disabled:opacity-50"
+        >
           Save
         </button>
         <button type="button" onClick={() => setOpen(false)} className="rounded border px-3 py-1 text-sm">

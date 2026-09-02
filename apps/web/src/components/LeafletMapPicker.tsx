@@ -242,7 +242,7 @@ export function LeafletMapPicker({
         </form>
 
         {showResults && results.length > 0 && (
-          <ul className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg">
+          <ul className="mt-2 max-h-56 w-full overflow-auto rounded-lg border border-slate-200 bg-white shadow-md">
             {results.map((place) => (
               <li key={`${place.latitude},${place.longitude},${place.displayName}`}>
                 <button
@@ -251,7 +251,7 @@ export function LeafletMapPicker({
                   className="block w-full px-3 py-2 text-left text-sm hover:bg-teal-50"
                 >
                   <span className="font-medium text-slate-900">{place.label}</span>
-                  <span className="mt-0.5 block truncate text-xs text-slate-500">
+                  <span className="mt-0.5 block text-xs text-slate-500">
                     {place.displayName}
                   </span>
                 </button>
@@ -264,11 +264,11 @@ export function LeafletMapPicker({
       {searchError && <p className="text-sm text-red-600">{searchError}</p>}
 
       <p className="text-xs text-slate-700">
-        Search for a place, then click a result to jump the map. You can also
-        click the map or drag the pin to fine-tune the check-in center.
+        Search for a place, then pick a result below. You can also click the map
+        or drag the pin to fine-tune the check-in center.
       </p>
 
-      <div className="h-64 w-full overflow-hidden rounded-lg border border-slate-200">
+      <div className="relative z-0 h-64 w-full overflow-hidden rounded-lg border border-slate-200">
         <MapContainer
           center={center}
           zoom={17}
