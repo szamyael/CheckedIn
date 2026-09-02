@@ -27,6 +27,7 @@ export function OrganizationProgramAlignmentPanel({
 }) {
   const router = useRouter();
   const run = useAsyncAction();
+  const [mappings, setMappings] = useState(existingMappings);
   const [organizationId, setOrganizationId] = useState(organizations[0]?.id ?? "");
   const [program, setProgram] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -36,13 +37,13 @@ export function OrganizationProgramAlignmentPanel({
 
   const normalizeProgramName = (value: string) => value.trim().toLowerCase();
 
-  const grouped = existingMappings.reduce<Record<string, ExistingMapping[]>>((acc, row) => {
+  const grouped = mappings.reduce<Record<string, ExistingMapping[]>>((acc, row) => {
     const orgId = row.organization_id;
     acc[orgId] = [...(acc[orgId] ?? []), row];
     return acc;
   }, {});
 
-  const programToOrganizations = existingMappings.reduce<Record<string, string[]>>((acc, row) => {
+  const programToOrganizations = mappings.reduce<Record<string, string[]>>((acc, row) => {
     const normalizedProgram = normalizeProgramName(row.program);
     if (!normalizedProgram) return acc;
 
@@ -82,6 +83,14 @@ export function OrganizationProgramAlignmentPanel({
         return;
       }
 
+      const savedMapping = data.mapping as ExistingMapping;
+      setMappings((current) => [
+        ...current.filter((mapping) => mapping.id !== savedMapping.id),
+        {
+          ...savedMapping,
+          organizations: { name: organizations.find((org) => org.id === savedMapping.organization_id)?.name ?? "" },
+        },
+      ]);
       setProgram("");
       setSuccess(`Added ${trimmedProgram} to ${organizations.find((o) => o.id === organizationId)?.name ?? "organization"}.`);
       router.refresh();
@@ -112,6 +121,9 @@ export function OrganizationProgramAlignmentPanel({
         return;
       }
 
+      setMappings((current) => current.map((mapping) =>
+        mapping.id === id ? { ...mapping, program: updated } : mapping,
+      ));
       setEditingId(null);
       setEditingValue("");
       setSuccess(`Updated mapping to ${updated}.`);
@@ -140,6 +152,7 @@ export function OrganizationProgramAlignmentPanel({
         return;
       }
 
+      setMappings((current) => current.filter((mapping) => mapping.id !== id));
       setSuccess(`Removed ${programName}.`);
       router.refresh();
     } catch {
