@@ -140,11 +140,13 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
       (isMissingColumnError(badgeError.message, "status") ||
         isMissingColumnError(badgeError.message, "description"))
     ) {
-      ({ data: badgeRows, error: badgeError } = await supabase
+      const fallbackResult = await supabase
         .from("org_badges")
         .select("id, organization_id, name, slug, points, kind, created_at")
         .eq("organization_id", organizationId)
-        .order("created_at", { ascending: false }));
+        .order("created_at", { ascending: false });
+      badgeRows = fallbackResult.data as typeof badgeRows;
+      badgeError = fallbackResult.error;
     }
 
     if (badgeError) {
