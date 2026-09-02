@@ -31,7 +31,7 @@ export function LiveAttendanceMonitor({ eventId }: { eventId: string }) {
           "id, checked_in_at, fraud_flag, is_manual_override, students(student_id, first_name, last_name, program)",
         )
         .eq("event_id", eventId)
-        .eq("status", "checked_in")
+        .in("status", ["checked_in", "late"])
         .order("checked_in_at", { ascending: false });
 
       const mapped = (data ?? []).map((row) => {
@@ -74,7 +74,7 @@ export function LiveAttendanceMonitor({ eventId }: { eventId: string }) {
     <div className="rounded-xl border border-slate-200 bg-white">
       <div className="border-b border-slate-200 px-4 py-3">
         <p className="text-sm font-medium">
-          Live attendance: <span className="text-blue-600">{count}</span> checked in
+          Live attendance: <span className="text-blue-600">{count}</span> active
         </p>
       </div>
       <div className="max-h-96 overflow-auto">

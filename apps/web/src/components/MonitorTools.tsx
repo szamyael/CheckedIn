@@ -23,7 +23,8 @@ export function MonitorTools({ eventId }: { eventId: string }) {
       const { data: attendance } = await supabase
         .from("attendance_records")
         .select("student_id")
-        .eq("event_id", eventId);
+        .eq("event_id", eventId)
+        .in("status", ["checked_in", "late"]);
 
       const checkedIds = new Set((attendance ?? []).map((a) => a.student_id));
 

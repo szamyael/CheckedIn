@@ -8,6 +8,7 @@ import { StudentActions } from "@/components/StudentActions";
 import { PendingStudentsBatchActions } from "@/components/PendingStudentsBatchActions";
 import { StudentAchievementsPanel } from "@/components/StudentAchievementsPanel";
 import { AdminBingoOverview } from "@/components/bingo/AdminBingoOverview";
+import { OrganizationProgramAlignmentPanel } from "@/components/OrganizationProgramAlignmentPanel";
 import { formatStudentDisplayName } from "@/lib/student/display-name";
 
 export default async function AdminPage() {
@@ -28,6 +29,12 @@ export default async function AdminPage() {
     .from("organizations")
     .select("id, name")
     .order("name");
+
+  const { data: organizationPrograms } = await supabase
+    .from("organization_programs")
+    .select("id, organization_id, program, organizations(name)")
+    .order("organization_id")
+    .order("program");
 
   const { data: staff } = await supabase
     .from("staff_profiles")
@@ -71,6 +78,11 @@ export default async function AdminPage() {
       <EventApprovalPanel events={allEvents ?? []} />
 
       <AdminBingoOverview />
+
+      <OrganizationProgramAlignmentPanel
+        organizations={organizations ?? []}
+        existingMappings={organizationPrograms ?? []}
+      />
 
       <div className="grid gap-8 lg:grid-cols-2">
         <CreateOrganizationForm />
