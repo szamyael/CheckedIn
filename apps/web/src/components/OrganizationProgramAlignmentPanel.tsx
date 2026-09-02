@@ -48,7 +48,7 @@ export function OrganizationProgramAlignmentPanel({
 
     const orgName = Array.isArray(row.organizations)
       ? row.organizations[0]?.name
-      : row.organizations?.name;
+      : row.organizations?.name ?? organizations.find((org) => org.id === row.organization_id)?.name;
 
     if (orgName) {
       acc[normalizedProgram] = [...(acc[normalizedProgram] ?? []), orgName];
