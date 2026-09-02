@@ -34,6 +34,8 @@ export function OrganizationProgramAlignmentPanel({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  const normalizeProgramName = (value: string) => value.trim().toLowerCase();
+
   const grouped = existingMappings.reduce<Record<string, ExistingMapping[]>>((acc, row) => {
     const orgId = row.organization_id;
     acc[orgId] = [...(acc[orgId] ?? []), row];
@@ -41,15 +43,15 @@ export function OrganizationProgramAlignmentPanel({
   }, {});
 
   const programToOrganizations = existingMappings.reduce<Record<string, string[]>>((acc, row) => {
-    const program = row.program.trim();
-    if (!program) return acc;
+    const normalizedProgram = normalizeProgramName(row.program);
+    if (!normalizedProgram) return acc;
 
     const orgName = Array.isArray(row.organizations)
       ? row.organizations[0]?.name
       : row.organizations?.name;
 
     if (orgName) {
-      acc[program] = [...(acc[program] ?? []), orgName];
+      acc[normalizedProgram] = [...(acc[normalizedProgram] ?? []), orgName];
     }
     return acc;
   }, {});
@@ -201,7 +203,8 @@ export function OrganizationProgramAlignmentPanel({
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
             {allPrograms.map((program) => {
-              const assignedTo = programToOrganizations[program] ?? [];
+              const normalizedProgram = normalizeProgramName(program);
+              const assignedTo = programToOrganizations[normalizedProgram] ?? [];
               return (
                 <div key={program} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                   <div className="mb-2 flex items-center justify-between gap-2">
