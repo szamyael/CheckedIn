@@ -51,37 +51,10 @@ export default function StudentBingoPage() {
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: student } = await supabase
-        .from("students")
-        .select("program")
-        .eq("id", user.id)
-        .single();
-
-      const program = student?.program?.trim();
-      let orgIds: string[] = [];
-
-      if (program) {
-        const { data: programMatches } = await supabase
-          .from("organization_programs")
-          .select("organization_id")
-          .eq("program", program);
-
-        orgIds = [...new Set((programMatches ?? []).map((row) => row.organization_id as string))];
-      }
-
-      if (orgIds.length === 0) {
-        setCard(null);
-        setCells([]);
-        setAwards([]);
-        setLoading(false);
-        return;
-      }
-
       const { data: cards } = await supabase
         .from("bingo_cards")
         .select("id, title, season_label, streak_threshold")
-        .eq("status", "active")
-        .in("organization_id", orgIds)
+        .eq("is_active", true)
         .limit(5);
 
       const active = (cards?.[0] as Card | undefined) ?? null;
