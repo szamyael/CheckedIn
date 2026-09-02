@@ -145,11 +145,6 @@ export function CreateEventForm({
           .eq("id", 1)
           .maybeSingle();
 
-        const resolvedStatus =
-          userRole === "org_member" && status === "published"
-            ? "pending_approval"
-            : status;
-
         const times = scheduleFieldsToIso(schedule);
 
         const { error: insertError } = await supabase.from("events").insert({
@@ -160,7 +155,7 @@ export function CreateEventForm({
           longitude: location.longitude,
           location_radius_m: locationRadiusM,
           ...times,
-          status: resolvedStatus,
+          status,
           requires_otp: settings?.default_requires_otp ?? false,
           created_by: user.id,
           organization_id: organizationId,
@@ -189,8 +184,8 @@ export function CreateEventForm({
 
       {organizationId && (
         <p className="text-xs text-slate-700">
-          This event will be linked to your organization. Publishing submits it
-          for admin approval.
+          This event will be linked to your organization and published
+          immediately when you choose Published.
         </p>
       )}
 
@@ -250,11 +245,7 @@ export function CreateEventForm({
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
           >
             <option value="draft">Draft</option>
-            <option value="published">
-              {userRole === "org_member"
-                ? "Submit for approval"
-                : "Published"}
-            </option>
+            <option value="published">Published</option>
           </select>
         </div>
 

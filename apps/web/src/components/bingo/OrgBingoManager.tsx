@@ -2,11 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useLoader } from "@/components/LoaderProvider";
-import {
-  backfillEventOrganizationIds,
-  fetchOrgBingoEvents,
-  type OrgBingoEvent,
-} from "@/lib/org-events";
+import { fetchBingoCardEvents, type BingoCardEvent } from "@/lib/org-events";
 import { createClient } from "@/lib/supabase/client";
 
 type OrgBadge = {
@@ -34,7 +30,7 @@ type BingoCell = {
   label: string | null;
 };
 
-type OrgEvent = OrgBingoEvent;
+type OrgEvent = BingoCardEvent;
 
 type AwardRow = {
   id: string;
@@ -79,23 +75,13 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
       .eq("organization_id", organizationId);
     setBadges((badgeRows as OrgBadge[]) ?? []);
 
-    const { data: eventRows, error: eventsError } = await (async () => {
-      try {
-        await backfillEventOrganizationIds(supabase, organizationId);
-        const rows = await fetchOrgBingoEvents(supabase, organizationId);
-        return { data: rows, error: null };
-      } catch (err) {
-        return {
-          data: [] as OrgEvent[],
-          error: err instanceof Error ? err : new Error("Could not load events"),
-        };
-      }
-    })();
-
-    if (eventsError) {
-      setError(eventsError.message);
+    try {
+      const eventRows = await fetchBingoCardEvents(supabase);
+      setEvents(eventRows);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not load events");
+      setEvents([]);
     }
-    setEvents(eventRows ?? []);
 
     if (active) {
       setTitle(active.title);
@@ -398,12 +384,11 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
         <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-6">
           <h2 className="text-lg font-semibold">3×3 event grid</h2>
           <p className="text-sm text-slate-600">
-            Assign one published org event to each cell.
+            Assign any campus event to each cell (org, admin, and published
+            events).
             {events.length === 0 && (
               <span className="mt-1 block text-amber-700">
-                No published events found for your organization yet. Create and
-                publish events on the Events page (org-submitted events must be
-                approved by an admin first).
+                No events found yet. Create events on the Events page.
               </span>
             )}
           </p>
@@ -429,6 +414,7 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
                     {events.map((ev) => (
                       <option key={ev.id} value={ev.id}>
                         {ev.title}
+                        {ev.status !== "published" ? ` (${ev.status})` : ""}
                       </option>
                     ))}
                   </select>

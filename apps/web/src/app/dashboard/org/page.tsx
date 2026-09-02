@@ -26,8 +26,7 @@ export default async function OrgDashboard() {
           Organization Dashboard
         </h1>
         <p className="mt-1 text-sm text-slate-700">
-          Create events (subject to admin approval) and manage Bingo badges for
-          your students.
+          Create events and manage Bingo badges for your students.
         </p>
       </div>
 
