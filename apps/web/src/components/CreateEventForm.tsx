@@ -52,7 +52,6 @@ export function CreateEventForm({
   useEffect(() => {
     if (initialOrganizationId) {
       setOrganizationId(initialOrganizationId);
-      return;
     }
 
     async function loadProfile() {
@@ -70,7 +69,7 @@ export function CreateEventForm({
 
       setUserRole(profile?.role ?? null);
 
-      if (profile?.role === "org_member" || profile?.role === "admin") {
+      if (!initialOrganizationId && (profile?.role === "org_member" || profile?.role === "admin")) {
         const { data: staff } = await supabase
           .from("staff_profiles")
           .select("organization_id")
