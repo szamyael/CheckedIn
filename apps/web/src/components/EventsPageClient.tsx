@@ -33,9 +33,11 @@ function statusLabel(event: Event, now: Date) {
 export function EventsPageClient({
   events,
   canCreate = false,
+  organizationId = null,
 }: {
   events: Event[];
   canCreate?: boolean;
+  organizationId?: string | null;
 }) {
   const [view, setView] = useState<ViewMode>("list");
   const [category, setCategory] = useState<ListCategory>("upcoming");
@@ -79,7 +81,7 @@ export function EventsPageClient({
         </p>
       </div>
 
-      {canCreate && <CreateEventForm />}
+      {canCreate && <CreateEventForm initialOrganizationId={organizationId} />}
 
       {!canCreate && (
         <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">

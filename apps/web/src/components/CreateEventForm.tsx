@@ -17,11 +17,17 @@ import {
   validateEventSchedule,
 } from "@/lib/event-form";
 
-export function CreateEventForm() {
+export function CreateEventForm({
+  initialOrganizationId = null,
+}: {
+  initialOrganizationId?: string | null;
+}) {
   const router = useRouter();
   const run = useAsyncAction();
   const [error, setError] = useState<string | null>(null);
-  const [organizationId, setOrganizationId] = useState<string | null>(null);
+  const [organizationId, setOrganizationId] = useState<string | null>(
+    initialOrganizationId,
+  );
   const [userRole, setUserRole] = useState<string | null>(null);
 
   const [title, setTitle] = useState("");
@@ -44,6 +50,11 @@ export function CreateEventForm() {
     scheduleValidation.valid;
 
   useEffect(() => {
+    if (initialOrganizationId) {
+      setOrganizationId(initialOrganizationId);
+      return;
+    }
+
     async function loadProfile() {
       const supabase = createClient();
       const {
@@ -70,7 +81,7 @@ export function CreateEventForm() {
     }
 
     void loadProfile();
-  }, []);
+  }, [initialOrganizationId]);
 
   function resetForm() {
     setTitle("");
@@ -99,6 +110,13 @@ export function CreateEventForm() {
 
     if (userRole !== "org_member" && userRole !== "admin") {
       setError("Only organization accounts can create events.");
+      return;
+    }
+
+    if (userRole === "org_member" && !organizationId) {
+      setError(
+        "Your account is not linked to an organization. Ask an admin to assign you before creating events.",
+      );
       return;
     }
 

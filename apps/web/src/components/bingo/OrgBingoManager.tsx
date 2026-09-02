@@ -2,6 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useLoader } from "@/components/LoaderProvider";
+import {
+  backfillEventOrganizationIds,
+  fetchOrgBingoEvents,
+  type OrgBingoEvent,
+} from "@/lib/org-events";
 import { createClient } from "@/lib/supabase/client";
 
 type OrgBadge = {
@@ -29,12 +34,7 @@ type BingoCell = {
   label: string | null;
 };
 
-type OrgEvent = {
-  id: string;
-  title: string;
-  starts_at: string;
-  status: string;
-};
+type OrgEvent = OrgBingoEvent;
 
 type AwardRow = {
   id: string;
@@ -79,13 +79,23 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
       .eq("organization_id", organizationId);
     setBadges((badgeRows as OrgBadge[]) ?? []);
 
-    const { data: eventRows } = await supabase
-      .from("events")
-      .select("id, title, starts_at, status")
-      .eq("organization_id", organizationId)
-      .eq("status", "published")
-      .order("starts_at", { ascending: true });
-    setEvents((eventRows as OrgEvent[]) ?? []);
+    const { data: eventRows, error: eventsError } = await (async () => {
+      try {
+        await backfillEventOrganizationIds(supabase, organizationId);
+        const rows = await fetchOrgBingoEvents(supabase, organizationId);
+        return { data: rows, error: null };
+      } catch (err) {
+        return {
+          data: [] as OrgEvent[],
+          error: err instanceof Error ? err : new Error("Could not load events"),
+        };
+      }
+    })();
+
+    if (eventsError) {
+      setError(eventsError.message);
+    }
+    setEvents(eventRows ?? []);
 
     if (active) {
       setTitle(active.title);
@@ -389,6 +399,13 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
           <h2 className="text-lg font-semibold">3×3 event grid</h2>
           <p className="text-sm text-slate-600">
             Assign one published org event to each cell.
+            {events.length === 0 && (
+              <span className="mt-1 block text-amber-700">
+                No published events found for your organization yet. Create and
+                publish events on the Events page (org-submitted events must be
+                approved by an admin first).
+              </span>
+            )}
           </p>
           <div className="grid grid-cols-3 gap-3">
             {Array.from({ length: 9 }, (_, position) => {
