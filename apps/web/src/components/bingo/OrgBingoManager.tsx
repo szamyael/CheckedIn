@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLoader } from "@/components/LoaderProvider";
+import { OrgBadgesPanel } from "@/components/bingo/OrgBadgesPanel";
 import {
   badgeSlugsForCard,
   createBingoCardCells,
@@ -12,15 +13,8 @@ import {
   type BingoCardStatus,
 } from "@/lib/bingo-cards";
 import { fetchBingoCardEvents, type BingoCardEvent } from "@/lib/org-events";
+import type { OrgBadgeRow } from "@/lib/org-badges";
 import { createClient } from "@/lib/supabase/client";
-
-type OrgBadge = {
-  id: string;
-  name: string;
-  slug: string;
-  points: number;
-  kind: string;
-};
 
 type BingoCell = {
   id: string;
@@ -52,7 +46,7 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
   const [cards, setCards] = useState<BingoCardRow[]>([]);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [cells, setCells] = useState<BingoCell[]>([]);
-  const [badges, setBadges] = useState<OrgBadge[]>([]);
+  const [badges, setBadges] = useState<OrgBadgeRow[]>([]);
   const [events, setEvents] = useState<BingoCardEvent[]>([]);
   const [awards, setAwards] = useState<AwardRow[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -129,9 +123,17 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
 
     const { data: badgeRows } = await supabase
       .from("org_badges")
-      .select("id, name, slug, points, kind")
-      .eq("organization_id", organizationId);
-    setBadges((badgeRows as OrgBadge[]) ?? []);
+      .select(
+        "id, organization_id, name, slug, points, kind, description, status, created_at",
+      )
+      .eq("organization_id", organizationId)
+      .order("created_at", { ascending: false });
+    setBadges(
+      ((badgeRows ?? []) as OrgBadgeRow[]).map((b) => ({
+        ...b,
+        status: b.status ?? "active",
+      })),
+    );
 
     try {
       const eventRows = await fetchBingoCardEvents(supabase);
@@ -656,27 +658,11 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
         </>
       )}
 
-      <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-6">
-        <h2 className="text-lg font-semibold">Org badges</h2>
-        {badges.length === 0 ? (
-          <p className="text-sm text-slate-500">No badges yet.</p>
-        ) : (
-          <ul className="space-y-2 text-sm">
-            {badges.map((b) => (
-              <li
-                key={b.id}
-                className="flex items-center justify-between rounded-lg border px-3 py-2"
-              >
-                <span>
-                  {b.name}{" "}
-                  <span className="text-xs text-slate-400">({b.kind})</span>
-                </span>
-                <span className="font-medium text-teal-700">+{b.points} pts</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <OrgBadgesPanel
+        organizationId={organizationId}
+        badges={badges}
+        onChanged={reload}
+      />
     </div>
   );
 }
