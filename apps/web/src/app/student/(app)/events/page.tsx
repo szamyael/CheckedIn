@@ -26,30 +26,6 @@ export default function StudentEventsPage() {
         return;
       }
 
-      const { data: student } = await supabase
-        .from("students")
-        .select("program")
-        .eq("id", user.id)
-        .single();
-
-      const program = student?.program?.trim();
-      let orgIds: string[] = [];
-
-      if (program) {
-        const { data: programMatches } = await supabase
-          .from("organization_programs")
-          .select("organization_id")
-          .eq("program", program);
-
-        orgIds = [...new Set((programMatches ?? []).map((row) => row.organization_id as string))];
-      }
-
-      if (orgIds.length === 0) {
-        setEvents([]);
-        setLoading(false);
-        return;
-      }
-
       const { data } = await supabase
         .from("events")
         .select(
@@ -57,7 +33,6 @@ export default function StudentEventsPage() {
         )
         .eq("status", "published")
         .gte("ends_at", now)
-        .in("organization_id", orgIds)
         .order("starts_at", { ascending: true });
 
       setEvents((data as StudentEvent[]) ?? []);
