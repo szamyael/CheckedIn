@@ -52,6 +52,9 @@ export default async function AdminPage() {
   });
   const pendingCount = pendingStudents.length;
   const pendingIds = pendingStudents.map((s) => s.id);
+  const allPrograms = [...new Set((students ?? []).map((s) => s.program.trim()).filter(Boolean))].sort((a, b) =>
+    a.localeCompare(b),
+  );
 
   const { data: achievements } = await supabase
     .from("student_achievements")
@@ -82,6 +85,7 @@ export default async function AdminPage() {
       <OrganizationProgramAlignmentPanel
         organizations={organizations ?? []}
         existingMappings={organizationPrograms ?? []}
+        allPrograms={allPrograms}
       />
 
       <div className="grid gap-8 lg:grid-cols-2">

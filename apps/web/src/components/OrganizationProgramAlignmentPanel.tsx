@@ -19,9 +19,11 @@ interface ExistingMapping {
 export function OrganizationProgramAlignmentPanel({
   organizations,
   existingMappings,
+  allPrograms,
 }: {
   organizations: Organization[];
   existingMappings: ExistingMapping[];
+  allPrograms: string[];
 }) {
   const router = useRouter();
   const run = useAsyncAction();
@@ -35,6 +37,20 @@ export function OrganizationProgramAlignmentPanel({
   const grouped = existingMappings.reduce<Record<string, ExistingMapping[]>>((acc, row) => {
     const orgId = row.organization_id;
     acc[orgId] = [...(acc[orgId] ?? []), row];
+    return acc;
+  }, {});
+
+  const programToOrganizations = existingMappings.reduce<Record<string, string[]>>((acc, row) => {
+    const program = row.program.trim();
+    if (!program) return acc;
+
+    const orgName = Array.isArray(row.organizations)
+      ? row.organizations[0]?.name
+      : row.organizations?.name;
+
+    if (orgName) {
+      acc[program] = [...(acc[program] ?? []), orgName];
+    }
     return acc;
   }, {});
 
@@ -180,74 +196,109 @@ export function OrganizationProgramAlignmentPanel({
       {success && <p className="mb-4 text-sm text-green-600">{success}</p>}
 
       <div className="space-y-4">
-        {organizations.length === 0 ? (
-          <p className="text-sm text-slate-700">Create an organization first.</p>
+        {allPrograms.length === 0 ? (
+          <p className="text-sm text-slate-700">No student programs have been registered yet.</p>
         ) : (
-          organizations.map((org) => (
-            <div key={org.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <h3 className="mb-2 text-sm font-semibold text-slate-900">{org.name}</h3>
-              {grouped[org.id]?.length ? (
-                <div className="flex flex-wrap gap-2">
-                  {grouped[org.id].map((mappedProgram) => (
-                    <div
-                      key={`${org.id}-${mappedProgram.id}`}
-                      className="flex items-center gap-2 rounded-full bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-800"
-                    >
-                      {editingId === mappedProgram.id ? (
-                        <>
-                          <input
-                            value={editingValue}
-                            onChange={(e) => setEditingValue(e.target.value)}
-                            className="w-28 rounded border border-blue-300 bg-white px-2 py-1 text-xs text-slate-900"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => void saveEdit(mappedProgram.id)}
-                            className="text-[10px] font-semibold text-teal-700"
-                          >
-                            Save
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditingId(null);
-                              setEditingValue("");
-                            }}
-                            className="text-[10px] font-semibold text-slate-700"
-                          >
-                            Cancel
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <span>{mappedProgram.program}</span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditingId(mappedProgram.id);
-                              setEditingValue(mappedProgram.program);
-                            }}
-                            className="text-[10px] font-semibold text-blue-700 underline"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => void deleteMapping(mappedProgram.id, mappedProgram.program)}
-                            className="text-[10px] font-semibold text-red-700 underline"
-                          >
-                            Remove
-                          </button>
-                        </>
-                      )}
+          <div className="grid gap-3 md:grid-cols-2">
+            {allPrograms.map((program) => {
+              const assignedTo = programToOrganizations[program] ?? [];
+              return (
+                <div key={program} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <p className="font-medium text-slate-900">{program}</p>
+                    {assignedTo.length === 0 && (
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
+                        Unassigned
+                      </span>
+                    )}
+                  </div>
+
+                  {assignedTo.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {assignedTo.map((orgName) => (
+                        <span key={`${program}-${orgName}`} className="rounded-full bg-blue-100 px-2 py-1 text-[11px] font-medium text-blue-800">
+                          {orgName}
+                        </span>
+                      ))}
                     </div>
-                  ))}
+                  ) : (
+                    <p className="text-xs text-slate-500">No organization linked yet.</p>
+                  )}
                 </div>
-              ) : (
-                <p className="text-sm text-slate-500">No programs mapped yet.</p>
-              )}
-            </div>
-          ))
+              );
+            })}
+          </div>
+        )}
+
+        {organizations.length > 0 && (
+          <div className="space-y-4 border-t border-slate-200 pt-4">
+            <h3 className="text-sm font-semibold text-slate-900">Organization mappings</h3>
+            {organizations.map((org) => (
+              <div key={org.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <h3 className="mb-2 text-sm font-semibold text-slate-900">{org.name}</h3>
+                {grouped[org.id]?.length ? (
+                  <div className="flex flex-wrap gap-2">
+                    {grouped[org.id].map((mappedProgram) => (
+                      <div
+                        key={`${org.id}-${mappedProgram.id}`}
+                        className="flex items-center gap-2 rounded-full bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-800"
+                      >
+                        {editingId === mappedProgram.id ? (
+                          <>
+                            <input
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              className="w-28 rounded border border-blue-300 bg-white px-2 py-1 text-xs text-slate-900"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => void saveEdit(mappedProgram.id)}
+                              className="text-[10px] font-semibold text-teal-700"
+                            >
+                              Save
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingId(null);
+                                setEditingValue("");
+                              }}
+                              className="text-[10px] font-semibold text-slate-700"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <span>{mappedProgram.program}</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingId(mappedProgram.id);
+                                setEditingValue(mappedProgram.program);
+                              }}
+                              className="text-[10px] font-semibold text-blue-700 underline"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void deleteMapping(mappedProgram.id, mappedProgram.program)}
+                              className="text-[10px] font-semibold text-red-700 underline"
+                            >
+                              Remove
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500">No programs mapped yet.</p>
+                )}
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>
