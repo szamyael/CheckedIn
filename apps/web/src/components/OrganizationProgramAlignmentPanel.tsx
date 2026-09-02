@@ -176,12 +176,19 @@ export function OrganizationProgramAlignmentPanel({
 
         <div>
           <label className="mb-1 block text-sm font-medium text-slate-800">Program / Course</label>
-          <input
+          <select
             value={program}
             onChange={(e) => setProgram(e.target.value)}
-            placeholder="e.g. BSIT, BSBA, Tourism"
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-          />
+            disabled={allPrograms.length === 0}
+          >
+            <option value="">Choose a program or course</option>
+            {allPrograms.map((programName) => (
+              <option key={programName} value={programName}>
+                {programName}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="flex items-end">
