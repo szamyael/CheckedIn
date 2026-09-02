@@ -15,6 +15,73 @@ export type BingoCardRow = {
   updated_at: string;
 };
 
+export function getSupabaseErrorMessage(err: unknown): string {
+  if (err && typeof err === "object" && "message" in err) {
+    return String((err as { message: string }).message);
+  }
+  if (err instanceof Error) return err.message;
+  return "Unknown error";
+}
+
+export function normalizeBingoCardRow(row: Record<string, unknown>): BingoCardRow {
+  const isActive = Boolean(row.is_active);
+  const rawStatus = row.status as BingoCardStatus | undefined;
+  const status: BingoCardStatus =
+    rawStatus ?? (isActive ? "active" : "draft");
+
+  return {
+    id: row.id as string,
+    title: row.title as string,
+    season_label: row.season_label as string,
+    streak_threshold: row.streak_threshold as number,
+    line_badge_id: (row.line_badge_id as string | null) ?? null,
+    streak_badge_id: (row.streak_badge_id as string | null) ?? null,
+    is_active: isActive,
+    status,
+    created_at: row.created_at as string,
+    updated_at: row.updated_at as string,
+  };
+}
+
+export function isMissingColumnError(message: string, column: string): boolean {
+  const lower = message.toLowerCase();
+  return (
+    lower.includes(column.toLowerCase()) &&
+    (lower.includes("column") ||
+      lower.includes("schema cache") ||
+      lower.includes("could not find"))
+  );
+}
+
+export async function insertBingoCard(
+  supabase: SupabaseClient,
+  payload: {
+    organization_id: string;
+    title: string;
+    season_label: string;
+    streak_threshold: number;
+    created_by: string;
+  },
+): Promise<BingoCardRow> {
+  const base = {
+    ...payload,
+    is_active: false,
+  };
+
+  let result = await supabase
+    .from("bingo_cards")
+    .insert({ ...base, status: "draft" as const })
+    .select()
+    .single();
+
+  if (result.error && isMissingColumnError(result.error.message, "status")) {
+    result = await supabase.from("bingo_cards").insert(base).select().single();
+  }
+
+  if (result.error) throw result.error;
+  return normalizeBingoCardRow(result.data as Record<string, unknown>);
+}
+
 export function badgeSlugsForCard(cardId: string, season: string) {
   const suffix = cardId.slice(0, 8);
   const seasonSlug = season.toLowerCase().replace(/\s+/g, "-");
@@ -44,20 +111,47 @@ export async function setBingoCardStatus(
   cardId: string,
   status: BingoCardStatus,
 ) {
+  const now = new Date().toISOString();
+
   if (status === "active") {
-    await supabase
+    const demote = await supabase
       .from("bingo_cards")
-      .update({ status: "draft", updated_at: new Date().toISOString() })
+      .update({ status: "draft", updated_at: now })
       .eq("organization_id", organizationId)
       .eq("status", "active");
+
+    if (demote.error && isMissingColumnError(demote.error.message, "status")) {
+      await supabase
+        .from("bingo_cards")
+        .update({ is_active: false, updated_at: now })
+        .eq("organization_id", organizationId)
+        .eq("is_active", true);
+    }
   }
 
-  const { error } = await supabase
+  let update = await supabase
     .from("bingo_cards")
-    .update({ status, updated_at: new Date().toISOString() })
+    .update({ status, updated_at: now })
     .eq("id", cardId);
 
-  if (error) throw error;
+  if (update.error && isMissingColumnError(update.error.message, "status")) {
+    if (status === "active") {
+      await supabase
+        .from("bingo_cards")
+        .update({ is_active: false, updated_at: now })
+        .eq("organization_id", organizationId)
+        .eq("is_active", true);
+    }
+    update = await supabase
+      .from("bingo_cards")
+      .update({
+        is_active: status === "active",
+        updated_at: now,
+      })
+      .eq("id", cardId);
+  }
+
+  if (update.error) throw update.error;
 }
 
 export function statusLabel(status: BingoCardStatus): string {

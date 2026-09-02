@@ -6,6 +6,10 @@ import { OrgBadgesPanel } from "@/components/bingo/OrgBadgesPanel";
 import {
   badgeSlugsForCard,
   createBingoCardCells,
+  getSupabaseErrorMessage,
+  insertBingoCard,
+  isMissingColumnError,
+  normalizeBingoCardRow,
   setBingoCardStatus,
   statusBadgeClass,
   statusLabel,
@@ -118,19 +122,39 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
       return;
     }
 
-    const list = (cardRows as BingoCardRow[]) ?? [];
+    const list = ((cardRows ?? []) as Record<string, unknown>[]).map(
+      normalizeBingoCardRow,
+    );
     setCards(list);
 
-    const { data: badgeRows } = await supabase
+    const badgeSelect =
+      "id, organization_id, name, slug, points, kind, description, status, created_at";
+    let { data: badgeRows, error: badgeError } = await supabase
       .from("org_badges")
-      .select(
-        "id, organization_id, name, slug, points, kind, description, status, created_at",
-      )
+      .select(badgeSelect)
       .eq("organization_id", organizationId)
       .order("created_at", { ascending: false });
+
+    if (
+      badgeError &&
+      (isMissingColumnError(badgeError.message, "status") ||
+        isMissingColumnError(badgeError.message, "description"))
+    ) {
+      ({ data: badgeRows, error: badgeError } = await supabase
+        .from("org_badges")
+        .select("id, organization_id, name, slug, points, kind, created_at")
+        .eq("organization_id", organizationId)
+        .order("created_at", { ascending: false }));
+    }
+
+    if (badgeError) {
+      setError(badgeError.message);
+    }
+
     setBadges(
       ((badgeRows ?? []) as OrgBadgeRow[]).map((b) => ({
         ...b,
+        description: b.description ?? null,
         status: b.status ?? "active",
       })),
     );
@@ -214,6 +238,10 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
 
   async function createNewCard() {
     setError(null);
+    if (!organizationId) {
+      setError("No organization is linked to your account.");
+      return;
+    }
     showLoader("Creating bingo card…");
     try {
       const supabase = createClient();
@@ -222,27 +250,27 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Not signed in");
 
-      const { data: newCard, error: cardErr } = await supabase
-        .from("bingo_cards")
-        .insert({
-          organization_id: organizationId,
-          title: DEFAULT_FORM.title,
-          season_label: DEFAULT_FORM.season,
-          streak_threshold: DEFAULT_FORM.streakThreshold,
-          status: "draft",
-          is_active: false,
-          created_by: user.id,
-        })
-        .select()
-        .single();
-      if (cardErr) throw cardErr;
+      const newCard = await insertBingoCard(supabase, {
+        organization_id: organizationId,
+        title: DEFAULT_FORM.title,
+        season_label: DEFAULT_FORM.season,
+        streak_threshold: DEFAULT_FORM.streakThreshold,
+        created_by: user.id,
+      });
 
-      await createBingoCardCells(supabase, newCard.id as string);
-      setSelectedCardId(newCard.id as string);
+      await createBingoCardCells(supabase, newCard.id);
+      setSelectedCardId(newCard.id);
       resetFormDefaults();
       await reload();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not create card");
+      const message = getSupabaseErrorMessage(err);
+      if (message.toLowerCase().includes("row-level security")) {
+        setError(
+          "Permission denied. Make sure your account is linked to this organization.",
+        );
+      } else {
+        setError(message || "Could not create card");
+      }
     } finally {
       hideLoader();
     }
