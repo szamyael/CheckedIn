@@ -54,7 +54,7 @@ export default function StudentBingoPage() {
       const { data: cards } = await supabase
         .from("bingo_cards")
         .select("id, title, season_label, streak_threshold")
-        .eq("is_active", true)
+        .eq("status", "active")
         .limit(5);
 
       const active = (cards?.[0] as Card | undefined) ?? null;

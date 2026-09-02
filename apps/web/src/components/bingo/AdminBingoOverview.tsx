@@ -6,9 +6,9 @@ export async function AdminBingoOverview() {
   const { data: cards } = await supabase
     .from("bingo_cards")
     .select(
-      "id, title, season_label, is_active, streak_threshold, organizations(name)",
+      "id, title, season_label, status, is_active, streak_threshold, organizations(name)",
     )
-    .order("created_at", { ascending: false })
+    .order("updated_at", { ascending: false })
     .limit(20);
 
   const { data: awards } = await supabase
@@ -51,11 +51,17 @@ export async function AdminBingoOverview() {
                       {" "}
                       · {org?.name ?? "Org"} · {c.season_label}
                     </span>
-                    {c.is_active && (
-                      <span className="ml-2 rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-semibold text-teal-700">
-                        ACTIVE
-                      </span>
-                    )}
+                    <span
+                      className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${
+                        c.status === "active"
+                          ? "bg-teal-50 text-teal-700"
+                          : c.status === "archived"
+                            ? "bg-slate-100 text-slate-600"
+                            : "bg-amber-50 text-amber-800"
+                      }`}
+                    >
+                      {c.status ?? (c.is_active ? "active" : "draft")}
+                    </span>
                   </li>
                 );
               })}

@@ -1,7 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLoader } from "@/components/LoaderProvider";
+import {
+  badgeSlugsForCard,
+  createBingoCardCells,
+  setBingoCardStatus,
+  statusBadgeClass,
+  statusLabel,
+  type BingoCardRow,
+  type BingoCardStatus,
+} from "@/lib/bingo-cards";
 import { fetchBingoCardEvents, type BingoCardEvent } from "@/lib/org-events";
 import { createClient } from "@/lib/supabase/client";
 
@@ -13,24 +22,12 @@ type OrgBadge = {
   kind: string;
 };
 
-type BingoCard = {
-  id: string;
-  title: string;
-  season_label: string;
-  streak_threshold: number;
-  line_badge_id: string | null;
-  streak_badge_id: string | null;
-  is_active: boolean;
-};
-
 type BingoCell = {
   id: string;
   position: number;
   event_id: string | null;
   label: string | null;
 };
-
-type OrgEvent = BingoCardEvent;
 
 type AwardRow = {
   id: string;
@@ -40,34 +37,95 @@ type AwardRow = {
   students: { first_name: string; last_name: string; student_id: string } | null;
 };
 
+const DEFAULT_FORM = {
+  title: "Semester Bingo",
+  season: "2026",
+  streakThreshold: 3,
+  lineBadgeName: "Events Goer",
+  linePoints: 50,
+  streakBadgeName: "Event Streak",
+  streakPoints: 30,
+};
+
 export function OrgBingoManager({ organizationId }: { organizationId: string }) {
   const { showLoader, hideLoader } = useLoader();
-  const [card, setCard] = useState<BingoCard | null>(null);
+  const [cards, setCards] = useState<BingoCardRow[]>([]);
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [cells, setCells] = useState<BingoCell[]>([]);
   const [badges, setBadges] = useState<OrgBadge[]>([]);
-  const [events, setEvents] = useState<OrgEvent[]>([]);
+  const [events, setEvents] = useState<BingoCardEvent[]>([]);
   const [awards, setAwards] = useState<AwardRow[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const [title, setTitle] = useState("Semester Bingo");
-  const [season, setSeason] = useState("2026");
-  const [streakThreshold, setStreakThreshold] = useState(3);
-  const [lineBadgeName, setLineBadgeName] = useState("Events Goer 2026");
-  const [linePoints, setLinePoints] = useState(50);
-  const [streakBadgeName, setStreakBadgeName] = useState("Event Streak");
-  const [streakPoints, setStreakPoints] = useState(30);
+  const [title, setTitle] = useState(DEFAULT_FORM.title);
+  const [season, setSeason] = useState(DEFAULT_FORM.season);
+  const [streakThreshold, setStreakThreshold] = useState(DEFAULT_FORM.streakThreshold);
+  const [lineBadgeName, setLineBadgeName] = useState(DEFAULT_FORM.lineBadgeName);
+  const [linePoints, setLinePoints] = useState(DEFAULT_FORM.linePoints);
+  const [streakBadgeName, setStreakBadgeName] = useState(DEFAULT_FORM.streakBadgeName);
+  const [streakPoints, setStreakPoints] = useState(DEFAULT_FORM.streakPoints);
+
+  const selectedCard = useMemo(
+    () => cards.find((c) => c.id === selectedCardId) ?? null,
+    [cards, selectedCardId],
+  );
+
+  const isReadOnly = selectedCard?.status === "archived";
+
+  function applyCardToForm(card: BingoCardRow) {
+    setTitle(card.title);
+    setSeason(card.season_label);
+    setStreakThreshold(card.streak_threshold);
+  }
+
+  function resetFormDefaults() {
+    setTitle(DEFAULT_FORM.title);
+    setSeason(DEFAULT_FORM.season);
+    setStreakThreshold(DEFAULT_FORM.streakThreshold);
+    setLineBadgeName(DEFAULT_FORM.lineBadgeName);
+    setLinePoints(DEFAULT_FORM.linePoints);
+    setStreakBadgeName(DEFAULT_FORM.streakBadgeName);
+    setStreakPoints(DEFAULT_FORM.streakPoints);
+  }
+
+  const loadCardDetails = useCallback(
+    async (cardId: string) => {
+      const supabase = createClient();
+      const { data: cellRows } = await supabase
+        .from("bingo_cells")
+        .select("id, position, event_id, label")
+        .eq("card_id", cardId)
+        .order("position");
+      setCells((cellRows as BingoCell[]) ?? []);
+
+      const { data: awardRows } = await supabase
+        .from("student_org_badges")
+        .select(
+          "id, earned_at, points_awarded, org_badges(name), students(first_name, last_name, student_id)",
+        )
+        .eq("bingo_card_id", cardId)
+        .order("earned_at", { ascending: false })
+        .limit(30);
+      setAwards((awardRows as unknown as AwardRow[]) ?? []);
+    },
+    [],
+  );
 
   const reload = useCallback(async () => {
     const supabase = createClient();
-    const { data: cards } = await supabase
+    const { data: cardRows, error: cardsError } = await supabase
       .from("bingo_cards")
       .select("*")
       .eq("organization_id", organizationId)
-      .order("created_at", { ascending: false })
-      .limit(1);
+      .order("updated_at", { ascending: false });
 
-    const active = (cards?.[0] as BingoCard | undefined) ?? null;
-    setCard(active);
+    if (cardsError) {
+      setError(cardsError.message);
+      return;
+    }
+
+    const list = (cardRows as BingoCardRow[]) ?? [];
+    setCards(list);
 
     const { data: badgeRows } = await supabase
       .from("org_badges")
@@ -83,38 +141,113 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
       setEvents([]);
     }
 
-    if (active) {
-      setTitle(active.title);
-      setSeason(active.season_label);
-      setStreakThreshold(active.streak_threshold);
-
-      const { data: cellRows } = await supabase
-        .from("bingo_cells")
-        .select("id, position, event_id, label")
-        .eq("card_id", active.id)
-        .order("position");
-      setCells((cellRows as BingoCell[]) ?? []);
-
-      const { data: awardRows } = await supabase
-        .from("student_org_badges")
-        .select(
-          "id, earned_at, points_awarded, org_badges(name), students(first_name, last_name, student_id)",
-        )
-        .eq("bingo_card_id", active.id)
-        .order("earned_at", { ascending: false })
-        .limit(30);
-      setAwards((awardRows as unknown as AwardRow[]) ?? []);
-    } else {
-      setCells([]);
-      setAwards([]);
-    }
+    setSelectedCardId((current) => {
+      if (current && list.some((c) => c.id === current)) return current;
+      return (
+        list.find((c) => c.status === "active")?.id ??
+        list.find((c) => c.status === "draft")?.id ??
+        list[0]?.id ??
+        null
+      );
+    });
   }, [organizationId]);
 
   useEffect(() => {
     void reload();
   }, [reload]);
 
-  async function createOrUpdateCard() {
+  useEffect(() => {
+    if (!selectedCard) {
+      setCells([]);
+      setAwards([]);
+      return;
+    }
+    applyCardToForm(selectedCard);
+    void loadCardDetails(selectedCard.id);
+  }, [selectedCard, loadCardDetails]);
+
+  async function upsertCardBadges(
+    supabase: ReturnType<typeof createClient>,
+    userId: string,
+    cardId: string,
+  ) {
+    const slugs = badgeSlugsForCard(cardId, season);
+
+    const { data: lineBadge, error: lineErr } = await supabase
+      .from("org_badges")
+      .upsert(
+        {
+          organization_id: organizationId,
+          slug: slugs.line,
+          name: lineBadgeName,
+          points: linePoints,
+          kind: "bingo_line",
+          created_by: userId,
+        },
+        { onConflict: "organization_id,slug" },
+      )
+      .select()
+      .single();
+    if (lineErr) throw lineErr;
+
+    const { data: streakBadge, error: streakErr } = await supabase
+      .from("org_badges")
+      .upsert(
+        {
+          organization_id: organizationId,
+          slug: slugs.streak,
+          name: streakBadgeName,
+          points: streakPoints,
+          kind: "streak",
+          created_by: userId,
+        },
+        { onConflict: "organization_id,slug" },
+      )
+      .select()
+      .single();
+    if (streakErr) throw streakErr;
+
+    return { lineBadgeId: lineBadge.id as string, streakBadgeId: streakBadge.id as string };
+  }
+
+  async function createNewCard() {
+    setError(null);
+    showLoader("Creating bingo card…");
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not signed in");
+
+      const { data: newCard, error: cardErr } = await supabase
+        .from("bingo_cards")
+        .insert({
+          organization_id: organizationId,
+          title: DEFAULT_FORM.title,
+          season_label: DEFAULT_FORM.season,
+          streak_threshold: DEFAULT_FORM.streakThreshold,
+          status: "draft",
+          is_active: false,
+          created_by: user.id,
+        })
+        .select()
+        .single();
+      if (cardErr) throw cardErr;
+
+      await createBingoCardCells(supabase, newCard.id as string);
+      setSelectedCardId(newCard.id as string);
+      resetFormDefaults();
+      await reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not create card");
+    } finally {
+      hideLoader();
+    }
+  }
+
+  async function saveCard() {
+    if (!selectedCard) return;
     setError(null);
     showLoader("Saving bingo card…");
     try {
@@ -124,90 +257,24 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Not signed in");
 
-      const slugLine = `line-${season}`.toLowerCase().replace(/\s+/g, "-");
-      const slugStreak = `streak-${season}`.toLowerCase().replace(/\s+/g, "-");
+      const { lineBadgeId, streakBadgeId } = await upsertCardBadges(
+        supabase,
+        user.id,
+        selectedCard.id,
+      );
 
-      const { data: lineBadge, error: lineErr } = await supabase
-        .from("org_badges")
-        .upsert(
-          {
-            organization_id: organizationId,
-            slug: slugLine,
-            name: lineBadgeName,
-            points: linePoints,
-            kind: "bingo_line",
-            created_by: user.id,
-          },
-          { onConflict: "organization_id,slug" },
-        )
-        .select()
-        .single();
-      if (lineErr) throw lineErr;
-
-      const { data: streakBadge, error: streakErr } = await supabase
-        .from("org_badges")
-        .upsert(
-          {
-            organization_id: organizationId,
-            slug: slugStreak,
-            name: streakBadgeName,
-            points: streakPoints,
-            kind: "streak",
-            created_by: user.id,
-          },
-          { onConflict: "organization_id,slug" },
-        )
-        .select()
-        .single();
-      if (streakErr) throw streakErr;
-
-      if (card) {
-        const { error: updErr } = await supabase
-          .from("bingo_cards")
-          .update({
-            title,
-            season_label: season,
-            streak_threshold: streakThreshold,
-            line_badge_id: lineBadge.id,
-            streak_badge_id: streakBadge.id,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", card.id);
-        if (updErr) throw updErr;
-      } else {
-        // Deactivate other cards, create active one with 9 empty cells.
-        await supabase
-          .from("bingo_cards")
-          .update({ is_active: false })
-          .eq("organization_id", organizationId);
-
-        const { data: newCard, error: cardErr } = await supabase
-          .from("bingo_cards")
-          .insert({
-            organization_id: organizationId,
-            title,
-            season_label: season,
-            streak_threshold: streakThreshold,
-            line_badge_id: lineBadge.id,
-            streak_badge_id: streakBadge.id,
-            is_active: true,
-            created_by: user.id,
-          })
-          .select()
-          .single();
-        if (cardErr) throw cardErr;
-
-        const cellInserts = Array.from({ length: 9 }, (_, position) => ({
-          card_id: newCard.id,
-          position,
-          event_id: null,
-          label: null,
-        }));
-        const { error: cellsErr } = await supabase
-          .from("bingo_cells")
-          .insert(cellInserts);
-        if (cellsErr) throw cellsErr;
-      }
+      const { error: updErr } = await supabase
+        .from("bingo_cards")
+        .update({
+          title: title.trim() || DEFAULT_FORM.title,
+          season_label: season.trim() || DEFAULT_FORM.season,
+          streak_threshold: streakThreshold,
+          line_badge_id: lineBadgeId,
+          streak_badge_id: streakBadgeId,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", selectedCard.id);
+      if (updErr) throw updErr;
 
       await reload();
     } catch (err) {
@@ -217,55 +284,101 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
     }
   }
 
-  async function assignEvent(position: number, eventId: string) {
-    if (!card) return;
+  async function changeCardStatus(status: BingoCardStatus) {
+    if (!selectedCard) return;
     setError(null);
-    showLoader("Updating cell…");
+    showLoader(
+      status === "active"
+        ? "Publishing card…"
+        : status === "archived"
+          ? "Archiving card…"
+          : "Saving as draft…",
+    );
     try {
-      const event = events.find((e) => e.id === eventId);
-      const { error: updErr } = await supabaseUpdateCell(
-        card.id,
-        position,
-        eventId || null,
-        event?.title ?? null,
-      );
-      if (updErr) throw updErr;
+      const supabase = createClient();
+      if (!isReadOnly) {
+        await saveCardInternals(supabase);
+      }
+      await setBingoCardStatus(supabase, organizationId, selectedCard.id, status);
       await reload();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not assign event");
+      setError(err instanceof Error ? err.message : "Could not update status");
     } finally {
       hideLoader();
     }
   }
 
-  async function supabaseUpdateCell(
-    cardId: string,
-    position: number,
-    eventId: string | null,
-    label: string | null,
-  ) {
-    const supabase = createClient();
-    return supabase
-      .from("bingo_cells")
-      .update({ event_id: eventId, label })
-      .eq("card_id", cardId)
-      .eq("position", position);
+  async function saveCardInternals(supabase: ReturnType<typeof createClient>) {
+    if (!selectedCard) return;
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) throw new Error("Not signed in");
+
+    const { lineBadgeId, streakBadgeId } = await upsertCardBadges(
+      supabase,
+      user.id,
+      selectedCard.id,
+    );
+
+    const { error: updErr } = await supabase
+      .from("bingo_cards")
+      .update({
+        title: title.trim() || DEFAULT_FORM.title,
+        season_label: season.trim() || DEFAULT_FORM.season,
+        streak_threshold: streakThreshold,
+        line_badge_id: lineBadgeId,
+        streak_badge_id: streakBadgeId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", selectedCard.id);
+    if (updErr) throw updErr;
   }
 
-  async function activateCard() {
-    if (!card) return;
-    showLoader("Activating…");
+  async function deleteCard() {
+    if (!selectedCard) return;
+    if (
+      !confirm(
+        `Delete "${selectedCard.title}"? This removes the card and its cell assignments. Student progress on this card will be kept but unlinked.`,
+      )
+    ) {
+      return;
+    }
+
+    setError(null);
+    showLoader("Deleting card…");
     try {
       const supabase = createClient();
-      await supabase
+      const { error: delErr } = await supabase
         .from("bingo_cards")
-        .update({ is_active: false })
-        .eq("organization_id", organizationId);
-      await supabase
-        .from("bingo_cards")
-        .update({ is_active: true })
-        .eq("id", card.id);
+        .delete()
+        .eq("id", selectedCard.id);
+      if (delErr) throw delErr;
+      setSelectedCardId(null);
       await reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not delete card");
+    } finally {
+      hideLoader();
+    }
+  }
+
+  async function assignEvent(position: number, eventId: string) {
+    if (!selectedCard || isReadOnly) return;
+    setError(null);
+    showLoader("Updating cell…");
+    try {
+      const event = events.find((e) => e.id === eventId);
+      const supabase = createClient();
+      const { error: updErr } = await supabase
+        .from("bingo_cells")
+        .update({ event_id: eventId || null, label: event?.title ?? null })
+        .eq("card_id", selectedCard.id)
+        .eq("position", position);
+      if (updErr) throw updErr;
+      await loadCardDetails(selectedCard.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not assign event");
     } finally {
       hideLoader();
     }
@@ -275,154 +388,272 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Bingo &amp; Badges</h1>
-        <p className="mt-1 text-sm text-slate-700">
-          Build a 3×3 bingo card from your published events. Completing a line
-          or a streak awards org badges and points.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Bingo &amp; Badges</h1>
+          <p className="mt-1 text-sm text-slate-700">
+            Create multiple 3×3 bingo cards. Publish one active card for students;
+            keep drafts while building and archive past seasons.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => void createNewCard()}
+          className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
+        >
+          + New card
+        </button>
       </div>
 
       {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
-          {error}
-        </p>
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
       )}
 
-      <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-6">
-        <h2 className="text-lg font-semibold">Card settings</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="text-sm">
-            Title
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="mt-1 w-full rounded-lg border px-3 py-2"
-            />
-          </label>
-          <label className="text-sm">
-            Season label
-            <input
-              value={season}
-              onChange={(e) => setSeason(e.target.value)}
-              className="mt-1 w-full rounded-lg border px-3 py-2"
-            />
-          </label>
-          <label className="text-sm">
-            Streak threshold
-            <input
-              type="number"
-              min={2}
-              value={streakThreshold}
-              onChange={(e) => setStreakThreshold(Number(e.target.value))}
-              className="mt-1 w-full rounded-lg border px-3 py-2"
-            />
-          </label>
-          <label className="text-sm">
-            Line badge name
-            <input
-              value={lineBadgeName}
-              onChange={(e) => setLineBadgeName(e.target.value)}
-              className="mt-1 w-full rounded-lg border px-3 py-2"
-            />
-          </label>
-          <label className="text-sm">
-            Line badge points
-            <input
-              type="number"
-              min={0}
-              value={linePoints}
-              onChange={(e) => setLinePoints(Number(e.target.value))}
-              className="mt-1 w-full rounded-lg border px-3 py-2"
-            />
-          </label>
-          <label className="text-sm">
-            Streak badge name
-            <input
-              value={streakBadgeName}
-              onChange={(e) => setStreakBadgeName(e.target.value)}
-              className="mt-1 w-full rounded-lg border px-3 py-2"
-            />
-          </label>
-          <label className="text-sm">
-            Streak badge points
-            <input
-              type="number"
-              min={0}
-              value={streakPoints}
-              onChange={(e) => setStreakPoints(Number(e.target.value))}
-              className="mt-1 w-full rounded-lg border px-3 py-2"
-            />
-          </label>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => void createOrUpdateCard()}
-            className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white"
-          >
-            {card ? "Update card & badges" : "Create active bingo card"}
-          </button>
-          {card && !card.is_active && (
-            <button
-              type="button"
-              onClick={() => void activateCard()}
-              className="rounded-lg border px-4 py-2 text-sm"
-            >
-              Activate this card
-            </button>
-          )}
-          {card?.is_active && (
-            <span className="rounded-full bg-teal-50 px-3 py-2 text-xs font-medium text-teal-700">
-              Active
-            </span>
-          )}
-        </div>
+      <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-6">
+        <h2 className="text-lg font-semibold">Your bingo cards</h2>
+        {cards.length === 0 ? (
+          <p className="text-sm text-slate-500">
+            No bingo cards yet. Click &quot;New card&quot; to create your first draft.
+          </p>
+        ) : (
+          <ul className="divide-y divide-slate-100 rounded-lg border border-slate-200">
+            {cards.map((c) => (
+              <li
+                key={c.id}
+                className={`flex flex-wrap items-center justify-between gap-3 px-4 py-3 ${
+                  selectedCardId === c.id ? "bg-teal-50/60" : "bg-white"
+                }`}
+              >
+                <button
+                  type="button"
+                  onClick={() => setSelectedCardId(c.id)}
+                  className="min-w-0 flex-1 text-left"
+                >
+                  <span className="font-medium text-slate-900">{c.title}</span>
+                  <span className="ml-2 text-xs text-slate-500">{c.season_label}</span>
+                  <span
+                    className={`ml-2 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${statusBadgeClass(c.status)}`}
+                  >
+                    {statusLabel(c.status)}
+                  </span>
+                </button>
+                <p className="text-xs text-slate-400">
+                  Updated {new Date(c.updated_at).toLocaleDateString()}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
-      {card && (
-        <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-6">
-          <h2 className="text-lg font-semibold">3×3 event grid</h2>
-          <p className="text-sm text-slate-600">
-            Assign any campus event to each cell (org, admin, and published
-            events).
-            {events.length === 0 && (
-              <span className="mt-1 block text-amber-700">
-                No events found yet. Create events on the Events page.
+      {selectedCard && (
+        <>
+          <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-6">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-lg font-semibold">Card settings</h2>
+              <span
+                className={`rounded-full px-3 py-1 text-xs font-medium ${statusBadgeClass(selectedCard.status)}`}
+              >
+                {statusLabel(selectedCard.status)}
               </span>
+            </div>
+
+            {isReadOnly && (
+              <p className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
+                This card is archived. Restore to draft to edit, or delete it.
+              </p>
             )}
-          </p>
-          <div className="grid grid-cols-3 gap-3">
-            {Array.from({ length: 9 }, (_, position) => {
-              const cell = cellByPos(position);
-              return (
-                <div
-                  key={position}
-                  className="rounded-xl border border-slate-200 bg-slate-50 p-3"
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="text-sm">
+                Title
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  disabled={isReadOnly}
+                  className="mt-1 w-full rounded-lg border px-3 py-2 disabled:bg-slate-50"
+                />
+              </label>
+              <label className="text-sm">
+                Season label
+                <input
+                  value={season}
+                  onChange={(e) => setSeason(e.target.value)}
+                  disabled={isReadOnly}
+                  className="mt-1 w-full rounded-lg border px-3 py-2 disabled:bg-slate-50"
+                />
+              </label>
+              <label className="text-sm">
+                Streak threshold
+                <input
+                  type="number"
+                  min={2}
+                  value={streakThreshold}
+                  onChange={(e) => setStreakThreshold(Number(e.target.value))}
+                  disabled={isReadOnly}
+                  className="mt-1 w-full rounded-lg border px-3 py-2 disabled:bg-slate-50"
+                />
+              </label>
+              <label className="text-sm">
+                Line badge name
+                <input
+                  value={lineBadgeName}
+                  onChange={(e) => setLineBadgeName(e.target.value)}
+                  disabled={isReadOnly}
+                  className="mt-1 w-full rounded-lg border px-3 py-2 disabled:bg-slate-50"
+                />
+              </label>
+              <label className="text-sm">
+                Line badge points
+                <input
+                  type="number"
+                  min={0}
+                  value={linePoints}
+                  onChange={(e) => setLinePoints(Number(e.target.value))}
+                  disabled={isReadOnly}
+                  className="mt-1 w-full rounded-lg border px-3 py-2 disabled:bg-slate-50"
+                />
+              </label>
+              <label className="text-sm">
+                Streak badge name
+                <input
+                  value={streakBadgeName}
+                  onChange={(e) => setStreakBadgeName(e.target.value)}
+                  disabled={isReadOnly}
+                  className="mt-1 w-full rounded-lg border px-3 py-2 disabled:bg-slate-50"
+                />
+              </label>
+              <label className="text-sm">
+                Streak badge points
+                <input
+                  type="number"
+                  min={0}
+                  value={streakPoints}
+                  onChange={(e) => setStreakPoints(Number(e.target.value))}
+                  disabled={isReadOnly}
+                  className="mt-1 w-full rounded-lg border px-3 py-2 disabled:bg-slate-50"
+                />
+              </label>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {!isReadOnly && (
+                <button
+                  type="button"
+                  onClick={() => void saveCard()}
+                  className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
                 >
-                  <p className="mb-2 text-xs font-medium text-slate-500">
-                    Cell {position + 1}
-                  </p>
-                  <select
-                    value={cell?.event_id ?? ""}
-                    onChange={(e) =>
-                      void assignEvent(position, e.target.value)
-                    }
-                    className="w-full rounded-lg border bg-white px-2 py-2 text-xs"
+                  Update
+                </button>
+              )}
+              {selectedCard.status !== "draft" && !isReadOnly && (
+                <button
+                  type="button"
+                  onClick={() => void changeCardStatus("draft")}
+                  className="rounded-lg border border-amber-300 px-4 py-2 text-sm text-amber-800 hover:bg-amber-50"
+                >
+                  Save as draft
+                </button>
+              )}
+              {selectedCard.status !== "active" && !isReadOnly && (
+                <button
+                  type="button"
+                  onClick={() => void changeCardStatus("active")}
+                  className="rounded-lg border border-teal-300 px-4 py-2 text-sm text-teal-800 hover:bg-teal-50"
+                >
+                  Publish (activate)
+                </button>
+              )}
+              {selectedCard.status !== "archived" && (
+                <button
+                  type="button"
+                  onClick={() => void changeCardStatus("archived")}
+                  className="rounded-lg border px-4 py-2 text-sm hover:bg-slate-50"
+                >
+                  Archive
+                </button>
+              )}
+              {selectedCard.status === "archived" && (
+                <button
+                  type="button"
+                  onClick={() => void changeCardStatus("draft")}
+                  className="rounded-lg border px-4 py-2 text-sm hover:bg-slate-50"
+                >
+                  Restore to draft
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => void deleteCard()}
+                className="rounded-lg border border-red-300 px-4 py-2 text-sm text-red-700 hover:bg-red-50"
+              >
+                Delete
+              </button>
+            </div>
+          </section>
+
+          <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-6">
+            <h2 className="text-lg font-semibold">3×3 event grid</h2>
+            <p className="text-sm text-slate-600">
+              Assign any campus event to each cell.
+              {events.length === 0 && (
+                <span className="mt-1 block text-amber-700">
+                  No events found yet. Create events on the Events page.
+                </span>
+              )}
+            </p>
+            <div className="grid grid-cols-3 gap-3">
+              {Array.from({ length: 9 }, (_, position) => {
+                const cell = cellByPos(position);
+                return (
+                  <div
+                    key={position}
+                    className="rounded-xl border border-slate-200 bg-slate-50 p-3"
                   >
-                    <option value="">Unassigned</option>
-                    {events.map((ev) => (
-                      <option key={ev.id} value={ev.id}>
-                        {ev.title}
-                        {ev.status !== "published" ? ` (${ev.status})` : ""}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              );
-            })}
-          </div>
-        </section>
+                    <p className="mb-2 text-xs font-medium text-slate-500">
+                      Cell {position + 1}
+                    </p>
+                    <select
+                      value={cell?.event_id ?? ""}
+                      disabled={isReadOnly}
+                      onChange={(e) => void assignEvent(position, e.target.value)}
+                      className="w-full rounded-lg border bg-white px-2 py-2 text-xs disabled:bg-slate-100"
+                    >
+                      <option value="">Unassigned</option>
+                      {events.map((ev) => (
+                        <option key={ev.id} value={ev.id}>
+                          {ev.title}
+                          {ev.status !== "published" ? ` (${ev.status})` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-6">
+            <h2 className="text-lg font-semibold">Recent badge awards</h2>
+            {awards.length === 0 ? (
+              <p className="text-sm text-slate-500">No awards for this card yet.</p>
+            ) : (
+              <ul className="space-y-2 text-sm">
+                {awards.map((a) => (
+                  <li key={a.id} className="rounded-lg border px-3 py-2">
+                    <span className="font-medium">
+                      {a.students
+                        ? `${a.students.first_name} ${a.students.last_name}`
+                        : "Student"}
+                    </span>{" "}
+                    earned <span className="text-teal-700">{a.org_badges?.name}</span>{" "}
+                    (+{a.points_awarded})
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </>
       )}
 
       <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-6">
@@ -441,27 +672,6 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
                   <span className="text-xs text-slate-400">({b.kind})</span>
                 </span>
                 <span className="font-medium text-teal-700">+{b.points} pts</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-6">
-        <h2 className="text-lg font-semibold">Recent badge awards</h2>
-        {awards.length === 0 ? (
-          <p className="text-sm text-slate-500">No awards yet.</p>
-        ) : (
-          <ul className="space-y-2 text-sm">
-            {awards.map((a) => (
-              <li key={a.id} className="rounded-lg border px-3 py-2">
-                <span className="font-medium">
-                  {a.students
-                    ? `${a.students.first_name} ${a.students.last_name}`
-                    : "Student"}
-                </span>{" "}
-                earned <span className="text-teal-700">{a.org_badges?.name}</span>{" "}
-                (+{a.points_awarded})
               </li>
             ))}
           </ul>
