@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 
 interface Organization {
@@ -37,6 +37,10 @@ export function OrganizationProgramAlignmentPanel({
 
   const normalizeProgramName = (value: string) => value.trim().toLowerCase();
 
+  useEffect(() => {
+    setMappings(existingMappings);
+  }, [existingMappings]);
+
   const grouped = mappings.reduce<Record<string, ExistingMapping[]>>((acc, row) => {
     const orgId = row.organization_id;
     acc[orgId] = [...(acc[orgId] ?? []), row];
@@ -47,9 +51,10 @@ export function OrganizationProgramAlignmentPanel({
     const normalizedProgram = normalizeProgramName(row.program);
     if (!normalizedProgram) return acc;
 
-    const orgName = Array.isArray(row.organizations)
+    const relationName = Array.isArray(row.organizations)
       ? row.organizations[0]?.name
-      : row.organizations?.name ?? organizations.find((org) => org.id === row.organization_id)?.name;
+      : row.organizations?.name;
+    const orgName = relationName ?? organizations.find((org) => org.id === row.organization_id)?.name;
 
     if (orgName) {
       acc[normalizedProgram] = [...(acc[normalizedProgram] ?? []), orgName];
