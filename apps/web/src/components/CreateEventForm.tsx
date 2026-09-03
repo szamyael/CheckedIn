@@ -214,7 +214,11 @@ export function CreateEventForm({
         </div>
 
         <div className="sm:col-span-2">
-          <EventLocationPicker value={location} onChange={setLocation} />
+          <EventLocationPicker
+            value={location}
+            radiusMeters={locationRadiusM}
+            onChange={setLocation}
+          />
         </div>
 
         <div>

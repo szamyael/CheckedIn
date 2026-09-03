@@ -41,12 +41,14 @@ export interface EventLocation {
 
 interface EventLocationPickerProps {
   value: EventLocation;
+  radiusMeters?: number;
   onChange: (value: EventLocation) => void;
   compact?: boolean;
 }
 
 export function EventLocationPicker({
   value,
+  radiusMeters = 100,
   onChange,
   compact = false,
 }: EventLocationPickerProps) {
@@ -187,6 +189,7 @@ export function EventLocationPicker({
         <LeafletMapPicker
           latitude={value.latitude || DEFAULT_MAP_CENTER.lat}
           longitude={value.longitude || DEFAULT_MAP_CENTER.lng}
+          radiusMeters={radiusMeters}
           onLocationChange={({ latitude, longitude, venueName }) => {
             onChange({
               venueName: venueName ?? value.venueName,

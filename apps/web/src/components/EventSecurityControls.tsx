@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { EventQrCode } from "@/components/EventQrCode";
@@ -17,6 +17,8 @@ export function EventSecurityControls({ event }: EventSecurityControlsProps) {
   const [otp, setOtp] = useState<{ code: string; expiresAt: string } | null>(null);
   const [qrToken, setQrToken] = useState(event.qr_token);
   const [error, setError] = useState<string | null>(null);
+  const [refreshingSecurity, setRefreshingSecurity] = useState(false);
+  const expiryRefreshStarted = useRef(false);
 
   async function generateOtp() {
     setError(null);
@@ -60,6 +62,31 @@ export function EventSecurityControls({ event }: EventSecurityControlsProps) {
     }
   }
 
+  useEffect(() => {
+    if (!otp) return;
+
+    const expiresInMs = Math.max(
+      0,
+      new Date(otp.expiresAt).getTime() - Date.now(),
+    );
+    const timer = window.setTimeout(() => {
+      if (expiryRefreshStarted.current) return;
+      expiryRefreshStarted.current = true;
+      setRefreshingSecurity(true);
+      void (async () => {
+        try {
+          await rotateQr();
+          await generateOtp();
+        } finally {
+          expiryRefreshStarted.current = false;
+          setRefreshingSecurity(false);
+        }
+      })();
+    }, expiresInMs + 250);
+
+    return () => window.clearTimeout(timer);
+  }, [otp]);
+
   if (event.status !== "published") return null;
 
   return (
@@ -93,6 +120,11 @@ export function EventSecurityControls({ event }: EventSecurityControlsProps) {
           <p className="text-xs text-amber-800">
             Expires {new Date(otp.expiresAt).toLocaleTimeString()}
           </p>
+          {refreshingSecurity && (
+            <p className="mt-1 text-xs font-medium text-amber-900">
+              Refreshing OTP and QR code…
+            </p>
+          )}
         </div>
       )}
       {error && <p className="text-xs text-red-600">{error}</p>}

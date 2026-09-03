@@ -137,7 +137,12 @@ export function EditEventForm({ event }: { event: Event }) {
         className="w-full rounded border px-2 py-1 text-sm"
         placeholder={formPlaceholders.eventDescription}
       />
-      <EventLocationPicker value={location} onChange={setLocation} compact />
+      <EventLocationPicker
+        value={location}
+        radiusMeters={locationRadiusM}
+        onChange={setLocation}
+        compact
+      />
       <input
         type="number"
         value={locationRadiusM}

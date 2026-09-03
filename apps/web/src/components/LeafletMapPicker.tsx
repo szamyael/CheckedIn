@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   MapContainer,
+  Circle,
   Marker,
   TileLayer,
   useMap,
@@ -33,6 +34,7 @@ type PlaceResult = {
 interface LeafletMapPickerProps {
   latitude: number;
   longitude: number;
+  radiusMeters?: number;
   onLocationChange: (coords: {
     latitude: number;
     longitude: number;
@@ -64,6 +66,7 @@ function Recenter({ lat, lng }: { lat: number; lng: number }) {
 export function LeafletMapPicker({
   latitude,
   longitude,
+  radiusMeters = 100,
   onLocationChange,
 }: LeafletMapPickerProps) {
   const [search, setSearch] = useState("");
@@ -144,8 +147,7 @@ export function LeafletMapPicker({
     });
   }
 
-  function submitSearch(e: React.FormEvent) {
-    e.preventDefault();
+  function submitSearch() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     void (async () => {
       const q = search.trim();
@@ -212,11 +214,17 @@ export function LeafletMapPicker({
   return (
     <div className="space-y-3">
       <div ref={wrapRef} className="relative">
-        <form onSubmit={submitSearch} className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2">
           <input
             type="text"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                submitSearch();
+              }
+            }}
             onFocus={() => {
               if (results.length) setShowResults(true);
             }}
@@ -225,7 +233,8 @@ export function LeafletMapPicker({
             className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm"
           />
           <button
-            type="submit"
+            type="button"
+            onClick={submitSearch}
             disabled={searching}
             className="shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
           >
@@ -239,7 +248,7 @@ export function LeafletMapPicker({
           >
             {locating ? "Locating…" : "Use my location"}
           </button>
-        </form>
+        </div>
 
         {showResults && results.length > 0 && (
           <ul className="mt-2 max-h-56 w-full overflow-auto rounded-lg border border-slate-200 bg-white shadow-md">
@@ -285,6 +294,16 @@ export function LeafletMapPicker({
             }
           />
           <Recenter lat={latitude} lng={longitude} />
+          <Circle
+            center={center}
+            radius={Math.max(1, radiusMeters)}
+            pathOptions={{
+              color: "#17324d",
+              fillColor: "#c18a2e",
+              fillOpacity: 0.16,
+              weight: 2,
+            }}
+          />
           <Marker
             position={center}
             draggable
