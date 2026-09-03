@@ -11,7 +11,7 @@ import {
   LayoutGrid,
 } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
-import { DashboardNav } from "@/components/DashboardNav";
+import { DashboardNav, type DashboardNavItem } from "@/components/DashboardNav";
 import { DashboardRealtimeSync } from "@/components/DashboardRealtimeSync";
 import { SessionTimeoutGuard } from "@/components/SessionTimeoutGuard";
 import { BrandLogo } from "@/components/BrandLogo";
@@ -52,7 +52,7 @@ export default async function DashboardLayout({
           {
             href: "/dashboard/events",
             label: role === "faculty" ? "Events (view)" : "Events",
-            icon: Calendar,
+            icon: "calendar" as const,
           },
         ]
       : []),
@@ -61,32 +61,32 @@ export default async function DashboardLayout({
           {
             href: "/dashboard/org/bingo",
             label: "Bingo & Badges",
-            icon: LayoutGrid,
+            icon: "bingo" as const,
           },
         ]
       : []),
     ...(role === "admin" || role === "faculty" || role === "org_member"
-      ? [{ href: "/dashboard/monitor", label: "Live Monitor", icon: Radio }]
+      ? [{ href: "/dashboard/monitor", label: "Live Monitor", icon: "monitor" as const }]
       : []),
     ...(role === "admin" || role === "faculty" || role === "org_member"
-      ? [{ href: "/dashboard/reports", label: "Reports", icon: BarChart3 }]
+      ? [{ href: "/dashboard/reports", label: "Reports", icon: "reports" as const }]
       : []),
     ...(role === "admin" || role === "faculty"
-      ? [{ href: "/dashboard/analytics", label: "Analytics", icon: LineChart }]
+      ? [{ href: "/dashboard/analytics", label: "Analytics", icon: "analytics" as const }]
       : []),
     ...(role === "admin"
       ? [
-          { href: "/dashboard/admin", label: "Users", icon: Users },
-          { href: "/dashboard/settings", label: "Settings", icon: Settings },
+          { href: "/dashboard/admin", label: "Users", icon: "users" as const },
+          { href: "/dashboard/settings", label: "Settings", icon: "settings" as const },
         ]
       : []),
     ...(role === "org_member"
-      ? [{ href: "/dashboard/org", label: "Org Home", icon: Users }]
+      ? [{ href: "/dashboard/org", label: "Org Home", icon: "users" as const }]
       : []),
     ...(role === "faculty"
-      ? [{ href: "/dashboard/faculty", label: "Faculty Home", icon: Users }]
+      ? [{ href: "/dashboard/faculty", label: "Faculty Home", icon: "users" as const }]
       : []),
-  ];
+  ] satisfies DashboardNavItem[];
 
   return (
     <div className="flex min-h-screen bg-[#f6f7f5]">

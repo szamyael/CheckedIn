@@ -2,11 +2,30 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  BarChart3,
+  Calendar,
+  LineChart,
+  Radio,
+  Settings,
+  Users,
+  LayoutGrid,
+} from "lucide-react";
+
+const icons = {
+  calendar: Calendar,
+  users: Users,
+  monitor: Radio,
+  reports: BarChart3,
+  analytics: LineChart,
+  settings: Settings,
+  bingo: LayoutGrid,
+} as const;
 
 export interface DashboardNavItem {
   href: string;
   label: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: keyof typeof icons;
 }
 
 export function DashboardNav({ items }: { items: DashboardNavItem[] }) {
@@ -14,7 +33,8 @@ export function DashboardNav({ items }: { items: DashboardNavItem[] }) {
 
   return (
     <nav className="flex-1 space-y-1 p-3">
-      {items.map(({ href, label, icon: Icon }) => {
+      {items.map(({ href, label, icon }) => {
+        const Icon = icons[icon];
         const active = pathname === href || pathname.startsWith(`${href}/`);
         return (
           <Link

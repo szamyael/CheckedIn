@@ -11,6 +11,8 @@ import { AdminBingoOverview } from "@/components/bingo/AdminBingoOverview";
 import { OrganizationProgramAlignmentPanel } from "@/components/OrganizationProgramAlignmentPanel";
 import { formatStudentDisplayName } from "@/lib/student/display-name";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminPage() {
   const supabase = await createClient();
   const {

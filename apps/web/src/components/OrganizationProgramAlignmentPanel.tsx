@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 
 interface Organization {
@@ -36,10 +36,6 @@ export function OrganizationProgramAlignmentPanel({
   const [success, setSuccess] = useState<string | null>(null);
 
   const normalizeProgramName = (value: string) => value.trim().toLowerCase();
-
-  useEffect(() => {
-    setMappings(existingMappings);
-  }, [existingMappings]);
 
   const grouped = mappings.reduce<Record<string, ExistingMapping[]>>((acc, row) => {
     const orgId = row.organization_id;
