@@ -30,11 +30,19 @@ export default async function AdminPage() {
     .select("id, name")
     .order("name");
 
-  const { data: organizationPrograms } = await supabase
+  const { data: organizationProgramRows } = await supabase
     .from("organization_programs")
-    .select("id, organization_id, program, organizations(name)")
+    .select("id, organization_id, program")
     .order("organization_id")
     .order("program");
+
+  const organizationNames = new Map(
+    (organizations ?? []).map((organization) => [organization.id, organization.name]),
+  );
+  const organizationPrograms = (organizationProgramRows ?? []).map((mapping) => ({
+    ...mapping,
+    organizations: { name: organizationNames.get(mapping.organization_id) ?? "" },
+  }));
 
   const { data: staff } = await supabase
     .from("staff_profiles")
