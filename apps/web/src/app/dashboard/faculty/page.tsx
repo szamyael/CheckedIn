@@ -27,8 +27,9 @@ export default async function FacultyDashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Faculty Dashboard</h1>
-        <p className="mt-1 text-sm text-slate-700">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#a46618]">Attendance intelligence</p>
+        <h1 className="text-3xl font-bold tracking-tight text-[#0c2238]">Faculty Dashboard</h1>
+        <p className="mt-2 max-w-2xl text-sm text-[#697178]">
           Generate attendance reports, monitor live check-ins, and review
           analytics. Organizations create and manage events.
         </p>
@@ -37,7 +38,7 @@ export default async function FacultyDashboard() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Link
           href="/dashboard/reports"
-          className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-6 hover:border-blue-200"
+          className="flex items-center gap-4 rounded-lg border border-[#e2e5e7] bg-white p-6 hover:border-[#17324d]"
         >
           <BarChart3 className="h-8 w-8 text-blue-600" />
           <div>
@@ -48,7 +49,7 @@ export default async function FacultyDashboard() {
 
         <Link
           href="/dashboard/monitor"
-          className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-6 hover:border-blue-200"
+          className="flex items-center gap-4 rounded-lg border border-[#e2e5e7] bg-white p-6 hover:border-[#17324d]"
         >
           <Radio className="h-8 w-8 text-blue-600" />
           <div>
@@ -59,7 +60,7 @@ export default async function FacultyDashboard() {
 
         <Link
           href="/dashboard/analytics"
-          className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-6 hover:border-blue-200"
+          className="flex items-center gap-4 rounded-lg border border-[#e2e5e7] bg-white p-6 hover:border-[#17324d]"
         >
           <LineChart className="h-8 w-8 text-blue-600" />
           <div>
@@ -70,7 +71,7 @@ export default async function FacultyDashboard() {
 
         <Link
           href="/dashboard/events"
-          className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-6 hover:border-blue-200"
+          className="flex items-center gap-4 rounded-lg border border-[#e2e5e7] bg-white p-6 hover:border-[#17324d]"
         >
           <Calendar className="h-8 w-8 text-slate-500" />
           <div>

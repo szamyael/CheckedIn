@@ -100,11 +100,11 @@ class BingoService {
     final cards = await _client
         .from('bingo_cards')
         .select('id, title, season_label, streak_threshold')
-        .eq('status', 'active')
+      .eq('is_active', true)
         .limit(1);
 
-    if ((cards as List).isEmpty) return null;
-    final card = cards.first as Map<String, dynamic>;
+    if (cards.isEmpty) return null;
+    final card = cards.first;
 
     final cellRows = await _client
         .from('bingo_cells')

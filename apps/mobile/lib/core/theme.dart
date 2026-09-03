@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  static const _teal = Color(0xFF0D9488);
-  static const _bg = Color(0xFFF8FAFC);
+  static const _navy = Color(0xFF17324D);
+  static const _bg = Color(0xFFF6F7F5);
   static const _surface = Colors.white;
   static const _border = Color(0xFFE2E8F0);
-  static const _textPrimary = Color(0xFF0F172A);
-  static const _textSecondary = Color(0xFF334155);
-  static const _textMuted = Color(0xFF475569);
+  static const _textPrimary = Color(0xFF202428);
+  static const _textSecondary = Color(0xFF3F484F);
+  static const _textMuted = Color(0xFF697178);
 
   static ThemeData get light {
     final scheme = ColorScheme.fromSeed(
-      seedColor: _teal,
+      seedColor: _navy,
       brightness: Brightness.light,
     );
 
@@ -19,7 +19,7 @@ class AppTheme {
       useMaterial3: true,
       scaffoldBackgroundColor: _bg,
       colorScheme: scheme.copyWith(
-        primary: _teal,
+        primary: _navy,
         surface: _surface,
         onSurface: _textPrimary,
         onSurfaceVariant: _textSecondary,
@@ -42,7 +42,7 @@ class AppTheme {
         color: _surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(8),
           side: const BorderSide(color: _border),
         ),
       ),
@@ -52,16 +52,16 @@ class AppTheme {
         filled: true,
         fillColor: _surface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: _border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: _border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: _teal, width: 1.4),
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: _navy, width: 1.4),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
@@ -71,26 +71,26 @@ class AppTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: _surface.withValues(alpha: 0.96),
-        indicatorColor: const Color(0xFFCCFBF1),
+        indicatorColor: const Color(0xFFE7EEF4),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: selected ? _teal : _textMuted,
+            color: selected ? _navy : _textMuted,
           );
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
-          return IconThemeData(color: selected ? _teal : _textMuted);
+          return IconThemeData(color: selected ? _navy : _textMuted);
         }),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: _teal,
+          backgroundColor: _navy,
           foregroundColor: Colors.white,
           minimumSize: const Size.fromHeight(54),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -98,7 +98,7 @@ class AppTheme {
           foregroundColor: _textPrimary,
           side: const BorderSide(color: _border),
           minimumSize: const Size.fromHeight(48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       ),
     );

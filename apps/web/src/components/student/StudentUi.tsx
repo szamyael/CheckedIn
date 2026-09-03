@@ -1,13 +1,13 @@
 import type { ReactNode } from "react";
 
 export const studentInputClass =
-  "w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-900 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20";
+  "w-full rounded-lg border border-[#e2e5e7] bg-white px-3 py-3 text-sm text-[#202428] outline-none focus:border-[#17324d] focus:ring-2 focus:ring-[#c18a2e]/25";
 
 export const studentPrimaryButtonClass =
-  "w-full rounded-xl bg-teal-600 py-3 text-sm font-semibold text-white hover:bg-teal-500 disabled:opacity-60";
+  "w-full rounded-lg bg-[#17324d] py-3 text-sm font-semibold text-white hover:bg-[#0c2238] disabled:opacity-60";
 
 export const studentSecondaryButtonClass =
-  "block w-full rounded-xl border border-slate-200 py-2.5 text-center text-sm font-medium text-slate-700 hover:bg-slate-50";
+  "block w-full rounded-lg border border-[#e2e5e7] py-2.5 text-center text-sm font-medium text-[#3f484f] hover:bg-[#eef1f0]";
 
 export function StudentPageTitle({
   title,
@@ -18,7 +18,7 @@ export function StudentPageTitle({
 }) {
   return (
     <div>
-      <h1 className="text-xl font-bold text-slate-900">{title}</h1>
+      <h1 className="text-xl font-bold tracking-tight text-[#0c2238]">{title}</h1>
       {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
     </div>
   );
@@ -34,7 +34,7 @@ export function StudentCard({
   onClick?: () => void;
 }) {
   const base =
-    "rounded-2xl border border-slate-200 bg-white p-4 shadow-sm " + className;
+    "rounded-lg border border-[#e2e5e7] bg-white p-4 shadow-sm " + className;
   if (onClick) {
     return (
       <button type="button" onClick={onClick} className={`${base} text-left`}>
@@ -47,7 +47,7 @@ export function StudentCard({
 
 export function StudentErrorBanner({ message }: { message: string }) {
   return (
-    <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">
+    <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-[#b43b45]">
       {message}
     </p>
   );
@@ -61,13 +61,13 @@ export function StudentInfoBanner({
   tone?: "amber" | "slate" | "teal";
 }) {
   const tones = {
-    amber: "border-amber-200 bg-amber-50 text-amber-800",
-    slate: "border-slate-200 bg-slate-100 text-slate-700",
-    teal: "border-teal-200 bg-teal-50 text-teal-800",
+    amber: "border-amber-200 bg-amber-50 text-[#a46618]",
+    slate: "border-[#e2e5e7] bg-[#eef1f0] text-[#3f484f]",
+    teal: "border-[#b9d8d0] bg-[#edf7f2] text-[#237a57]",
   };
   return (
     <div
-      className={`rounded-xl border px-3 py-2 text-sm ${tones[tone]}`}
+      className={`rounded-lg border px-3 py-2 text-sm ${tones[tone]}`}
     >
       {message}
     </div>
@@ -76,7 +76,7 @@ export function StudentInfoBanner({
 
 export function StudentEmptyState({ message }: { message: string }) {
   return (
-    <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
+    <div className="rounded-lg border border-dashed border-[#cbd2d4] p-8 text-center text-sm text-[#697178]">
       {message}
     </div>
   );

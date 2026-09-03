@@ -22,10 +22,11 @@ export default async function OrgDashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#a46618]">Organization operations</p>
+        <h1 className="text-3xl font-bold tracking-tight text-[#0c2238]">
           Organization Dashboard
         </h1>
-        <p className="mt-1 text-sm text-slate-700">
+        <p className="mt-2 text-sm text-[#697178]">
           Create events and manage Bingo badges for your students.
         </p>
       </div>
@@ -33,7 +34,7 @@ export default async function OrgDashboard() {
       <div className="grid gap-4 sm:grid-cols-2">
         <Link
           href="/dashboard/events"
-          className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-6 hover:border-teal-200"
+          className="flex items-center gap-4 rounded-lg border border-[#e2e5e7] bg-white p-6 hover:border-[#17324d]"
         >
           <Calendar className="h-8 w-8 text-teal-600" />
           <div>
@@ -46,7 +47,7 @@ export default async function OrgDashboard() {
 
         <Link
           href="/dashboard/org/bingo"
-          className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-6 hover:border-teal-200"
+          className="flex items-center gap-4 rounded-lg border border-[#e2e5e7] bg-white p-6 hover:border-[#17324d]"
         >
           <LayoutGrid className="h-8 w-8 text-teal-600" />
           <div>

@@ -87,7 +87,7 @@ export default function StudentProfilePage() {
 
   return (
     <div className="space-y-6">
-      <StudentCard>
+      <StudentCard className="bg-[#0c2238] text-white">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
             {avatarUrl ? (
@@ -95,38 +95,41 @@ export default function StudentProfilePage() {
               <img
                 src={avatarUrl}
                 alt=""
-                className="h-16 w-16 rounded-full object-cover ring-2 ring-teal-100"
+                className="h-16 w-16 rounded-full object-cover ring-2 ring-[#c18a2e]"
               />
             ) : (
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-teal-50 text-lg font-bold text-teal-800">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#e7eef4] text-lg font-bold text-[#17324d]">
                 {initials}
               </div>
             )}
             <div>
-              <h1 className="text-xl font-bold">
+              <h1 className="text-xl font-bold text-white">
                 {formatStudentDisplayName(profile)}
               </h1>
-              <p className="text-sm text-slate-500">{profile.student_id}</p>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="text-sm text-slate-300">{profile.student_id}</p>
+              <p className="mt-1 text-sm text-slate-300">
                 {profile.program} · Year {profile.year_level}
                 {profile.section ? ` · ${profile.section}` : ""}
               </p>
-              <p className="mt-2 text-sm font-medium text-teal-600">
+              <p className="mt-2 text-sm font-medium text-[#f0c46d]">
                 {profile.reward_points} reward points
               </p>
             </div>
           </div>
           <Link
             href="/student/profile/edit"
-            className="rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-medium"
+            className="rounded-lg border border-slate-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/10"
           >
             Edit
           </Link>
         </div>
       </StudentCard>
 
-      <section>
-        <h2 className="mb-2 text-sm font-semibold text-slate-700">Badges</h2>
+      <section id="rewards">
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-[#0c2238]">Rewards &amp; badges</h2>
+          <span className="text-xs font-medium text-[#a46618]">{profile.reward_points} points</span>
+        </div>
         {badges.length === 0 ? (
           <StudentEmptyState message="No badges yet. Check in to events to earn them!" />
         ) : (
@@ -134,7 +137,7 @@ export default function StudentProfilePage() {
             {badges.map((b) => (
               <li
                 key={b.id}
-                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                className="rounded-lg border border-[#e2e5e7] bg-white px-3 py-2 text-sm"
               >
                 {b.badge_name}
               </li>
@@ -144,7 +147,7 @@ export default function StudentProfilePage() {
       </section>
 
       <section>
-        <h2 className="mb-2 text-sm font-semibold text-slate-700">
+        <h2 className="mb-2 text-sm font-semibold text-[#0c2238]">
           Attendance history
         </h2>
         {history.length === 0 ? (
@@ -154,7 +157,7 @@ export default function StudentProfilePage() {
             {history.map((h) => (
               <li
                 key={h.id}
-                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                className="rounded-lg border border-[#e2e5e7] bg-white px-3 py-2 text-sm"
               >
                 <p className="font-medium">{h.events?.title ?? "Event"}</p>
                 <p className="text-xs text-slate-500">

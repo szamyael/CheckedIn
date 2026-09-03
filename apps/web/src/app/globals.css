@@ -1,43 +1,68 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --muted: #475569;
+  --background: #f6f7f5;
+  --foreground: #202428;
+  --muted: #697178;
+  --primary: #17324d;
+  --primary-strong: #0c2238;
+  --primary-soft: #e7eef4;
+  --surface: #ffffff;
+  --surface-muted: #eef1f0;
+  --border: #e2e5e7;
+  --success: #237a57;
+  --warning: #a46618;
+  --error: #b43b45;
+  --accent: #c18a2e;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "Aptos", "Segoe UI", sans-serif;
+  --font-mono: "Cascadia Code", Consolas, monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: "Aptos", "Segoe UI", sans-serif;
 }
 
 label {
-  color: #1e293b;
+  color: var(--primary-strong);
 }
 
 input,
 textarea,
 select {
-  color: #0f172a;
+  color: var(--foreground);
+  border-color: var(--border);
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: #64748b;
+  color: var(--muted);
 }
 
 th {
-  color: #1e293b;
+  color: var(--primary-strong);
 }
 
 td {
-  color: #334155;
+  color: #3f484f;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  transition: border-color 150ms ease, background-color 150ms ease,
+    color 150ms ease, box-shadow 150ms ease;
+}
+
+:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 70%, white);
+  outline-offset: 2px;
 }

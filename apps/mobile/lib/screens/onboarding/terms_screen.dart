@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/student_terms.dart';
 import '../../services/auth_service.dart';
-import '../../services/auth_service.dart';
 import '../../services/onboarding_service.dart';
 import '../../services/terms_service.dart';
 import '../../widgets/app_logo.dart';

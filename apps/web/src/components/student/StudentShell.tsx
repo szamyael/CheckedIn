@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, CalendarDays, Home, LayoutGrid, UserRound } from "lucide-react";
+import { Bell, CalendarDays, Home, LayoutGrid, Trophy, UserRound } from "lucide-react";
 import { BrandMark } from "@/components/BrandLogo";
 
 const TABS = [
   { href: "/student", label: "Home", icon: Home, exact: true },
   { href: "/student/events", label: "Events", icon: CalendarDays, exact: false },
   { href: "/student/bingo", label: "Bingo", icon: LayoutGrid, exact: false },
+  { href: "/student/profile#rewards", label: "Rewards", icon: Trophy, exact: false },
   { href: "/student/profile", label: "Profile", icon: UserRound, exact: false },
 ];
 
@@ -52,8 +53,8 @@ export function StudentShell({
 
       <main className="flex-1 overflow-y-auto px-4 pb-24 pt-4">{children}</main>
 
-      <nav className="fixed bottom-0 left-1/2 z-20 w-full max-w-md -translate-x-1/2 border-t border-slate-200 bg-white/95 backdrop-blur">
-        <ul className="grid grid-cols-4">
+      <nav className="fixed bottom-0 left-1/2 z-20 w-full max-w-md -translate-x-1/2 border-t border-[#e2e5e7] bg-white/95 backdrop-blur">
+        <ul className="grid grid-cols-5">
           {TABS.map(({ href, label, icon: Icon, exact }) => {
             const active = exact
               ? pathname === href
@@ -63,7 +64,7 @@ export function StudentShell({
                 <Link
                   href={href}
                   className={`flex flex-col items-center gap-1 py-3 text-xs font-medium ${
-                    active ? "text-teal-600" : "text-slate-500"
+                    active ? "text-[#17324d]" : "text-[#697178]"
                   }`}
                 >
                   <Icon className="h-5 w-5" />
