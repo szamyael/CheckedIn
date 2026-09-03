@@ -44,15 +44,32 @@ export default async function AdminPage() {
     organizations: { name: organizationNames.get(mapping.organization_id) ?? "" },
   }));
 
-  const { data: staff } = await supabase
+  const { data: staffRows } = await supabase
     .from("staff_profiles")
-    .select("id, first_name, last_name, users(email, role, status), organizations(name)")
+    .select("id, first_name, last_name, department, organization_id")
     .order("created_at", { ascending: false });
 
-  const { data: students } = await supabase
+  const { data: studentRows } = await supabase
     .from("students")
-    .select("id, student_id, first_name, middle_name, last_name, name_extension, program, year_level, users(status)")
+    .select("id, student_id, first_name, middle_name, last_name, name_extension, program, year_level")
     .order("created_at", { ascending: false });
+
+  const accountIds = [...new Set([
+    ...(staffRows ?? []).map((staffMember) => staffMember.id),
+    ...(studentRows ?? []).map((student) => student.id),
+  ])];
+  const { data: accountRows } = accountIds.length
+    ? await supabase.from("users").select("id, email, role, status").in("id", accountIds)
+    : { data: [] };
+  const accountById = new Map((accountRows ?? []).map((account) => [account.id, account]));
+  const staff = (staffRows ?? []).map((staffMember) => ({
+    ...staffMember,
+    users: accountById.get(staffMember.id) ?? null,
+  }));
+  const students = (studentRows ?? []).map((student) => ({
+    ...student,
+    users: accountById.get(student.id) ?? null,
+  }));
 
   const pendingStudents = (students ?? []).filter((s) => {
     const userRow = Array.isArray(s.users) ? s.users[0] : s.users;
@@ -64,13 +81,29 @@ export default async function AdminPage() {
     a.localeCompare(b),
   );
 
-  const { data: achievements } = await supabase
+  const { data: achievementRows } = await supabase
     .from("student_achievements")
-    .select(
-      "id, badge_name, badge_type, earned_at, students(student_id, first_name, last_name, program), events(title)",
-    )
+    .select("id, badge_name, badge_type, earned_at, student_id, event_id")
     .order("earned_at", { ascending: false })
     .limit(50);
+
+  const achievementStudentIds = [...new Set((achievementRows ?? []).map((achievement) => achievement.student_id))];
+  const achievementEventIds = [...new Set((achievementRows ?? []).map((achievement) => achievement.event_id).filter(Boolean))];
+  const [{ data: achievementStudents }, { data: achievementEvents }] = await Promise.all([
+    achievementStudentIds.length
+      ? supabase.from("students").select("id, student_id, first_name, last_name, program").in("id", achievementStudentIds)
+      : Promise.resolve({ data: [] }),
+    achievementEventIds.length
+      ? supabase.from("events").select("id, title").in("id", achievementEventIds)
+      : Promise.resolve({ data: [] }),
+  ]);
+  const achievementStudentById = new Map((achievementStudents ?? []).map((student) => [student.id, student]));
+  const achievementEventById = new Map((achievementEvents ?? []).map((event) => [event.id, event]));
+  const achievements = (achievementRows ?? []).map((achievement) => ({
+    ...achievement,
+    students: achievementStudentById.get(achievement.student_id) ?? null,
+    events: achievement.event_id ? achievementEventById.get(achievement.event_id) ?? null : null,
+  }));
 
   const { data: allEvents } = await supabase
     .from("events")
