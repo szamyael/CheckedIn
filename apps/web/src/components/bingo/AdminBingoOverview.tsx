@@ -6,10 +6,18 @@ export async function AdminBingoOverview() {
   const { data: cards } = await supabase
     .from("bingo_cards")
     .select(
-      "id, title, season_label, status, is_active, streak_threshold, organizations(name)",
+      "id, title, season_label, status, is_active, streak_threshold, organization_id",
     )
     .order("updated_at", { ascending: false })
     .limit(20);
+
+  const organizationIds = [...new Set((cards ?? []).map((card) => card.organization_id))];
+  const { data: organizations } = organizationIds.length
+    ? await supabase.from("organizations").select("id, name").in("id", organizationIds)
+    : { data: [] };
+  const organizationNames = new Map(
+    (organizations ?? []).map((organization) => [organization.id, organization.name]),
+  );
 
   const { data: awards } = await supabase
     .from("student_org_badges")
@@ -38,9 +46,6 @@ export async function AdminBingoOverview() {
           ) : (
             <ul className="space-y-2 text-sm">
               {(cards ?? []).map((c) => {
-                const org = Array.isArray(c.organizations)
-                  ? c.organizations[0]
-                  : c.organizations;
                 return (
                   <li
                     key={c.id}
@@ -49,7 +54,7 @@ export async function AdminBingoOverview() {
                     <span className="font-medium">{c.title}</span>
                     <span className="text-slate-500">
                       {" "}
-                      · {org?.name ?? "Org"} · {c.season_label}
+                      · {organizationNames.get(c.organization_id) ?? "Org"} · {c.season_label}
                     </span>
                     <span
                       className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${
