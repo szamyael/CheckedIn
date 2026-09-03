@@ -12,6 +12,7 @@ import {
   LayoutGrid,
 } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
+import { DashboardRealtimeSync } from "@/components/DashboardRealtimeSync";
 import { SessionTimeoutGuard } from "@/components/SessionTimeoutGuard";
 import { BrandLogo } from "@/components/BrandLogo";
 import type { UserRole } from "@/lib/types";
@@ -125,6 +126,7 @@ export default async function DashboardLayout({
       </aside>
 
       <main className="flex flex-1 flex-col overflow-auto">
+        <DashboardRealtimeSync />
         <SessionTimeoutGuard />
         <header className="flex items-center justify-end border-b border-slate-200 bg-white px-8 py-3">
           <NotificationBell />

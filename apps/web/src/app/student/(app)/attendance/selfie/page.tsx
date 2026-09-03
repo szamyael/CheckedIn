@@ -102,7 +102,7 @@ export default function AttendanceSelfiePage() {
       const path = `${user.id}/${Date.now()}.jpg`;
       const { error: upErr } = await supabase.storage
         .from("selfies")
-        .upload(path, blob, { contentType: "image/jpeg", upsert: true });
+        .upload(path, blob, { contentType: "image/jpeg" });
       if (upErr) throw upErr;
 
       const body: Record<string, unknown> = {
