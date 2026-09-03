@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { EventApprovalPanel } from "@/components/EventApprovalPanel";
 import { CreateOrganizationForm } from "@/components/CreateOrganizationForm";
 import { CreateStaffForm } from "@/components/CreateStaffForm";
@@ -32,7 +33,12 @@ export default async function AdminPage() {
     .select("id, name")
     .order("name");
 
-  const { data: organizationProgramRows } = await supabase
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const adminSupabase = serviceKey
+    ? createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey)
+    : supabase;
+
+  const { data: organizationProgramRows } = await adminSupabase
     .from("organization_programs")
     .select("id, organization_id, program")
     .order("organization_id")
