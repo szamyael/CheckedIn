@@ -38,11 +38,22 @@ export default function LoginPage() {
           data: { user },
         } = await supabase.auth.getUser();
 
-        const { data: profile } = await supabase
+        if (!user) {
+          setError("Your session could not be created. Please try again.");
+          return;
+        }
+
+        const { data: profile, error: profileError } = await supabase
           .from("users")
           .select("status, role")
-          .eq("id", user!.id)
+          .eq("id", user.id)
           .single();
+
+        if (profileError || !profile) {
+          await supabase.auth.signOut();
+          setError("Your account profile could not be loaded. Contact an administrator.");
+          return;
+        }
 
         if (profile?.status === "disabled") {
           await supabase.auth.signOut();

@@ -42,7 +42,9 @@ export default async function DashboardLayout({
     .eq("id", user.id)
     .single();
 
-  const role = profile?.role as UserRole;
+  if (!profile?.role) redirect("/login");
+
+  const role = profile.role as UserRole;
 
   const nav = [
     ...(role === "org_member" || role === "admin" || role === "faculty"
