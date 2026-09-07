@@ -5,7 +5,7 @@ import '../../services/attendance_service.dart';
 import '../../widgets/student_ui.dart';
 import '../../widgets/universal_loader.dart';
 
-/// After scanning an event QR: check out if already checked in,
+/// After scanning an event QR: record a break or check out if already checked in,
 /// otherwise continue to the location → OTP → selfie check-in flow.
 class AttendanceResolveScreen extends StatefulWidget {
   final String qrToken;
@@ -64,6 +64,8 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
         return;
       }
       final canCheckOut = meta['can_check_out'] == true;
+      final canBreakOut = meta['can_break_out'] == true;
+      final canBreakIn = meta['can_break_in'] == true;
       final alreadyOut = meta['already_checked_out'] == true;
       final title = meta['title'] as String? ?? 'Event';
 
@@ -76,7 +78,42 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
         return;
       }
 
-      if (canCheckOut) {
+      if (canBreakIn) {
+        loader.show('Recording break-in…');
+        final result = await _attendance.recordBreak(
+          qrToken: widget.qrToken,
+          returning: true,
+        );
+        if (!mounted) return;
+        final eventTitle =
+            (result['event'] is Map ? result['event']['title'] : null) as String? ?? title;
+        setState(() {
+          _successTitle = 'Welcome back';
+          _successBody = 'You are checked back in to $eventTitle.';
+        });
+        return;
+      }
+
+      if (canCheckOut || canBreakOut) {
+        if (!mounted) return;
+        loader.hide();
+        final action = await _chooseExitAction(title);
+        if (!mounted || action == null) return;
+        loader.show(action == _ExitAction.breakOut ? 'Recording break-out…' : 'Checking out…');
+        if (action == _ExitAction.breakOut) {
+          final result = await _attendance.recordBreak(
+            qrToken: widget.qrToken,
+            returning: false,
+          );
+          if (!mounted) return;
+          final eventTitle = (result['event'] is Map ? result['event']['title'] : null) as String? ?? title;
+          setState(() {
+            _successTitle = 'Break started';
+            _successBody = 'Your break-out from $eventTitle has been recorded. Scan the event QR again when you return.';
+          });
+          return;
+        }
+
         loader.show('Checking out…');
         final result = await _attendance.checkOut(qrToken: widget.qrToken);
         if (!mounted) return;
@@ -105,6 +142,19 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
       loader.hide();
     }
   }
+
+  Future<_ExitAction?> _chooseExitAction(String title) => showDialog<_ExitAction>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(title),
+          content: const Text('Are you taking a temporary break or leaving the event for the day?'),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('Cancel')),
+            OutlinedButton(onPressed: () => Navigator.of(dialogContext).pop(_ExitAction.breakOut), child: const Text('Break out')),
+            FilledButton(onPressed: () => Navigator.of(dialogContext).pop(_ExitAction.checkOut), child: const Text('Check out')),
+          ],
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -174,3 +224,5 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
     );
   }
 }
+
+enum _ExitAction { breakOut, checkOut }

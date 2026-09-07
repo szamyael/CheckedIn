@@ -71,13 +71,15 @@ Deno.serve(async (req) => {
 
     const { data: myAttendance } = await supabase
       .from("attendance_records")
-      .select("status, checked_in_at, checked_out_at")
+      .select("status, checked_in_at, break_out_at, break_in_at, checked_out_at, break_count")
       .eq("event_id", event.id)
       .eq("student_id", userData.user.id)
       .maybeSingle();
 
     const myStatus = (myAttendance?.status as string | undefined) ?? null;
     const canCheckOut = myStatus === "checked_in" || myStatus === "late";
+    const canBreakOut = myStatus === "checked_in" || myStatus === "late";
+    const canBreakIn = myStatus === "on_break";
     const alreadyCheckedOut = myStatus === "checked_out";
 
     const base = {
@@ -93,8 +95,13 @@ Deno.serve(async (req) => {
       window_open: windowOpen,
       my_attendance_status: myStatus,
       can_check_out: canCheckOut,
+      can_break_out: canBreakOut,
+      can_break_in: canBreakIn,
       already_checked_out: alreadyCheckedOut,
       checked_in_at: myAttendance?.checked_in_at ?? null,
+      break_out_at: myAttendance?.break_out_at ?? null,
+      break_in_at: myAttendance?.break_in_at ?? null,
+      break_count: myAttendance?.break_count ?? 0,
       checked_out_at: myAttendance?.checked_out_at ?? null,
     };
 

@@ -57,6 +57,8 @@ export type CheckInMeta = {
   title?: string;
   requires_otp?: boolean;
   can_check_out?: boolean;
+  can_break_out?: boolean;
+  can_break_in?: boolean;
   already_checked_out?: boolean;
   my_attendance_status?: string | null;
   location_ok?: boolean;

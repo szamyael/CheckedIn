@@ -255,7 +255,13 @@ class ProfileService {
           .from('attendance_records')
           .select('id, checked_in_at, events(title)')
           .eq('student_id', userId)
-          .inFilter('status', ['checked_in', 'late', 'excused'])
+          .inFilter('status', [
+            'checked_in',
+            'late',
+            'excused',
+            'on_break',
+            'checked_out',
+          ])
           .order('checked_in_at', ascending: false);
 
       final synced = (response as List).map((row) {

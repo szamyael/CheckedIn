@@ -24,6 +24,33 @@ export default function AttendanceScanPage() {
   const [result, setResult] = useState<{ title: string; body: string } | null>(
     null,
   );
+  const [exitChoice, setExitChoice] = useState<{ token: string; title: string } | null>(null);
+
+  const recordExit = useCallback(async (action: "break_out" | "check_out", token: string, title: string) => {
+    setExitChoice(null);
+    setError(null);
+    showLoader(action === "break_out" ? "Recording break-out…" : "Checking out…");
+    try {
+      const supabase = createClient();
+      const functionName = action === "break_out" ? "attendance-break" : "check-out";
+      const { data, error: actionError } = await supabase.functions.invoke(functionName, {
+        body: action === "break_out" ? { qr_token: token, action } : { qr_token: token },
+      });
+      if (actionError) throw new Error(actionError.message);
+      const payload = data as { success?: boolean; error?: string; event?: { title?: string } };
+      if (!payload.success) throw new Error(payload.error || "Attendance update failed");
+      clearFlow();
+      const eventTitle = payload.event?.title ?? title;
+      setResult(action === "break_out"
+        ? { title: "Break started", body: `Your break-out from ${eventTitle} is recorded. Scan the event QR again when you return.` }
+        : { title: "Checked out", body: `Checked out of ${eventTitle}. No OTP or selfie required.` });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Attendance update failed");
+      setScanKey((key) => key + 1);
+    } finally {
+      hideLoader();
+    }
+  }, [hideLoader, showLoader]);
 
   const onScan = useCallback(
     async (token: string) => {
@@ -47,26 +74,21 @@ export default function AttendanceScanPage() {
           return;
         }
 
-        if (meta.can_check_out) {
-          showLoader("Checking out…");
-          const { data: outData, error: outErr } =
-            await supabase.functions.invoke("check-out", {
-              body: { qr_token: token },
-            });
-          if (outErr) throw new Error(outErr.message);
-          const payload = outData as {
-            success?: boolean;
-            error?: string;
-            event?: { title?: string };
-          };
-          if (!payload.success) {
-            throw new Error(payload.error || "Check-out failed");
-          }
-          clearFlow();
-          setResult({
-            title: "Checked out",
-            body: `Checked out of ${payload.event?.title ?? meta.title ?? "event"}. No OTP or selfie required.`,
+        if (meta.can_break_in) {
+          showLoader("Recording break-in…");
+          const { data: breakData, error: breakErr } = await supabase.functions.invoke("attendance-break", {
+            body: { qr_token: token, action: "break_in" },
           });
+          if (breakErr) throw new Error(breakErr.message);
+          const payload = breakData as { success?: boolean; error?: string; event?: { title?: string } };
+          if (!payload.success) throw new Error(payload.error || "Break-in failed");
+          clearFlow();
+          setResult({ title: "Welcome back", body: `You are checked back in to ${payload.event?.title ?? meta.title ?? "the event"}.` });
+          return;
+        }
+
+        if (meta.can_check_out || meta.can_break_out) {
+          setExitChoice({ token, title: meta.title ?? "this event" });
           return;
         }
 
@@ -105,6 +127,25 @@ export default function AttendanceScanPage() {
     );
   }
 
+  if (exitChoice) {
+    return (
+      <div className="space-y-5">
+        <StudentPageTitle title={exitChoice.title} subtitle="Choose the attendance action that matches your plans." />
+        <div className="border border-[var(--border)] bg-[var(--surface)] p-5">
+          <h2 className="font-semibold text-[var(--primary-strong)]">Leaving temporarily?</h2>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Record a break for lunch or a short exit. Scan the QR again when you return.</p>
+          <button type="button" onClick={() => void recordExit("break_out", exitChoice.token, exitChoice.title)} className={`${studentPrimaryButtonClass} mt-5 w-full`}>Break out</button>
+        </div>
+        <div className="border border-[var(--border)] bg-[var(--surface)] p-5">
+          <h2 className="font-semibold text-[var(--primary-strong)]">Leaving for the day?</h2>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Check out to close your attendance for this event.</p>
+          <button type="button" onClick={() => void recordExit("check_out", exitChoice.token, exitChoice.title)} className="mt-5 w-full border border-[var(--border)] px-4 py-3 text-sm font-semibold text-[var(--primary-strong)] hover:bg-[var(--primary-soft)]">Check out</button>
+        </div>
+        <button type="button" onClick={() => { setExitChoice(null); setScanKey((key) => key + 1); }} className="w-full text-sm font-medium text-[var(--muted)]">Cancel and scan again</button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <StudentPageTitle title="Scan Event QR" />
@@ -130,7 +171,7 @@ export default function AttendanceScanPage() {
       {error && !cameraBlocked && <StudentErrorBanner message={error} />}
       <p className="text-center text-xs text-slate-500">
         Point your camera at the event QR. Scan once to check in, or again after
-        check-in to check out.
+        check-in, choose a temporary break, or check out for the day.
       </p>
     </div>
   );

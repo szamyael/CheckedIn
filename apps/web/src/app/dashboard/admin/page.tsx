@@ -11,6 +11,7 @@ import { StudentAchievementsPanel } from "@/components/StudentAchievementsPanel"
 import { AdminBingoOverview } from "@/components/bingo/AdminBingoOverview";
 import { OrganizationProgramAlignmentPanel } from "@/components/OrganizationProgramAlignmentPanel";
 import { formatStudentDisplayName } from "@/lib/student/display-name";
+import { DashboardPageHeader, DashboardSection, DashboardStat } from "@/components/DashboardUi";
 
 export const dynamic = "force-dynamic";
 
@@ -120,11 +121,13 @@ export default async function AdminPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Administration</h1>
-        <p className="mt-1 text-sm text-slate-700">
-          Manage organizations, staff, and student accounts.
-        </p>
+      <DashboardPageHeader eyebrow="SYSTEM CONTROL" title="Administration" description="Manage institutional accounts, approval queues, event governance, and organization access." />
+
+      <div className="grid gap-px border border-[var(--border)] bg-[var(--border)] sm:grid-cols-2 xl:grid-cols-4">
+        <DashboardStat label="Students" value={students.length} detail="Registered student accounts" />
+        <DashboardStat label="Pending review" value={pendingCount} detail="Accounts awaiting approval" />
+        <DashboardStat label="Staff" value={staff.length} detail="Faculty and organization members" />
+        <DashboardStat label="Organizations" value={organizations?.length ?? 0} detail="Active campus organizations" />
       </div>
 
       <EventApprovalPanel events={allEvents ?? []} />
@@ -142,8 +145,7 @@ export default async function AdminPage() {
         <CreateStaffForm organizations={organizations ?? []} />
       </div>
 
-      <div>
-        <h2 className="mb-4 text-lg font-semibold">Staff Accounts</h2>
+      <DashboardSection title="Staff accounts" description="Role, account status, and access controls for campus staff.">
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
           <table className="w-full text-sm">
             <thead className="border-b border-slate-200 bg-slate-50 text-left">
@@ -180,17 +182,9 @@ export default async function AdminPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </DashboardSection>
 
-      <div>
-        <h2 className="mb-4 text-lg font-semibold">
-          Student Accounts
-          {pendingCount > 0 && (
-            <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
-              {pendingCount} pending approval
-            </span>
-          )}
-        </h2>
+      <DashboardSection title="Student accounts" description={pendingCount > 0 ? `${pendingCount} account${pendingCount === 1 ? " is" : "s are"} awaiting approval.` : "Student identity and account-status review."}>
         <PendingStudentsBatchActions pendingIds={pendingIds} />
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
           <table className="w-full text-sm">
@@ -257,7 +251,7 @@ export default async function AdminPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </DashboardSection>
 
       <StudentAchievementsPanel achievements={achievements ?? []} />
     </div>

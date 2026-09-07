@@ -36,7 +36,10 @@ CREATE TABLE IF NOT EXISTS public.offline_attendance_submissions (
     reviewed_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
     reviewed_at TIMESTAMPTZ,
     synced_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT offline_attendance_rejection_requires_note CHECK (
+        review_status <> 'rejected' OR NULLIF(BTRIM(review_note), '') IS NOT NULL
+    )
 );
 
 CREATE INDEX IF NOT EXISTS idx_offline_attendance_event_review
@@ -45,6 +48,9 @@ CREATE INDEX IF NOT EXISTS idx_offline_attendance_student
     ON public.offline_attendance_submissions (student_id, captured_at DESC);
 
 ALTER TABLE public.offline_attendance_submissions ENABLE ROW LEVEL SECURITY;
+
+-- RLS policies are evaluated only after the API role has table access.
+GRANT SELECT ON public.offline_attendance_submissions TO authenticated;
 
 DROP POLICY IF EXISTS offline_attendance_student_read_own ON public.offline_attendance_submissions;
 CREATE POLICY offline_attendance_student_read_own

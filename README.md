@@ -189,6 +189,7 @@ supabase functions deploy check-in scan-student-id student-reset-password
 supabase functions deploy complete-student-registration --no-verify-jwt
 supabase functions deploy student-resolve-email student-verify-reset
 supabase functions deploy generate-event-otp rotate-event-qr event-check-in-meta
+supabase functions deploy check-out submit-offline-attendance attendance-break
 ```
 
 Ensure Veryfi secrets are set on the hosted project:

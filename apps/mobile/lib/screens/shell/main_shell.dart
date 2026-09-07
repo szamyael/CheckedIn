@@ -11,8 +11,7 @@ import '../profile/profile_screen.dart';
 import '../home/home_screen.dart';
 import '../../widgets/app_logo.dart';
 import '../../widgets/student_ui.dart';
-
-const _shellBorder = Color(0xFFE2E8F0);
+import '../../widgets/appearance_sheet.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -69,6 +68,7 @@ class _MainShellState extends State<MainShell> {
       HomeScreen(
         onScan: () => context.push('/attendance/scan'),
         onOpenBingo: () => setState(() => _index = 2),
+        onOpenNotifications: () => context.push('/notifications'),
       ),
       const EventsScreen(),
       const BingoScreen(),
@@ -83,9 +83,14 @@ class _MainShellState extends State<MainShell> {
         centerTitle: true,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(height: 1, color: _shellBorder),
+          child: Container(height: 1, color: Theme.of(context).colorScheme.outline),
         ),
         actions: [
+          IconButton(
+            tooltip: 'Appearance',
+            onPressed: () => showAppearanceSheet(context),
+            icon: const Icon(Icons.palette_outlined),
+          ),
           IconButton(
             onPressed: () async {
               await context.push('/notifications');
@@ -159,40 +164,16 @@ class _MainShellState extends State<MainShell> {
           Expanded(child: pages[_index]),
         ],
       ),
-      bottomNavigationBar: SizedBox(
-        height: 78,
-        child: Stack(
-          clipBehavior: Clip.none,
-          alignment: Alignment.topCenter,
-          children: [
-            Container(
-              height: 72,
-              decoration: const BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: _shellBorder))),
-              child: Row(children: [
-                Expanded(child: _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Home', selected: _index == 0, onTap: () => setState(() => _index = 0))),
-                Expanded(child: _NavItem(icon: Icons.event_outlined, activeIcon: Icons.event, label: 'Events', selected: _index == 1, onTap: () => setState(() => _index = 1))),
-                const SizedBox(width: 72),
-                Expanded(child: _NavItem(icon: Icons.grid_view_outlined, activeIcon: Icons.grid_view_rounded, label: 'Bingo', selected: _index == 2, onTap: () => setState(() => _index = 2))),
-                Expanded(child: _NavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: 'Profile', selected: _index == 3, onTap: () => setState(() => _index = 3))),
-              ]),
-            ),
-            Positioned(
-              top: -19,
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => context.push('/attendance/scan'),
-                  customBorder: const CircleBorder(),
-                  child: Ink(
-                    width: 64, height: 64,
-                    decoration: const BoxDecoration(color: Color(0xFFC18A2E), shape: BoxShape.circle, boxShadow: [BoxShadow(color: Color(0x4017344D), blurRadius: 12, offset: Offset(0, 5))]),
-                    child: const Icon(Icons.qr_code_scanner, color: Colors.white, size: 29),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+      bottomNavigationBar: Container(
+        height: 72,
+        decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, border: Border(top: BorderSide(color: Theme.of(context).colorScheme.outline))),
+        child: Row(children: [
+          Expanded(child: _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Home', selected: _index == 0, onTap: () => setState(() => _index = 0))),
+          Expanded(child: _NavItem(icon: Icons.event_outlined, activeIcon: Icons.event, label: 'Events', selected: _index == 1, onTap: () => setState(() => _index = 1))),
+          Expanded(child: _NavItem(icon: Icons.qr_code_scanner, activeIcon: Icons.qr_code_scanner, label: 'Scan', selected: false, onTap: () => context.push('/attendance/scan'))),
+          Expanded(child: _NavItem(icon: Icons.grid_view_outlined, activeIcon: Icons.grid_view_rounded, label: 'Bingo', selected: _index == 2, onTap: () => setState(() => _index = 2))),
+          Expanded(child: _NavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: 'Profile', selected: _index == 3, onTap: () => setState(() => _index = 3))),
+        ]),
       ),
     );
   }
@@ -207,5 +188,5 @@ class _NavItem extends StatelessWidget {
   const _NavItem({required this.icon, required this.activeIcon, required this.label, required this.selected, required this.onTap});
 
   @override
-  Widget build(BuildContext context) => InkWell(onTap: onTap, child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(selected ? activeIcon : icon, size: 22, color: selected ? const Color(0xFF17324D) : StudentUi.muted), const SizedBox(height: 3), Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: selected ? const Color(0xFF17324D) : StudentUi.muted))]));
+  Widget build(BuildContext context) => InkWell(onTap: onTap, child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(selected ? activeIcon : icon, size: 22, color: selected ? Theme.of(context).colorScheme.primary : StudentUi.muted), const SizedBox(height: 3), Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: selected ? Theme.of(context).colorScheme.primary : StudentUi.muted))]));
 }

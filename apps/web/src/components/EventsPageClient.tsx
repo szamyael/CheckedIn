@@ -9,6 +9,7 @@ import { EventsCalendar } from "@/components/EventsCalendar";
 import { format, isAfter, isBefore, isWithinInterval } from "date-fns";
 import type { Event } from "@/lib/types";
 import Link from "next/link";
+import { DashboardPageHeader, DashboardSection } from "@/components/DashboardUi";
 
 type ListCategory = "upcoming" | "ended";
 type ViewMode = "list" | "calendar";
@@ -72,26 +73,20 @@ export function EventsPageClient({
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Events Calendar</h1>
-        <p className="mt-1 text-sm text-slate-700">
-          {canCreate
-            ? "Create organization events and share QR codes for student attendance."
-            : "View published events. Organizations create events; faculty generate reports."}
-        </p>
-      </div>
+      <DashboardPageHeader eyebrow="EVENT OPERATIONS" title="Events" description={canCreate ? "Create and operate events with controlled QR attendance, security, and live monitoring." : "Review published events. Organizations create events; faculty focus on attendance oversight."} />
 
       {canCreate && <CreateEventForm initialOrganizationId={organizationId} />}
 
       {!canCreate && (
-        <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+        <p className="border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3 text-sm text-[var(--muted)]">
           Event creation is limited to Organization accounts. Use Reports and
           Live Monitor for attendance oversight.
         </p>
       )}
 
       {publishedUpcoming.length > 0 && (
-        <section className="rounded-xl border border-blue-200 bg-blue-50/50 p-6">
+        <DashboardSection title="Active event credentials" description="Display a live QR credential for students when attendance is open.">
+        <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6">
           <h2 className="text-lg font-semibold text-slate-900">
             Active event QR codes
           </h2>
@@ -111,17 +106,18 @@ export function EventsPageClient({
             ))}
           </div>
         </section>
+        </DashboardSection>
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-slate-900">All Events</h2>
+        <h2 className="text-lg font-semibold text-[var(--primary-strong)]">All events</h2>
         <div className="flex flex-wrap gap-2">
-          <div className="flex rounded-lg border border-slate-200 p-1 text-sm">
+          <div className="flex border border-[var(--border)] p-1 text-sm">
             <button
               type="button"
               onClick={() => setCategory("upcoming")}
               className={`rounded-md px-3 py-1 ${
-                category === "upcoming" ? "bg-teal-600 text-white" : ""
+                category === "upcoming" ? "bg-[var(--primary)] text-white" : "text-[var(--muted)]"
               }`}
             >
               Upcoming ({upcomingEvents.length})
@@ -130,18 +126,18 @@ export function EventsPageClient({
               type="button"
               onClick={() => setCategory("ended")}
               className={`rounded-md px-3 py-1 ${
-                category === "ended" ? "bg-teal-600 text-white" : ""
+                category === "ended" ? "bg-[var(--primary)] text-white" : "text-[var(--muted)]"
               }`}
             >
               Ended ({endedEvents.length})
             </button>
           </div>
-          <div className="flex rounded-lg border border-slate-200 p-1 text-sm">
+          <div className="flex border border-[var(--border)] p-1 text-sm">
             <button
               type="button"
               onClick={() => setView("list")}
               className={`rounded-md px-3 py-1 ${
-                view === "list" ? "bg-blue-600 text-white" : ""
+                view === "list" ? "bg-[var(--primary)] text-white" : "text-[var(--muted)]"
               }`}
             >
               List
@@ -150,7 +146,7 @@ export function EventsPageClient({
               type="button"
               onClick={() => setView("calendar")}
               className={`rounded-md px-3 py-1 ${
-                view === "calendar" ? "bg-blue-600 text-white" : ""
+                view === "calendar" ? "bg-[var(--primary)] text-white" : "text-[var(--muted)]"
               }`}
             >
               Calendar

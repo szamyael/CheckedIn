@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Award, CalendarDays, ChevronRight, QrCode, Sparkles, TicketCheck } from "lucide-react";
+import { Award, CalendarDays, ChevronRight, Megaphone, QrCode, Sparkles, TicketCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 type StudentSummary = {
@@ -15,20 +15,24 @@ type StudentSummary = {
   badges: number;
 };
 
+type BulletinItem = { id: string; title: string; body: string; created_at: string };
+
 export default function StudentHomePage() {
   const [summary, setSummary] = useState<StudentSummary>({
     name: "Student", studentId: "—", program: "Program not set", yearLevel: null, attended: 0, points: 0, badges: 0,
   });
+  const [bulletins, setBulletins] = useState<BulletinItem[]>([]);
 
   useEffect(() => {
     const supabase = createClient();
     async function load() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const [{ data: student }, { count: attended }, { count: badges }] = await Promise.all([
+      const [{ data: student }, { count: attended }, { count: badges }, { data: announcements }] = await Promise.all([
         supabase.from("students").select("first_name, student_id, program, year_level, reward_points").eq("id", user.id).single(),
         supabase.from("attendance_records").select("*", { count: "exact", head: true }).eq("student_id", user.id).in("status", ["checked_in", "late", "excused", "checked_out"]),
         supabase.from("student_achievements").select("*", { count: "exact", head: true }).eq("student_id", user.id),
+        supabase.from("notifications").select("id, title, body, created_at").eq("user_id", user.id).eq("notification_type", "general").order("created_at", { ascending: false }).limit(3),
       ]);
       setSummary({
         name: student?.first_name ?? "Student",
@@ -39,6 +43,7 @@ export default function StudentHomePage() {
         points: student?.reward_points ?? 0,
         badges: badges ?? 0,
       });
+      setBulletins((announcements ?? []) as BulletinItem[]);
     }
     void load();
   }, []);
@@ -84,6 +89,25 @@ export default function StudentHomePage() {
           <div className="flex items-start justify-between"><div className="flex h-10 w-10 items-center justify-center bg-[#f7edcf] text-[#a46618]"><Sparkles size={20} /></div><ChevronRight size={19} className="text-[#a46618] transition-transform group-hover:translate-x-0.5" /></div>
           <p className="mt-7 text-xs font-semibold tracking-[0.12em] text-[#a46618]">ENGAGEMENT</p><h2 className="mt-2 text-lg font-semibold text-[#0c2238]">Your Bingo progress</h2><p className="mt-2 text-sm leading-6 text-[#697178]">Check your active card and see what participation can unlock next.</p>
         </Link>
+      </section>
+
+      <section className="border border-[#e2e5e7] bg-white">
+        <div className="flex items-center justify-between border-b border-[#e2e5e7] px-5 py-4">
+          <div className="flex items-center gap-2 text-[#0c2238]"><Megaphone size={19} className="text-[var(--primary)]" /><h2 className="font-semibold">Bulletin board</h2></div>
+          <Link href="/student/notifications" className="text-sm font-semibold text-[var(--primary)] hover:underline">View all</Link>
+        </div>
+        {bulletins.length === 0 ? (
+          <p className="px-5 py-6 text-sm text-[#697178]">No announcements right now. Check back soon.</p>
+        ) : (
+          <div className="divide-y divide-[#e2e5e7]">
+            {bulletins.map((item) => (
+              <Link key={item.id} href="/student/notifications" className="block px-5 py-4 hover:bg-[var(--primary-soft)]">
+                <div className="flex items-start justify-between gap-4"><h3 className="font-semibold text-[#0c2238]">{item.title}</h3><time className="shrink-0 text-xs text-[#697178]">{new Date(item.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</time></div>
+                <p className="mt-1 line-clamp-2 text-sm leading-6 text-[#697178]">{item.body}</p>
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
 
       <Link href="/student/events" className="flex items-center justify-between border-t border-[#e2e5e7] py-5 text-sm"><span className="flex items-center gap-2 font-semibold text-[#17324d]"><CalendarDays size={18} />Find your next event</span><ChevronRight size={18} className="text-[#697178]" /></Link>

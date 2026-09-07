@@ -99,3 +99,69 @@ select {
   outline: 3px solid color-mix(in srgb, var(--accent) 70%, white);
   outline-offset: 2px;
 }
+
+/* Operational dashboard: restrained, dense enough for supervision, and
+   consistently legible in every role workspace. */
+.dashboard-workspace {
+  font-family: "Aptos", "Segoe UI", sans-serif;
+}
+
+.dashboard-workspace input,
+.dashboard-workspace select,
+.dashboard-workspace textarea {
+  border-radius: 8px;
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--foreground);
+}
+
+.dashboard-workspace table thead {
+  background: var(--surface-muted);
+  color: var(--primary-strong);
+}
+
+.dashboard-workspace table tbody tr {
+  border-color: var(--border);
+}
+
+.dashboard-workspace table tbody tr:hover {
+  background: var(--primary-soft);
+}
+
+.dashboard-workspace button,
+.dashboard-workspace a {
+  transition: border-color 150ms ease, background-color 150ms ease,
+    color 150ms ease, box-shadow 150ms ease;
+}
+
+/* The student portal is frequently opened in a phone browser. Keep pages and
+   embedded content inside the handset viewport rather than relying on a
+   desktop-width document. */
+.student-portal * {
+  min-width: 0;
+}
+
+.student-portal img,
+.student-portal video,
+.student-portal canvas {
+  max-width: 100%;
+}
+
+.student-portal pre,
+.student-portal code {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 359px) {
+  .student-portal header > div:last-child {
+    gap: 0;
+  }
+
+  .student-portal header button:last-child {
+    font-size: 11px;
+  }
+
+  .student-portal nav a {
+    font-size: 10px;
+  }
+}

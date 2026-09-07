@@ -7,6 +7,7 @@ import 'core/env_config.dart';
 import 'core/theme.dart';
 import 'router.dart';
 import 'services/auth_service.dart';
+import 'services/appearance_service.dart';
 import 'services/connectivity_service.dart';
 import 'services/offline_sync_service.dart';
 import 'services/onboarding_service.dart';
@@ -29,6 +30,7 @@ Future<void> main() async {
   final terms = TermsService.instance;
   await onboarding.init();
   await terms.init();
+  await AppearanceService.instance.init();
   await ConnectivityService.instance.init();
   await OfflineSyncService.instance.init();
 
@@ -42,13 +44,18 @@ class CheckedInApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SessionActivityWrapper(
-      child: UniversalLoaderScope(
-        controller: UniversalLoaderController.instance,
-        child: MaterialApp.router(
-          title: 'CheckedIn',
-          theme: AppTheme.light,
-          routerConfig: router,
+    return AnimatedBuilder(
+      animation: AppearanceService.instance,
+      builder: (context, _) => SessionActivityWrapper(
+        child: UniversalLoaderScope(
+          controller: UniversalLoaderController.instance,
+          child: MaterialApp.router(
+            title: 'CheckedIn',
+            theme: AppTheme.build(AppearanceService.instance.colorTheme, Brightness.light),
+            darkTheme: AppTheme.build(AppearanceService.instance.colorTheme, Brightness.dark),
+            themeMode: AppearanceService.instance.themeMode,
+            routerConfig: router,
+          ),
         ),
       ),
     );

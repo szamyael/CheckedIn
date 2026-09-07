@@ -9,10 +9,14 @@ import { ReportDateRangeFilter } from "@/components/ReportDateRangeFilter";
 import { ReportMultiEventSelect } from "@/components/ReportMultiEventSelect";
 import { AbsenteeReport } from "@/components/AbsenteeReport";
 import { AttendanceCorrectionPanel } from "@/components/AttendanceCorrectionPanel";import type { ExportRow } from "@/lib/export-report";
+import { DashboardPageHeader, DashboardSection } from "@/components/DashboardUi";
 
 type AttendanceRow = {
   id: string;
   checked_in_at: string;
+  break_out_at: string | null;
+  break_in_at: string | null;
+  checked_out_at: string | null;
   distance_from_venue_m: number | null;
   selfie_url: string | null;
   selfie_signed_url: string | null;
@@ -85,10 +89,10 @@ export default async function ReportsPage({
     const { data } = await supabase
       .from("attendance_records")
       .select(
-        "id, event_id, checked_in_at, distance_from_venue_m, selfie_url, students(student_id, first_name, last_name, program, year_level)",
+        "id, event_id, status, checked_in_at, break_out_at, break_in_at, checked_out_at, distance_from_venue_m, selfie_url, students(student_id, first_name, last_name, program, year_level)",
       )
       .in("event_id", targetEventIds)
-      .in("status", ["checked_in", "late", "excused"])
+      .in("status", ["checked_in", "late", "excused", "on_break", "checked_out"])
       .order("checked_in_at", { ascending: true });
 
     attendance = await Promise.all(
@@ -114,6 +118,9 @@ export default async function ReportsPage({
           event_id: eid,
           event_title: eventTitleById.get(eid) ?? "—",
           checked_in_at: row.checked_in_at as string,
+          break_out_at: row.break_out_at as string | null,
+          break_in_at: row.break_in_at as string | null,
+          checked_out_at: row.checked_out_at as string | null,
           distance_from_venue_m: row.distance_from_venue_m as number | null,
           selfie_url: row.selfie_url as string | null,
           selfie_signed_url: selfieSignedUrl,
@@ -139,6 +146,9 @@ export default async function ReportsPage({
     program: r.students.program,
     year_level: r.students.year_level,
     checked_in_at: r.checked_in_at,
+    break_out_at: r.break_out_at,
+    break_in_at: r.break_in_at,
+    checked_out_at: r.checked_out_at,
     distance_from_venue_m: r.distance_from_venue_m,
     event_title: includeEvent ? r.event_title : undefined,
   }));
@@ -147,12 +157,7 @@ export default async function ReportsPage({
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Attendance Reports</h1>
-        <p className="mt-1 text-sm text-slate-700">
-          Single event, date range, or multiple events with program/year filters.
-        </p>
-      </div>
+      <DashboardPageHeader eyebrow="REPORTING" title="Attendance reports" description="Review attendance by event, date range, program, and year level. Export only when the report is ready." />
 
       <Suspense fallback={<div className="h-9 w-80 animate-pulse rounded-lg bg-slate-200" />}>
         <ReportModeTabs />
@@ -220,6 +225,9 @@ export default async function ReportsPage({
                 <th className="px-4 py-3 font-medium">Program</th>
                 <th className="px-4 py-3 font-medium">Year</th>
                 <th className="px-4 py-3 font-medium">Checked In</th>
+                <th className="px-4 py-3 font-medium">Break Out</th>
+                <th className="px-4 py-3 font-medium">Break In</th>
+                <th className="px-4 py-3 font-medium">Checked Out</th>
                 <th className="px-4 py-3 font-medium">Distance (m)</th>
                 <th className="px-4 py-3 font-medium">Selfie</th>
               </tr>
@@ -239,6 +247,9 @@ export default async function ReportsPage({
                   <td className="px-4 py-3">
                     {format(new Date(row.checked_in_at), "MMM d, yyyy h:mm:ss a")}
                   </td>
+                  <td className="px-4 py-3">{row.break_out_at ? format(new Date(row.break_out_at), "MMM d, h:mm:ss a") : "—"}</td>
+                  <td className="px-4 py-3">{row.break_in_at ? format(new Date(row.break_in_at), "MMM d, h:mm:ss a") : "—"}</td>
+                  <td className="px-4 py-3">{row.checked_out_at ? format(new Date(row.checked_out_at), "MMM d, h:mm:ss a") : "—"}</td>
                   <td className="px-4 py-3">
                     {row.distance_from_venue_m?.toFixed(1) ?? "—"}
                   </td>
@@ -261,7 +272,7 @@ export default async function ReportsPage({
               {attendance.length === 0 && (
                 <tr>
                   <td
-                    colSpan={includeEvent ? 8 : 7}
+                    colSpan={includeEvent ? 11 : 10}
                     className="px-4 py-6 text-center text-slate-700"
                   >
                     No attendance records for this selection.
@@ -277,10 +288,9 @@ export default async function ReportsPage({
         <AbsenteeReport eventId={eventId} />
       )}
 
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-slate-900">Correction requests</h2>
+      <DashboardSection title="Correction requests" description="Review submitted attendance corrections.">
         <AttendanceCorrectionPanel isAdmin={false} />
-      </section>
+      </DashboardSection>
     </div>
   );
 }

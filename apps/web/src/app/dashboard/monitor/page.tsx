@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { LiveAttendanceMonitor } from "@/components/LiveAttendanceMonitor";
 import { MonitorTools } from "@/components/MonitorTools";
 import { EventSelector } from "@/components/EventSelector";
+import { DashboardPageHeader, DashboardSection } from "@/components/DashboardUi";
 
 export default async function MonitorPage({
   searchParams,
@@ -22,26 +23,20 @@ export default async function MonitorPage({
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Live Attendance Monitor</h1>
-        <p className="mt-1 text-sm text-slate-700">
-          Watch check-ins appear in real time during an active event.
-        </p>
-      </div>
+      <DashboardPageHeader eyebrow="REAL-TIME OPERATIONS" title="Live attendance monitor" description="Watch verified check-ins arrive as they happen. Select an event to begin monitoring." />
 
-      <div>
+      <DashboardSection title="Select an event" description="Only published events are available for live attendance monitoring.">
         <label className="mb-1 block text-sm font-medium">Event</label>
         <Suspense fallback={<div className="h-10 w-64 animate-pulse rounded-lg bg-slate-200" />}>
           <EventSelector events={events ?? []} basePath="/dashboard/monitor" />
         </Suspense>
-      </div>
+      </DashboardSection>
 
       {eventId && selected && (
         <div className="space-y-6">
-          <div>
-            <h2 className="mb-4 text-lg font-semibold">{selected.title}</h2>
+          <DashboardSection title={selected.title} description="Live attendance records update automatically.">
             <LiveAttendanceMonitor eventId={eventId} />
-          </div>
+          </DashboardSection>
           <MonitorTools eventId={eventId} />
         </div>
       )}

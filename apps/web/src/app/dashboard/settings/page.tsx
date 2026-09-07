@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { SystemSettingsForm } from "@/components/SystemSettingsForm";
 import { BroadcastNotificationForm } from "@/components/BroadcastNotificationForm";
 import { AttendanceCorrectionPanel } from "@/components/AttendanceCorrectionPanel";
+import { DashboardPageHeader, DashboardSection } from "@/components/DashboardUi";
 export default async function SettingsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -22,20 +23,15 @@ export default async function SettingsPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">System settings</h1>
-        <p className="mt-1 text-sm text-slate-700">
-          Configure attendance policies, notifications, and audit trail.
-        </p>
-      </div>
+      <DashboardPageHeader eyebrow="SYSTEM CONTROL" title="System settings" description="Configure attendance policies, broadcasts, review queues, and the institutional audit trail." />
 
       <div className="grid gap-8 lg:grid-cols-2">
         <SystemSettingsForm />
         <BroadcastNotificationForm />
       </div>
 
+      <DashboardSection title="Audit trail" description="Recent administrative actions across CheckedIn.">
       <section className="rounded-xl border border-slate-200 bg-white p-6">
-        <h2 className="text-lg font-semibold text-slate-900">Audit trail</h2>
         <div className="mt-4 overflow-auto">
           <table className="w-full text-sm">
             <thead className="border-b text-left text-slate-600">
@@ -67,13 +63,10 @@ export default async function SettingsPage() {
           </table>
         </div>
       </section>
+      </DashboardSection>
 
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-slate-900">Attendance corrections</h2>
-        <p className="text-sm text-slate-600">
-          Review and approve staff correction requests.
-        </p>
+      <DashboardSection title="Attendance corrections" description="Review and approve staff correction requests.">
         <AttendanceCorrectionPanel isAdmin />
-      </section>
+      </DashboardSection>
     </div>  );
 }

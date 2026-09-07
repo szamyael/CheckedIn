@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import {
+  LayoutDashboard,
   LogOut,
 } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -41,6 +42,11 @@ export default async function DashboardLayout({
   const role = profile.role as UserRole;
 
   const nav = [
+    {
+      href: role === "admin" ? "/dashboard/admin" : role === "faculty" ? "/dashboard/faculty" : "/dashboard/org",
+      label: "Overview",
+      icon: "users" as const,
+    },
     ...(role === "org_member" || role === "admin" || role === "faculty"
       ? [
           {
@@ -70,38 +76,33 @@ export default async function DashboardLayout({
       : []),
     ...(role === "admin"
       ? [
-          { href: "/dashboard/admin", label: "Users", icon: "users" as const },
           { href: "/dashboard/settings", label: "Settings", icon: "settings" as const },
         ]
-      : []),
-    ...(role === "org_member"
-      ? [{ href: "/dashboard/org", label: "Org Home", icon: "users" as const }]
-      : []),
-    ...(role === "faculty"
-      ? [{ href: "/dashboard/faculty", label: "Faculty Home", icon: "users" as const }]
       : []),
   ] satisfies DashboardNavItem[];
 
   return (
-    <div className="flex min-h-screen bg-[#f6f7f5]">
-      <aside className="flex w-60 flex-col border-r border-[#28445d] bg-[#0c2238]">
-        <div className="border-b border-[#28445d] px-4 py-5">
-          <BrandLogo variant="transparent" className="max-h-16 w-full brightness-0 invert" />
-          <p className="mt-2 text-center text-xs capitalize text-slate-300">
-            {role}
-          </p>
+    <div className="dashboard-workspace flex min-h-screen bg-[var(--background)] text-[var(--foreground)]">
+      <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col border-r border-[#28445d] bg-[#0c2238]">
+        <div className="border-b border-[#28445d] px-5 py-6">
+          <BrandLogo variant="transparent" className="max-h-12 w-full max-w-[156px] brightness-0 invert" />
+          <div className="mt-5 flex items-center gap-2 text-xs text-slate-300">
+            <span className="grid h-6 w-6 place-items-center border border-[#527086] bg-[#17324d]"><LayoutDashboard className="h-3.5 w-3.5" /></span>
+            <span className="capitalize">{role.replace("_", " ")} workspace</span>
+          </div>
         </div>
 
         <DashboardNav items={nav} />
 
-        <div className="border-t border-[#28445d] p-3">
-          <p className="truncate px-3 text-xs text-slate-400">
+        <div className="border-t border-[#28445d] p-4">
+          <p className="mb-2 px-2 text-[10px] font-semibold tracking-[0.12em] text-slate-500">SIGNED IN AS</p>
+          <p className="truncate px-2 text-xs text-slate-300">
             {profile?.email ?? user.email}
           </p>
           <form action={signOut}>
             <button
               type="submit"
-              className="mt-2 flex w-full items-center gap-2 px-3 py-2 text-sm text-red-300 hover:bg-[#17324d] hover:text-white"
+              className="mt-3 flex min-h-10 w-full items-center gap-3 border-l-2 border-transparent px-2 text-sm text-slate-300 hover:border-[#c18a2e] hover:bg-[#17324d] hover:text-white"
             >
               <LogOut className="h-4 w-4" />
               Sign out
@@ -110,14 +111,20 @@ export default async function DashboardLayout({
         </div>
       </aside>
 
-      <main className="flex flex-1 flex-col overflow-auto">
+      <main className="flex min-w-0 flex-1 flex-col overflow-auto">
         <DashboardRealtimeSync />
         <SessionTimeoutGuard />
-        <header className="flex items-center justify-end border-b border-[#e2e5e7] bg-white px-8 py-3">
-          <ThemePanelButton />
-          <NotificationBell />
+        <header className="flex min-h-[73px] items-center justify-between border-b border-[var(--border)] bg-[var(--surface)] px-6 lg:px-10">
+          <div>
+            <p className="text-[10px] font-semibold tracking-[0.16em] text-[var(--muted)]">CHECKEDIN</p>
+            <p className="mt-0.5 text-sm font-semibold text-[var(--primary-strong)]">Campus operations</p>
+          </div>
+          <div className="flex items-center gap-1">
+            <ThemePanelButton />
+            <NotificationBell />
+          </div>
         </header>
-        <div className="flex-1 p-8">{children}</div>
+        <div className="mx-auto w-full max-w-[1440px] flex-1 p-6 lg:p-10">{children}</div>
       </main>
     </div>
   );

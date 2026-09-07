@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
@@ -148,15 +149,21 @@ class _SelfieScreenState extends State<SelfieScreen> {
 
       if (!mounted) return;
 
+      // The native screen-capture plugin can take an unbounded amount of time
+      // to release on some devices. Attendance has already been recorded at
+      // this point, so never hold the success UI hostage to that cleanup.
+      _finishProtectedSession();
+      UniversalLoaderController.instance.hide();
+      setState(() => _submitting = false);
+
       if (submission.outcome == CheckInOutcome.queuedOffline) {
-        await OfflineSyncService.instance.refresh();
-        await ScreenshotGuardService.instance.endProtectedSession();
+        unawaited(OfflineSyncService.instance.refresh());
+        if (!mounted) return;
         _showPendingDialog();
         return;
       }
 
       final result = submission.serverResult!;
-      await ScreenshotGuardService.instance.endProtectedSession();
       final eventTitle =
           (result['event'] as Map?)?['title'] ?? 'Event';
       final eventId = (result['event'] as Map?)?['id'] as String?;
@@ -171,6 +178,12 @@ class _SelfieScreenState extends State<SelfieScreen> {
       UniversalLoaderController.instance.hide();
       if (mounted) setState(() => _submitting = false);
     }
+  }
+
+  void _finishProtectedSession() {
+    unawaited(
+      ScreenshotGuardService.instance.endProtectedSession().catchError((_) {}),
+    );
   }
 
   void _showPendingDialog() {

@@ -21,7 +21,11 @@ export function ThemePanelButton() {
       <button type="button" onClick={() => setOpen((current) => !current)} className="flex h-10 w-10 items-center justify-center rounded-lg text-[var(--primary)] hover:bg-[var(--primary-soft)]" aria-label="Open appearance settings" aria-expanded={open}>
         {open ? <X size={20} /> : <Palette size={20} />}
       </button>
-      {open && <div className="absolute right-0 top-12 z-50 w-[min(22rem,calc(100vw-2rem))] shadow-2xl"><ThemeSettings /></div>}
+      {open && (
+        <div className="fixed inset-x-3 top-16 z-50 max-h-[calc(100dvh-5rem)] overflow-y-auto shadow-2xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:max-h-[calc(100dvh-6rem)] sm:w-[22rem]">
+          <ThemeSettings />
+        </div>
+      )}
     </div>
   );
 }

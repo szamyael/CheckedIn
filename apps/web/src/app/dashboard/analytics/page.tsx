@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AnalyticsCharts } from "@/components/AnalyticsCharts";
+import { DashboardPageHeader, DashboardSection, DashboardStat } from "@/components/DashboardUi";
 
 export default async function AnalyticsPage() {
   const supabase = await createClient();
@@ -82,26 +83,12 @@ export default async function AnalyticsPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Analytics Dashboard</h1>
-        <p className="mt-1 text-sm text-slate-700">
-          Institution-wide attendance and engagement overview.
-        </p>
-      </div>
+      <DashboardPageHeader eyebrow="ATTENDANCE INTELLIGENCE" title="Analytics" description="Institution-wide attendance, participation, and organization performance." />
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-slate-200 bg-white p-6">
-          <p className="text-sm text-slate-700">Total Events</p>
-          <p className="mt-1 text-3xl font-bold">{totalEvents ?? 0}</p>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-6">
-          <p className="text-sm text-slate-700">Total Check-ins</p>
-          <p className="mt-1 text-3xl font-bold">{totalAttendance ?? 0}</p>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-6">
-          <p className="text-sm text-slate-700">Registered Students</p>
-          <p className="mt-1 text-3xl font-bold">{totalStudents ?? 0}</p>
-        </div>
+      <div className="grid gap-px border border-[var(--border)] bg-[var(--border)] sm:grid-cols-3">
+        <DashboardStat label="Events" value={totalEvents ?? 0} detail="Events in the system" />
+        <DashboardStat label="Check-ins" value={totalAttendance ?? 0} detail="Confirmed attendance records" />
+        <DashboardStat label="Students" value={totalStudents ?? 0} detail="Registered student accounts" />
       </div>
 
       <AnalyticsCharts
@@ -110,8 +97,8 @@ export default async function AnalyticsPage() {
         yearLevelRankings={yearLevelRankings}
       />
 
+      <DashboardSection title="Organization activity" description="Event creation by organization.">
       <div className="rounded-xl border border-slate-200 bg-white p-6">
-        <h2 className="mb-4 font-semibold">Organizations by Events Created</h2>
         {orgRankings.length === 0 ? (
           <p className="text-sm text-slate-700">No organizations yet.</p>
         ) : (
@@ -125,6 +112,7 @@ export default async function AnalyticsPage() {
           </ul>
         )}
       </div>
+      </DashboardSection>
     </div>
   );
 }

@@ -27,10 +27,10 @@ export function StudentShell({
   const pathname = usePathname();
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-slate-50 text-slate-900 shadow-xl">
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur">
+    <div className="student-portal mx-auto flex min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-slate-50 text-slate-900 shadow-xl">
+      <header className="sticky top-0 z-20 flex min-w-0 items-center justify-between border-b border-slate-200 bg-white/95 px-3 py-3 sm:px-4 backdrop-blur">
         <BrandMark size={36} />
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           <ThemePanelButton />
           <Link
             href="/student/notifications"
@@ -47,14 +47,14 @@ export function StudentShell({
           <button
             type="button"
             onClick={onSignOut}
-            className="rounded-lg px-2 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-100"
+            className="rounded-lg px-1.5 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-100 sm:px-2"
           >
             Sign out
           </button>
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto px-4 pb-24 pt-4">{children}</main>
+      <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-3 pb-24 pt-4 sm:px-4">{children}</main>
 
       <nav className="fixed bottom-0 left-1/2 z-20 w-full max-w-md -translate-x-1/2 border-t border-[#e2e5e7] bg-white/95 backdrop-blur" aria-label="Student navigation">
         <ul className="grid grid-cols-5">
@@ -76,11 +76,11 @@ export function StudentShell({
               </li>
             );
           })}
-          <li className="relative">
-            <Link href="/student/attendance/scan" className="absolute -top-7 left-1/2 flex h-16 w-16 -translate-x-1/2 flex-col items-center justify-center rounded-full border-4 border-[var(--background)] bg-[var(--primary)] text-white shadow-lg hover:brightness-90" aria-label="Scan event QR">
-              <QrCode className="h-6 w-6" />
+          <li>
+            <Link href="/student/attendance/scan" className="flex flex-col items-center gap-1 py-3 text-xs font-medium text-[#697178] hover:text-[var(--primary)]" aria-label="Scan event QR">
+              <QrCode className="h-5 w-5" />
+              Scan
             </Link>
-            <span className="block h-[68px]" aria-hidden="true" />
           </li>
           {RIGHT_TABS.map(({ href, label, icon: Icon, exact }) => {
             const active = exact

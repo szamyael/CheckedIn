@@ -5,6 +5,9 @@ export interface ExportRow {
   program: string;
   year_level: number | null;
   checked_in_at: string;
+  break_out_at?: string | null;
+  break_in_at?: string | null;
+  checked_out_at?: string | null;
   distance_from_venue_m: number | null;
   event_title?: string;
 }
@@ -16,6 +19,9 @@ export const EXPORT_HEADERS = [
   "Program",
   "Year Level",
   "Checked In",
+  "Break Out",
+  "Break In",
+  "Checked Out",
   "Distance (m)",
 ] as const;
 
@@ -35,6 +41,9 @@ export function exportRowsToMatrix(
     r.program,
     r.year_level != null ? String(r.year_level) : "",
     r.checked_in_at,
+    r.break_out_at ?? "",
+    r.break_in_at ?? "",
+    r.checked_out_at ?? "",
     r.distance_from_venue_m?.toFixed(1) ?? "",
   ]);
 }

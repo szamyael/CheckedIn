@@ -228,6 +228,26 @@ class AttendanceService {
     return Map<String, dynamic>.from(response.data as Map);
   }
 
+  /// Records a temporary exit or return after the student has checked in.
+  Future<Map<String, dynamic>> recordBreak({
+    required String qrToken,
+    required bool returning,
+  }) async {
+    final response = await _client.functions.invoke(
+      'attendance-break',
+      body: {
+        'qr_token': qrToken,
+        'action': returning ? 'break_in' : 'break_out',
+      },
+    );
+    if (response.status != 200) {
+      final data = response.data;
+      final err = data is Map ? data['error'] : 'Break attendance failed';
+      throw Exception(err ?? 'Break attendance failed');
+    }
+    return Map<String, dynamic>.from(response.data as Map);
+  }
+
   Future<Map<String, dynamic>> checkIn({
     required String qrToken,
     required double latitude,
