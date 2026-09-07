@@ -9,7 +9,7 @@ import {
   Sparkles,
   UsersRound,
 } from "lucide-react";
-import { BrandLogo, BrandMark } from "@/components/BrandLogo";
+import { BrandMark } from "@/components/BrandLogo";
 import { PhoneStudentRedirect } from "@/components/student/PhoneStudentRedirect";
 
 const features = [
@@ -42,7 +42,7 @@ export default function HomePage() {
 
       <header className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8 lg:px-12 lg:py-7">
         <Link href="/" aria-label="CheckedIn home" className="inline-flex items-center">
-          <BrandLogo className="h-auto w-[150px] sm:w-[175px]" priority />
+          <BrandMark size={58} />
         </Link>
         <nav className="flex items-center gap-2 sm:gap-3" aria-label="Portal navigation">
           <Link
