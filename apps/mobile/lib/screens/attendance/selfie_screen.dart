@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../services/attendance_service.dart';
 import '../../services/offline_sync_service.dart';
+import '../../models/pending_check_in.dart';
 import '../../services/permission_service.dart';
 import '../../services/screenshot_guard_service.dart';
 import '../../widgets/permission_gate.dart';
@@ -19,6 +20,10 @@ class SelfieScreen extends StatefulWidget {
   final String? otpCode;
   final String? eventId;
   final String? eventTitle;
+  final bool requiresOtp;
+  final bool offlineSubmission;
+  final DateTime? scannedAt;
+  final OfflineAttendanceAction offlineAction;
 
   const SelfieScreen({
     super.key,
@@ -28,6 +33,10 @@ class SelfieScreen extends StatefulWidget {
     this.otpCode,
     this.eventId,
     this.eventTitle,
+    this.requiresOtp = false,
+    this.offlineSubmission = false,
+    this.scannedAt,
+    this.offlineAction = OfflineAttendanceAction.checkIn,
   });
 
   @override
@@ -117,24 +126,25 @@ class _SelfieScreenState extends State<SelfieScreen> {
       _submitting = true;
       _error = null;
     });
-    UniversalLoaderController.instance.show('Submitting check-in…');
+    UniversalLoaderController.instance.show(
+      widget.offlineSubmission ? 'Saving offline attendance…' : 'Submitting check-in…',
+    );
 
     try {
       final photo = await _controller!.takePicture();
       final selfieFile = File(photo.path);
 
-      // Fresh GPS at submit time — prevents using stale coordinates from the prior screen.
-      final position = await _attendance.getCurrentPosition();
-
-      final submission = await _attendance.submitCheckIn(
-        qrToken: widget.qrToken,
-        latitude: position.latitude,
-        longitude: position.longitude,
-        selfieFile: selfieFile,
-        otpCode: widget.otpCode,
-        eventId: widget.eventId,
-        eventTitleHint: widget.eventTitle,
-      );
+      final submission = widget.offlineSubmission
+          ? await _attendance.captureOfflineAttendance(
+              qrToken: widget.qrToken,
+              action: widget.offlineAction,
+              selfieFile: selfieFile,
+              capturedAt: widget.scannedAt ?? DateTime.now().toUtc(),
+              otpCode: widget.otpCode ?? '',
+              eventId: widget.eventId,
+              eventTitleHint: widget.eventTitle,
+            )
+          : await _submitOnlineOrFallback(selfieFile);
 
       if (!mounted) return;
 
@@ -170,7 +180,7 @@ class _SelfieScreenState extends State<SelfieScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('Saved — pending sync'),
         content: const Text(
-          'You are checked in on this device. Your attendance stays saved here even after the event closes, and uploads automatically when internet is available.',
+          'Your offline attendance and live selfie are saved on this device. When you reconnect and sign in online, they are uploaded for staff approval. Location is not collected for offline attendance.',
         ),
         actions: [
           TextButton(
@@ -270,7 +280,9 @@ class _SelfieScreenState extends State<SelfieScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Step 3 of 3 — Live selfie. Screenshots and screen recording are blocked during check-in.',
+                  widget.offlineSubmission
+                      ? 'Step 2 of 2 — Live selfie. This offline attendance will be reviewed by staff using the scan time and selfie.'
+                      : 'Step 3 of 3 — Live selfie. Screenshots and screen recording are blocked during check-in.',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
@@ -281,13 +293,49 @@ class _SelfieScreenState extends State<SelfieScreen> {
                 const SizedBox(height: 16),
                 FilledButton(
                   onPressed: _submitting ? null : _captureAndSubmit,
-                  child: Text(_submitting ? 'Submitting…' : 'Capture & Check In'),
+                  child: Text(_submitting
+                      ? 'Saving…'
+                      : widget.offlineSubmission
+                          ? 'Capture & save for review'
+                          : 'Capture & Check In'),
                 ),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Future<CheckInSubmission> _submitOnlineOrFallback(File selfieFile) async {
+    // Fresh GPS is used only for an online attendance flow. If connectivity
+    // drops later, the queued record is submitted for manual offline review.
+    if (!await _attendance.hasConnectivity()) {
+      if ((widget.otpCode ?? '').trim().isEmpty) {
+        throw Exception(
+          'Internet was lost before submission. Scan the QR again in offline mode and enter the event OTP to save attendance for review.',
+        );
+      }
+      return _attendance.captureOfflineAttendance(
+        qrToken: widget.qrToken,
+        action: OfflineAttendanceAction.checkIn,
+        selfieFile: selfieFile,
+        capturedAt: widget.scannedAt ?? DateTime.now().toUtc(),
+        otpCode: widget.otpCode!,
+        eventId: widget.eventId,
+        eventTitleHint: widget.eventTitle,
+      );
+    }
+    final position = await _attendance.getCurrentPosition();
+    return _attendance.submitCheckIn(
+      qrToken: widget.qrToken,
+      latitude: position.latitude,
+      longitude: position.longitude,
+      selfieFile: selfieFile,
+      otpCode: widget.otpCode,
+      eventId: widget.eventId,
+      eventTitleHint: widget.eventTitle,
+      capturedAt: widget.scannedAt,
     );
   }
 }

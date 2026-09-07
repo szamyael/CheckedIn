@@ -1,5 +1,9 @@
 enum PendingCheckInStatus { pending, syncing, failed }
 
+/// The action captured while the device was offline. It is deliberately kept
+/// separate from an attendance record: staff decide whether to approve it.
+enum OfflineAttendanceAction { checkIn, checkOut }
+
 class PendingCheckIn {
   final String id;
   final String qrToken;
@@ -13,6 +17,7 @@ class PendingCheckIn {
   final String? eventId;
   final String? otpCode;
   final Map<String, dynamic>? captureIntegrity;
+  final OfflineAttendanceAction action;
 
   const PendingCheckIn({
     required this.id,
@@ -27,6 +32,7 @@ class PendingCheckIn {
     this.eventId,
     this.otpCode,
     this.captureIntegrity,
+    this.action = OfflineAttendanceAction.checkIn,
   });
 
   PendingCheckIn copyWith({
@@ -36,6 +42,7 @@ class PendingCheckIn {
     String? eventId,
     String? otpCode,
     Map<String, dynamic>? captureIntegrity,
+    OfflineAttendanceAction? action,
   }) {
     return PendingCheckIn(
       id: id,
@@ -50,6 +57,7 @@ class PendingCheckIn {
       eventId: eventId ?? this.eventId,
       otpCode: otpCode ?? this.otpCode,
       captureIntegrity: captureIntegrity ?? this.captureIntegrity,
+      action: action ?? this.action,
     );
   }
 
@@ -66,6 +74,7 @@ class PendingCheckIn {
         'event_id': eventId,
         'otp_code': otpCode,
         'capture_integrity': captureIntegrity,
+        'action': action.name,
       };
 
   factory PendingCheckIn.fromJson(Map<String, dynamic> json) {
@@ -86,6 +95,10 @@ class PendingCheckIn {
       captureIntegrity: json['capture_integrity'] is Map
           ? Map<String, dynamic>.from(json['capture_integrity'] as Map)
           : null,
+      // Queues created by earlier app versions were check-ins.
+      action: OfflineAttendanceAction.values.byName(
+        json['action'] as String? ?? OfflineAttendanceAction.checkIn.name,
+      ),
     );
   }
 }

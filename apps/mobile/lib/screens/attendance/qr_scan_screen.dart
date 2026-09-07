@@ -41,7 +41,7 @@ class _QrScanScreenState extends State<QrScanScreen> {
     });
   }
 
-  void _onDetect(BarcodeCapture capture) {
+  Future<void> _onDetect(BarcodeCapture capture) async {
     if (_handled) return;
     final raw = capture.barcodes.firstOrNull?.rawValue;
     if (raw == null) return;
@@ -53,7 +53,26 @@ class _QrScanScreenState extends State<QrScanScreen> {
     }
 
     _handled = true;
-    context.push('/attendance/resolve', extra: token);
+    final scannedAt = DateTime.now().toUtc();
+    final offline = !await _attendance.hasConnectivity();
+    if (!mounted) return;
+    if (offline) {
+      context.push(
+        '/attendance/otp',
+        extra: {
+          'qr_token': token,
+          'requires_otp': true,
+          'event_title': 'Offline event',
+          'offline_submission': true,
+          'scanned_at': scannedAt.toIso8601String(),
+        },
+      );
+      return;
+    }
+    context.push(
+      '/attendance/resolve',
+      extra: {'qr_token': token, 'scanned_at': scannedAt.toIso8601String(), 'offline': false},
+    );
   }
 
   @override
@@ -85,7 +104,7 @@ class _QrScanScreenState extends State<QrScanScreen> {
                     child: StudentErrorBanner(message: _error!),
                   ),
                 Text(
-                  'Point your camera at the event QR code. Scan once to check in, or scan again after check-in to check out (no OTP or selfie needed for checkout).',
+                  'Point your camera at the event QR code. Offline scans collect an OTP, a live selfie, and the scan time for staff review; location is not requested offline.',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),

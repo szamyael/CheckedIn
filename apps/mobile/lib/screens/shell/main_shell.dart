@@ -118,8 +118,8 @@ class _MainShellState extends State<MainShell> {
                   if (offline)
                     StudentInfoBanner(
                       message: _auth.isOfflineMode
-                          ? 'Offline mode — browsing cached data. Check-ins save on device and sync when you reconnect and sign in online.'
-                          : 'No internet — showing cached data. Check-ins will sync when you reconnect.',
+                          ? 'Offline mode — browsing cached data. Offline attendance saves on this device and syncs for staff review after you reconnect and sign in online.'
+                          : 'No internet — showing cached data. Offline attendance will sync for staff review when you reconnect.',
                       icon: Icons.wifi_off,
                       background: StudentUi.slateBg,
                       border: StudentUi.border,
@@ -142,7 +142,7 @@ class _MainShellState extends State<MainShell> {
                     StudentInfoBanner(
                       message: _offlineSync.isSyncing
                           ? 'Syncing ${_offlineSync.pendingCount} pending attendance…'
-                          : '${_offlineSync.pendingCount} attendance waiting to sync when online',
+                          : '${_offlineSync.pendingCount} offline attendance submission${_offlineSync.pendingCount == 1 ? '' : 's'} waiting to sync for staff review',
                       icon: _offlineSync.isSyncing
                           ? Icons.sync
                           : Icons.cloud_off,

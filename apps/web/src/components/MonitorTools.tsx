@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { ManualAttendancePanel } from "@/components/ManualAttendancePanel";
+import { OfflineAttendanceReviewPanel } from "@/components/OfflineAttendanceReviewPanel";
 
 interface StudentOption {
   id: string;
@@ -49,6 +50,9 @@ export function MonitorTools({ eventId }: { eventId: string }) {
   }, [eventId]);
 
   return (
-    <ManualAttendancePanel eventId={eventId} absentStudents={absent} />
+    <div className="space-y-6">
+      <OfflineAttendanceReviewPanel eventId={eventId} />
+      <ManualAttendancePanel eventId={eventId} absentStudents={absent} />
+    </div>
   );
 }

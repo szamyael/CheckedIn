@@ -9,8 +9,15 @@ import '../../widgets/universal_loader.dart';
 /// otherwise continue to the location → OTP → selfie check-in flow.
 class AttendanceResolveScreen extends StatefulWidget {
   final String qrToken;
+  final DateTime scannedAt;
+  final bool wasOfflineAtScan;
 
-  const AttendanceResolveScreen({super.key, required this.qrToken});
+  const AttendanceResolveScreen({
+    super.key,
+    required this.qrToken,
+    required this.scannedAt,
+    this.wasOfflineAtScan = false,
+  });
 
   @override
   State<AttendanceResolveScreen> createState() =>
@@ -41,6 +48,21 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
 
     try {
       final meta = await _attendance.fetchCheckInMeta(widget.qrToken);
+      if (widget.wasOfflineAtScan || meta['offline_fallback'] == true) {
+        if (!mounted) return;
+        context.go(
+          '/attendance/otp',
+          extra: {
+            'qr_token': widget.qrToken,
+            'requires_otp': true,
+            'event_title': meta['title'] as String? ?? 'Event',
+            'event_id': meta['id'] as String?,
+            'offline_submission': true,
+            'scanned_at': widget.scannedAt.toIso8601String(),
+          },
+        );
+        return;
+      }
       final canCheckOut = meta['can_check_out'] == true;
       final alreadyOut = meta['already_checked_out'] == true;
       final title = meta['title'] as String? ?? 'Event';
@@ -70,7 +92,10 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
       }
 
       if (!mounted) return;
-      context.go('/attendance/location', extra: widget.qrToken);
+      context.go('/attendance/location', extra: {
+        'qr_token': widget.qrToken,
+        'scanned_at': widget.scannedAt.toIso8601String(),
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() {

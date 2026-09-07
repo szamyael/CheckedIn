@@ -117,7 +117,7 @@ class AttendanceService {
           return Map<String, dynamic>.from(raw);
         },
       );
-      if (cached != null) return cached;
+      if (cached != null) return {...cached, 'offline_fallback': true};
 
       return {
         'requires_otp': false,
@@ -268,6 +268,41 @@ class AttendanceService {
     return Map<String, dynamic>.from(response.data as Map);
   }
 
+  /// Sends a previously captured offline attendance action for staff review.
+  /// This endpoint intentionally does not send GPS coordinates or run a
+  /// geofence test. The event QR, scan timestamp, OTP evidence and live
+  /// selfie are reviewed by staff after the device reconnects.
+  Future<Map<String, dynamic>> submitOfflineAttendance({
+    required PendingCheckIn item,
+    required String selfiePath,
+  }) async {
+    final response = await _client.functions.invoke(
+      'submit-offline-attendance',
+      body: {
+        'client_submission_id': item.id,
+        'qr_token': item.qrToken,
+        'action': item.action == OfflineAttendanceAction.checkIn
+            ? 'check_in'
+            : 'check_out',
+        'selfie_path': selfiePath,
+        'captured_at': item.capturedAt.toUtc().toIso8601String(),
+        if (item.otpCode != null && item.otpCode!.trim().isNotEmpty)
+          'otp_code': item.otpCode!.trim(),
+        if (item.eventId != null && item.eventId!.isNotEmpty)
+          'event_id': item.eventId,
+        if (item.captureIntegrity != null)
+          'capture_integrity': item.captureIntegrity,
+      },
+    );
+
+    if (response.status != 200 && response.status != 201) {
+      final data = response.data;
+      final err = data is Map ? data['error'] : 'Offline attendance sync failed';
+      throw Exception(err ?? 'Offline attendance sync failed');
+    }
+    return Map<String, dynamic>.from(response.data as Map);
+  }
+
   Future<Map<String, dynamic>> buildCaptureIntegrity(File selfieFile) async {
     final guard = ScreenshotGuardService.instance;
     final analysis = await SelfieIntegrityAnalyzer.analyze(selfieFile);
@@ -286,8 +321,9 @@ class AttendanceService {
     String? otpCode,
     String? eventId,
     String? eventTitleHint,
+    DateTime? capturedAt,
   }) async {
-    final capturedAt = DateTime.now().toUtc();
+    final capturedAt = (capturedAt ?? DateTime.now()).toUtc();
 
     final guardError = ScreenshotGuardService.instance.validateBeforeCapture();
     if (guardError != null) {
@@ -303,7 +339,10 @@ class AttendanceService {
 
     final captureIntegrity = await buildCaptureIntegrity(selfieFile);
 
-    if (await OfflineStorageService.instance.hasPendingForQrToken(qrToken)) {
+    if (await OfflineStorageService.instance.hasPendingForQrToken(
+      qrToken,
+      action: OfflineAttendanceAction.checkIn,
+    )) {
       throw Exception(
         'You already have a pending check-in for this event waiting to sync.',
       );
@@ -341,6 +380,49 @@ class AttendanceService {
       eventId: eventId,
       otpCode: otpCode,
       captureIntegrity: captureIntegrity,
+      action: OfflineAttendanceAction.checkIn,
+    );
+    return CheckInSubmission.queuedOffline(pending);
+  }
+
+  /// Captures an attendance action wholly offline. GPS is purposefully not
+  /// requested here: staff review this offline submission after sync.
+  Future<CheckInSubmission> captureOfflineAttendance({
+    required String qrToken,
+    required OfflineAttendanceAction action,
+    required File selfieFile,
+    required DateTime capturedAt,
+    required String otpCode,
+    String? eventId,
+    String? eventTitleHint,
+  }) async {
+    final guardError = ScreenshotGuardService.instance.validateBeforeCapture();
+    if (guardError != null) throw Exception(guardError);
+
+    final analysis = await SelfieIntegrityAnalyzer.analyze(selfieFile);
+    if (analysis.blocksCheckIn) {
+      throw Exception(
+        'This photo looks like a screenshot. Use the camera to take a live selfie.',
+      );
+    }
+
+    if (otpCode.trim().isEmpty) {
+      throw Exception('Enter the attendance OTP before taking your selfie.');
+    }
+
+    final pending = await OfflineStorageService.instance.enqueue(
+      qrToken: qrToken,
+      // The legacy queue format retains coordinates. Offline submissions do
+      // not use them and never reach the geofence check.
+      latitude: 0,
+      longitude: 0,
+      selfieFile: selfieFile,
+      capturedAt: capturedAt.toUtc(),
+      eventTitleHint: eventTitleHint,
+      eventId: eventId,
+      otpCode: otpCode.trim(),
+      captureIntegrity: await buildCaptureIntegrity(selfieFile),
+      action: action,
     );
     return CheckInSubmission.queuedOffline(pending);
   }

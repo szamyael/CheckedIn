@@ -5,6 +5,7 @@ import '../../services/permission_service.dart';
 import '../../widgets/app_logo.dart';
 import '../../widgets/student_ui.dart';
 import 'terms_screen.dart';
+import 'swipe_animated_page.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -142,12 +143,47 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: Row(
                 children: [
                   const AppLogo(size: 28),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'CHECKEDIN',
+                    style: TextStyle(
+                      color: Color(0xFF17324D),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.8,
+                    ),
+                  ),
                   const Spacer(),
-                  Text(
-                    '${_page + 1} / $totalPages',
-                    style: Theme.of(context).textTheme.bodySmall,
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: StudentUi.border),
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                    child: Text(
+                      '${_page + 1} / $totalPages',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
                   ),
                 ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(99),
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0, end: (_page + 1) / totalPages),
+                  duration: const Duration(milliseconds: 260),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, value, _) => LinearProgressIndicator(
+                    value: value,
+                    minHeight: 3,
+                    backgroundColor: StudentUi.border,
+                    color: const Color(0xFF17324D),
+                  ),
+                ),
               ),
             ),
             Expanded(
@@ -158,20 +194,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   if (index == _pages.length) _refreshPermissionStates();
                 },
                 children: [
-                  ..._pages.map((data) => _WalkthroughPage(data: data)),
-                  _PermissionsPage(
-                    cameraGranted: _cameraGranted,
-                    locationGranted: _locationGranted,
-                    requestingCamera: _requestingCamera,
-                    requestingLocation: _requestingLocation,
-                    onRequestCamera: () => _requestPermission(AppPermission.camera),
-                    onRequestLocation: () =>
-                        _requestPermission(AppPermission.location),
+                  ..._pages.asMap().entries.map((entry) => SwipeAnimatedPage(
+                        controller: _pageController,
+                        index: entry.key,
+                        child: _WalkthroughPage(data: entry.value),
+                      )),
+                  SwipeAnimatedPage(
+                    controller: _pageController,
+                    index: _pages.length,
+                    child: _PermissionsPage(
+                      cameraGranted: _cameraGranted,
+                      locationGranted: _locationGranted,
+                      requestingCamera: _requestingCamera,
+                      requestingLocation: _requestingLocation,
+                      onRequestCamera: () => _requestPermission(AppPermission.camera),
+                      onRequestLocation: () => _requestPermission(AppPermission.location),
+                    ),
                   ),
-                  OnboardingTermsStep(
-                    onAcceptedChanged: (value) {
-                      setState(() => _termsAccepted = value);
-                    },
+                  SwipeAnimatedPage(
+                    controller: _pageController,
+                    index: _pages.length + 1,
+                    child: OnboardingTermsStep(
+                      onAcceptedChanged: (value) => setState(() => _termsAccepted = value),
+                    ),
                   ),
                 ],
               ),
@@ -200,6 +245,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
+                  if (!isTermsPage)
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 12),
+                      child: Text(
+                        'Swipe left or use Continue',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: StudentUi.muted, fontSize: 12),
+                      ),
+                    ),
                   FilledButton(
                     onPressed: isTermsPage
                         ? (_termsAccepted && !_finishing ? _finish : null)
@@ -209,7 +263,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ? (_finishing ? 'Saving…' : 'I accept and continue')
                           : isPermissionPage
                               ? 'Continue'
-                              : 'Continue',
+                              : _page == 0
+                                  ? 'Start registration'
+                                  : 'Continue',
                     ),
                   ),
                   if (isPermissionPage) ...[
@@ -266,17 +322,59 @@ class _WalkthroughPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: StudentUi.tealSoft,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: StudentUi.tealBorder),
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.88, end: 1),
+            duration: const Duration(milliseconds: 420),
+            curve: Curves.easeOutBack,
+            builder: (context, value, child) => Transform.scale(
+              scale: value,
+              child: child,
             ),
-            child: Icon(data.icon, size: 32, color: StudentUi.teal),
+            child: Container(
+              width: double.infinity,
+              height: 170,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEDF4F7),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFD9E2E9)),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Positioned(
+                    right: -18,
+                    top: -20,
+                    child: Container(
+                      width: 112,
+                      height: 112,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFFD8E8EE), width: 16),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: 78,
+                    height: 78,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white),
+                      boxShadow: const [BoxShadow(color: Color(0x1A17324D), blurRadius: 18, offset: Offset(0, 7))],
+                    ),
+                    child: Icon(data.icon, size: 36, color: const Color(0xFF17324D)),
+                  ),
+                  const Positioned(
+                    bottom: 15,
+                    child: Text('CHECKEDIN STUDENT PORTAL', style: TextStyle(color: Color(0xFF587080), fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.2)),
+                  ),
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: 24),
+          const Text('GET STARTED', style: TextStyle(color: StudentUi.tealText, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.4)),
+          const SizedBox(height: 8),
           StudentPageTitle(title: data.title, subtitle: data.body),
           const SizedBox(height: 20),
           ...data.bullets.map(

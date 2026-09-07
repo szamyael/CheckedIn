@@ -10,8 +10,9 @@ import '../../widgets/universal_loader.dart';
 /// Step 1 of check-in: GPS must pass the event geofence before OTP/selfie.
 class LocationCheckScreen extends StatefulWidget {
   final String qrToken;
+  final DateTime scannedAt;
 
-  const LocationCheckScreen({super.key, required this.qrToken});
+  const LocationCheckScreen({super.key, required this.qrToken, required this.scannedAt});
 
   @override
   State<LocationCheckScreen> createState() => _LocationCheckScreenState();
@@ -87,6 +88,7 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
           'event_title': meta['title'] as String? ?? 'Event',
           'event_id': meta['id'] as String?,
           'location_verified': true,
+          'scanned_at': widget.scannedAt.toIso8601String(),
         },
       );
     } catch (e) {

@@ -27,6 +27,13 @@ class OfflineSyncService extends ChangeNotifier {
     Connectivity().onConnectivityChanged.listen((_) {
       syncPending();
     });
+    // An offline-unlocked user has no bearer token. Once they sign in again
+    // after reconnecting, immediately retry the locally captured attendance.
+    Supabase.instance.client.auth.onAuthStateChange.listen((event) {
+      if (event.session != null) {
+        syncPending();
+      }
+    });
     await syncPending();
   }
 
@@ -79,15 +86,9 @@ class OfflineSyncService extends ChangeNotifier {
       }
 
       final selfiePath = await _attendance.uploadSelfie(selfieFile);
-      final result = await _attendance.checkIn(
-        qrToken: item.qrToken,
-        latitude: item.latitude,
-        longitude: item.longitude,
+      final result = await _attendance.submitOfflineAttendance(
+        item: item,
         selfiePath: selfiePath,
-        clientCheckedInAt: item.capturedAt,
-        otpCode: item.otpCode,
-        eventId: item.eventId,
-        captureIntegrity: item.captureIntegrity,
       );
 
       final eventTitle =
@@ -114,14 +115,11 @@ class OfflineSyncService extends ChangeNotifier {
 
   bool _isPermanentFailure(String message) {
     final lower = message.toLowerCase();
-    // Do NOT treat attendance-window / QR-expiry as permanent for offline
-    // check-ins — the server accepts capture-time validation after reconnect.
-    return lower.contains('already checked in') ||
-        lower.contains('not active') ||
+    return lower.contains('not active') ||
         lower.contains('pending admin approval') ||
-        lower.contains('outside the event location') ||
-        lower.contains('screenshot') ||
-        lower.contains('screen recording') ||
-        lower.contains('selfie appears to be a screenshot');
+        lower.contains('invalid or expired qr') ||
+        lower.contains('offline attendance is too old') ||
+        lower.contains('selfie appears to be a screenshot') ||
+        lower.contains('screen recording');
   }
 }

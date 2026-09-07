@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import '../models/registration_draft.dart';
+import '../models/pending_check_in.dart';
 import '../screens/attendance/attendance_otp_screen.dart';
 import '../screens/attendance/attendance_resolve_screen.dart';
 import '../screens/attendance/location_check_screen.dart';
@@ -144,13 +145,24 @@ GoRouter createRouter(
       ),
       GoRoute(
         path: '/attendance/resolve',
-        builder: (ctx, state) =>
-            AttendanceResolveScreen(qrToken: state.extra! as String),
+        builder: (ctx, state) {
+          final data = state.extra! as Map<String, dynamic>;
+          return AttendanceResolveScreen(
+            qrToken: data['qr_token'] as String,
+            scannedAt: DateTime.parse(data['scanned_at'] as String),
+            wasOfflineAtScan: data['offline'] as bool? ?? false,
+          );
+        },
       ),
       GoRoute(
         path: '/attendance/location',
-        builder: (ctx, state) =>
-            LocationCheckScreen(qrToken: state.extra! as String),
+        builder: (ctx, state) {
+          final data = state.extra! as Map<String, dynamic>;
+          return LocationCheckScreen(
+            qrToken: data['qr_token'] as String,
+            scannedAt: DateTime.parse(data['scanned_at'] as String),
+          );
+        },
       ),
       GoRoute(
         path: '/attendance/otp',
@@ -158,12 +170,16 @@ GoRouter createRouter(
           final data = state.extra! as Map<String, dynamic>;
           return AttendanceOtpScreen(
             qrToken: data['qr_token'] as String,
-            latitude: data['latitude'] as double,
-            longitude: data['longitude'] as double,
+            latitude: (data['latitude'] as num?)?.toDouble() ?? 0,
+            longitude: (data['longitude'] as num?)?.toDouble() ?? 0,
             requiresOtp: data['requires_otp'] as bool? ?? false,
             eventTitle: data['event_title'] as String? ?? 'Event',
             eventId: data['event_id'] as String?,
             locationVerified: data['location_verified'] as bool? ?? false,
+            offlineSubmission: data['offline_submission'] as bool? ?? false,
+            scannedAt: data['scanned_at'] is String
+                ? DateTime.parse(data['scanned_at'] as String)
+                : null,
           );
         },
       ),
@@ -171,16 +187,25 @@ GoRouter createRouter(
         path: '/attendance/selfie',
         builder: (ctx, state) {
           final data = state.extra! as Map<String, dynamic>;
-          if (data['location_verified'] != true) {
+          final offlineSubmission = data['offline_submission'] as bool? ?? false;
+          if (data['location_verified'] != true && !offlineSubmission) {
             return const QrScanScreen();
           }
           return SelfieScreen(
             qrToken: data['qr_token'] as String,
-            latitude: data['latitude'] as double,
-            longitude: data['longitude'] as double,
+            latitude: (data['latitude'] as num?)?.toDouble() ?? 0,
+            longitude: (data['longitude'] as num?)?.toDouble() ?? 0,
             otpCode: data['otp_code'] as String?,
             eventId: data['event_id'] as String?,
             eventTitle: data['event_title'] as String?,
+            requiresOtp: data['requires_otp'] as bool? ?? false,
+            offlineSubmission: offlineSubmission,
+            scannedAt: data['scanned_at'] is String
+                ? DateTime.parse(data['scanned_at'] as String)
+                : null,
+            offlineAction: OfflineAttendanceAction.values.byName(
+              data['offline_action'] as String? ?? OfflineAttendanceAction.checkIn.name,
+            ),
           );
         },
       ),

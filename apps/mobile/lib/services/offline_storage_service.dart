@@ -48,9 +48,15 @@ class OfflineStorageService {
     await file.writeAsString(encoded);
   }
 
-  Future<bool> hasPendingForQrToken(String qrToken) async {
+  Future<bool> hasPendingForQrToken(
+    String qrToken, {
+    OfflineAttendanceAction? action,
+  }) async {
     final items = await loadPending();
-    return items.any((item) => item.qrToken == qrToken);
+    return items.any(
+      (item) => item.qrToken == qrToken &&
+          (action == null || item.action == action),
+    );
   }
 
   Future<PendingCheckIn> enqueue({
@@ -63,10 +69,11 @@ class OfflineStorageService {
     String? eventId,
     String? otpCode,
     Map<String, dynamic>? captureIntegrity,
+    OfflineAttendanceAction action = OfflineAttendanceAction.checkIn,
   }) async {
-    if (await hasPendingForQrToken(qrToken)) {
+    if (await hasPendingForQrToken(qrToken, action: action)) {
       throw Exception(
-        'You already have a pending check-in for this event. It will sync when online.',
+        'You already have a pending ${action == OfflineAttendanceAction.checkIn ? 'time-in' : 'time-out'} for this event. It will sync when online.',
       );
     }
 
@@ -86,6 +93,7 @@ class OfflineStorageService {
       eventId: eventId,
       otpCode: otpCode,
       captureIntegrity: captureIntegrity,
+      action: action,
     );
 
     final items = await loadPending()..add(item);
