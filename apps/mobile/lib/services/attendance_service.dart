@@ -323,7 +323,7 @@ class AttendanceService {
     String? eventTitleHint,
     DateTime? capturedAt,
   }) async {
-    final capturedAt = (capturedAt ?? DateTime.now()).toUtc();
+    final capturedTimestamp = (capturedAt ?? DateTime.now()).toUtc();
 
     final guardError = ScreenshotGuardService.instance.validateBeforeCapture();
     if (guardError != null) {
@@ -375,7 +375,7 @@ class AttendanceService {
       latitude: latitude,
       longitude: longitude,
       selfieFile: selfieFile,
-      capturedAt: capturedAt,
+      capturedAt: capturedTimestamp,
       eventTitleHint: eventTitleHint,
       eventId: eventId,
       otpCode: otpCode,

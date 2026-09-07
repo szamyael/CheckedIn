@@ -142,7 +142,31 @@ class _EventTile extends StatelessWidget {
           Container(width: 42, height: 42, color: const Color(0xFFE7EEF4), child: const Icon(Icons.event_outlined, color: Color(0xFF17324D))),
           const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [Expanded(child: Text(event.title, style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF0C2238))), if (event.isAttendanceOpen) const Padding(padding: EdgeInsets.only(left: 6), child: Text('LIVE', style: TextStyle(color: Color(0xFF237A57), fontSize: 10, fontWeight: FontWeight.w700)))]),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    event.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF0C2238),
+                    ),
+                  ),
+                ),
+                if (event.isAttendanceOpen)
+                  const Padding(
+                    padding: EdgeInsets.only(left: 6),
+                    child: Text(
+                      'LIVE',
+                      style: TextStyle(
+                        color: Color(0xFF237A57),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
             const SizedBox(height: 5), Text(event.venueName, style: const TextStyle(color: StudentUi.muted, fontSize: 13)), const SizedBox(height: 3), Text(fmt.format(event.startsAt.toLocal()), style: const TextStyle(color: StudentUi.muted, fontSize: 12)),
             const SizedBox(height: 8), Text(event.isAttendanceOpen ? 'Attendance is open' : 'Check-in opens ${fmt.format(event.attendanceStartsAt.toLocal())}', style: TextStyle(color: event.isAttendanceOpen ? const Color(0xFF237A57) : StudentUi.muted, fontSize: 12, fontWeight: FontWeight.w600)),
           ])),
