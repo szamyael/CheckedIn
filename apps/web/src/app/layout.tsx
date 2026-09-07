@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { LoaderProvider } from "@/components/LoaderProvider";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -22,7 +23,7 @@ export default function RootLayout({
       className="h-full antialiased"
     >
       <body className="min-h-full flex flex-col">
-        <LoaderProvider>{children}</LoaderProvider>
+        <ThemeProvider><LoaderProvider>{children}</LoaderProvider></ThemeProvider>
       </body>
     </html>
   );

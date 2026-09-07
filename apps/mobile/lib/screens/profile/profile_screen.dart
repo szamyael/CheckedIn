@@ -19,6 +19,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _profile = ProfileService();
   late Future<_ProfileData> _future;
   String? _avatarUrl;
+  bool _showAllAchievements = false;
+  bool _showAllHistory = false;
 
   @override
   void initState() {
@@ -78,9 +80,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
             final fmt = DateFormat('MMM d, yyyy h:mm a');
 
             return ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
               children: [
-                StudentCard(
+                const Text('STUDENT RECORD', style: TextStyle(color: StudentUi.muted, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.4)),
+                const SizedBox(height: 8),
+                const Text('Profile', style: TextStyle(color: Color(0xFF0C2238), fontSize: 27, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 18),
+                Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(color: const Color(0xFF17324D), border: Border.all(color: const Color(0xFF0C2238))),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -88,7 +96,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           CircleAvatar(
                             radius: 36,
-                            backgroundColor: StudentUi.tealSoft,
+                            backgroundColor: const Color(0xFFE7EEF4),
                             backgroundImage: _avatarUrl != null
                                 ? NetworkImage(_avatarUrl!)
                                 : null,
@@ -96,7 +104,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ? Text(
                                     _initials(student),
                                     style: const TextStyle(
-                                      color: StudentUi.tealText,
+                                      color: const Color(0xFF17324D),
                                       fontWeight: FontWeight.w700,
                                       fontSize: 20,
                                     ),
@@ -117,32 +125,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           student['name_extension'] as String?,
                                     )
                                   : 'Student',
-                              style: Theme.of(context).textTheme.titleLarge,
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white),
                             ),
                           ),
                         ],
                       ),
                       if (student != null) ...[
                         const SizedBox(height: 12),
-                        Text('ID: ${student['student_id']}'),
-                        Text('Program: ${student['program']}'),
+                        Text('ID: ${student['student_id']}', style: const TextStyle(color: Color(0xFFD7E2EC))),
+                        Text('Program: ${student['program']}', style: const TextStyle(color: Color(0xFFD7E2EC))),
                         if (student['year_level'] != null)
-                          Text('Year Level: ${student['year_level']}'),
+                          Text('Year Level: ${student['year_level']}', style: const TextStyle(color: Color(0xFFD7E2EC))),
                         if (student['section'] != null)
-                          Text('Section: ${student['section']}'),
+                          Text('Section: ${student['section']}', style: const TextStyle(color: Color(0xFFD7E2EC))),
                         if (student['reward_points'] != null)
                           Text(
-                            'Reward points: ${student['reward_points']}',
+                            '${student['reward_points']} reward points',
                             style: const TextStyle(
-                              color: StudentUi.teal,
+                              color: Color(0xFFF0C46D),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                         const SizedBox(height: 8),
-                        Text('${data.attendanceCount} events attended'),
+                        Text('${data.attendanceCount} events attended', style: const TextStyle(color: Color(0xFFD7E2EC))),
                         const SizedBox(height: 8),
                         OutlinedButton(
                           onPressed: () => context.push('/profile/edit'),
+                          style: OutlinedButton.styleFrom(foregroundColor: Colors.white, side: const BorderSide(color: Color(0xFFB7C9D7))),
                           child: const Text('Edit profile'),
                         ),
                       ],
@@ -150,7 +159,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text('Achievements', style: Theme.of(context).textTheme.titleMedium),
+                const Row(children: [Icon(Icons.workspace_premium_outlined, color: Color(0xFFA46618), size: 19), SizedBox(width: 8), Text('Rewards & recognition', style: TextStyle(color: Color(0xFF0C2238), fontSize: 16, fontWeight: FontWeight.w700))]),
                 const SizedBox(height: 8),
                 if (data.achievements.isEmpty)
                   const StudentEmptyState(
@@ -158,7 +167,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     message: 'No badges yet. Check in to events to earn them!',
                   )
                 else
-                  ...data.achievements.map(
+                  ...data.achievements.take(_showAllAchievements ? data.achievements.length : 1).map(
                     (a) => Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: StudentCard(
@@ -176,8 +185,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   ),
+                if (data.achievements.length > 1)
+                  TextButton(
+                    onPressed: () => setState(() => _showAllAchievements = !_showAllAchievements),
+                    child: Text(_showAllAchievements ? 'Show recent only' : 'View all ${data.achievements.length} awards'),
+                  ),
                 const SizedBox(height: 16),
-                Text('Attendance History', style: Theme.of(context).textTheme.titleMedium),
+                const Row(children: [Icon(Icons.event_note_outlined, color: Color(0xFF17324D), size: 19), SizedBox(width: 8), Text('Attendance history', style: TextStyle(color: Color(0xFF0C2238), fontSize: 16, fontWeight: FontWeight.w700))]),
                 const SizedBox(height: 8),
                 if (data.history.isEmpty)
                   const StudentEmptyState(
@@ -185,7 +199,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     message: 'No attendance records yet.',
                   )
                 else
-                  ...data.history.map(
+                  ...data.history.take(_showAllHistory ? data.history.length : 1).map(
                     (h) => Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: StudentCard(
@@ -213,6 +227,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                     ),
+                  ),
+                if (data.history.length > 1)
+                  TextButton(
+                    onPressed: () => setState(() => _showAllHistory = !_showAllHistory),
+                    child: Text(_showAllHistory ? 'Show recent only' : 'View all ${data.history.length} attendance records'),
                   ),
               ],
             );

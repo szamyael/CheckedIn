@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Award, CalendarDays, ChevronRight, Pencil } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { formatStudentDisplayName } from "@/lib/student/display-name";
 import { createClient } from "@/lib/supabase/client";
 import {
-  StudentCard,
   StudentEmptyState,
 } from "@/components/student/StudentUi";
 
@@ -34,6 +34,8 @@ export default function StudentProfilePage() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [badges, setBadges] = useState<Achievement[]>([]);
   const [history, setHistory] = useState<HistoryRow[]>([]);
+  const [showAllBadges, setShowAllBadges] = useState(false);
+  const [showAllHistory, setShowAllHistory] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -86,8 +88,9 @@ export default function StudentProfilePage() {
     "?";
 
   return (
-    <div className="space-y-6">
-      <StudentCard className="bg-[#0c2238] text-white">
+    <div className="mx-auto max-w-3xl space-y-7">
+      <header><p className="text-xs font-semibold tracking-[0.14em] text-[#697178]">STUDENT RECORD</p><h1 className="mt-3 text-3xl font-semibold tracking-tight text-[#0c2238]">Profile &amp; rewards</h1></header>
+      <section className="border border-[#0c2238] p-6 shadow-sm" style={{ backgroundColor: "#17324D", color: "#FFFFFF" }}>
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
             {avatarUrl ? (
@@ -103,71 +106,71 @@ export default function StudentProfilePage() {
               </div>
             )}
             <div>
-              <h1 className="text-xl font-bold text-white">
+              <h2 className="text-xl font-bold" style={{ color: "#FFFFFF" }}>
                 {formatStudentDisplayName(profile)}
-              </h1>
-              <p className="text-sm text-slate-300">{profile.student_id}</p>
-              <p className="mt-1 text-sm text-slate-300">
+              </h2>
+              <p className="text-sm" style={{ color: "#D7E2EC" }}>{profile.student_id}</p>
+              <p className="mt-1 text-sm" style={{ color: "#D7E2EC" }}>
                 {profile.program} · Year {profile.year_level}
                 {profile.section ? ` · ${profile.section}` : ""}
               </p>
-              <p className="mt-2 text-sm font-medium text-[#f0c46d]">
+              <p className="mt-2 text-sm font-medium" style={{ color: "#F0C46D" }}>
                 {profile.reward_points} reward points
               </p>
             </div>
           </div>
           <Link
             href="/student/profile/edit"
-            className="rounded-lg border border-slate-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/10"
+            className="inline-flex items-center gap-1.5 border px-3 py-2 text-xs font-semibold hover:bg-white/10" style={{ borderColor: "rgba(255,255,255,.45)", color: "#FFFFFF" }}
           >
-            Edit
+            <Pencil size={13} /> Edit
           </Link>
         </div>
-      </StudentCard>
+      </section>
 
-      <section id="rewards">
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-[#0c2238]">Rewards &amp; badges</h2>
-          <span className="text-xs font-medium text-[#a46618]">{profile.reward_points} points</span>
+      <section id="rewards" className="border-t border-[#e2e5e7] pt-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-base font-semibold text-[#0c2238]"><Award size={18} className="text-[#a46618]" />Rewards &amp; recognition</h2>
+          <span className="border border-[#d9c38d] bg-[#fffaf0] px-2.5 py-1 text-xs font-semibold text-[#a46618]">{profile.reward_points} points</span>
         </div>
         {badges.length === 0 ? (
           <StudentEmptyState message="No badges yet. Check in to events to earn them!" />
         ) : (
           <ul className="space-y-2">
-            {badges.map((b) => (
+            {(showAllBadges ? badges : badges.slice(0, 1)).map((b) => (
               <li
                 key={b.id}
-                className="rounded-lg border border-[#e2e5e7] bg-white px-3 py-2 text-sm"
+                className="flex items-center justify-between border border-[#e2e5e7] bg-white px-4 py-3 text-sm"
               >
-                {b.badge_name}
+                <span className="font-medium text-[#0c2238]">{b.badge_name}</span><span className="text-xs text-[#697178]">{format(parseISO(b.earned_at), "MMM d, yyyy")}</span>
               </li>
             ))}
           </ul>
         )}
+        {badges.length > 1 && <button type="button" onClick={() => setShowAllBadges((current) => !current)} className="mt-3 text-sm font-semibold text-[#17324d] hover:underline">{showAllBadges ? "Show recent only" : `View all ${badges.length} awards`}</button>}
       </section>
 
-      <section>
-        <h2 className="mb-2 text-sm font-semibold text-[#0c2238]">
-          Attendance history
-        </h2>
+      <section className="border-t border-[#e2e5e7] pt-6">
+        <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-[#0c2238]"><CalendarDays size={18} className="text-[#17324d]" />Attendance history</h2>
         {history.length === 0 ? (
           <StudentEmptyState message="No attendance records yet." />
         ) : (
           <ul className="space-y-2">
-            {history.map((h) => (
+            {(showAllHistory ? history : history.slice(0, 1)).map((h) => (
               <li
                 key={h.id}
-                className="rounded-lg border border-[#e2e5e7] bg-white px-3 py-2 text-sm"
+                className="flex items-center justify-between border border-[#e2e5e7] bg-white px-4 py-3 text-sm"
               >
-                <p className="font-medium">{h.events?.title ?? "Event"}</p>
+                <div><p className="font-medium text-[#0c2238]">{h.events?.title ?? "Event"}</p>
                 <p className="text-xs text-slate-500">
                   {format(parseISO(h.checked_in_at), "MMM d, yyyy • h:mm a")} ·{" "}
                   {h.status.replace("_", " ")}
-                </p>
+                </p></div><ChevronRight size={17} className="text-[#697178]" />
               </li>
             ))}
           </ul>
         )}
+        {history.length > 1 && <button type="button" onClick={() => setShowAllHistory((current) => !current)} className="mt-3 text-sm font-semibold text-[#17324d] hover:underline">{showAllHistory ? "Show recent only" : `View all ${history.length} attendance records`}</button>}
       </section>
     </div>
   );

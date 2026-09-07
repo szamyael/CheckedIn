@@ -30,13 +30,6 @@ class _MainShellState extends State<MainShell> {
   int _unreadCount = 0;
   String? _accountStatus;
 
-  static const _tabs = [
-    _Tab('/home', Icons.home, 'Home'),
-    _Tab('/events', Icons.event, 'Events'),
-    _Tab('/bingo', Icons.grid_view_rounded, 'Bingo'),
-    _Tab('/profile', Icons.person, 'Profile'),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -166,26 +159,53 @@ class _MainShellState extends State<MainShell> {
           Expanded(child: pages[_index]),
         ],
       ),
-      bottomNavigationBar: DecoratedBox(
-        decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: _shellBorder)),
-        ),
-        child: NavigationBar(
-          height: 72,
-          selectedIndex: _index,
-          onDestinationSelected: (i) => setState(() => _index = i),
-          destinations: _tabs
-              .map((t) => NavigationDestination(icon: Icon(t.icon), label: t.label))
-              .toList(),
+      bottomNavigationBar: SizedBox(
+        height: 78,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.topCenter,
+          children: [
+            Container(
+              height: 72,
+              decoration: const BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: _shellBorder))),
+              child: Row(children: [
+                Expanded(child: _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Home', selected: _index == 0, onTap: () => setState(() => _index = 0))),
+                Expanded(child: _NavItem(icon: Icons.event_outlined, activeIcon: Icons.event, label: 'Events', selected: _index == 1, onTap: () => setState(() => _index = 1))),
+                const SizedBox(width: 72),
+                Expanded(child: _NavItem(icon: Icons.grid_view_outlined, activeIcon: Icons.grid_view_rounded, label: 'Bingo', selected: _index == 2, onTap: () => setState(() => _index = 2))),
+                Expanded(child: _NavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: 'Profile', selected: _index == 3, onTap: () => setState(() => _index = 3))),
+              ]),
+            ),
+            Positioned(
+              top: -19,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => context.push('/attendance/scan'),
+                  customBorder: const CircleBorder(),
+                  child: Ink(
+                    width: 64, height: 64,
+                    decoration: const BoxDecoration(color: Color(0xFFC18A2E), shape: BoxShape.circle, boxShadow: [BoxShadow(color: Color(0x4017344D), blurRadius: 12, offset: Offset(0, 5))]),
+                    child: const Icon(Icons.qr_code_scanner, color: Colors.white, size: 29),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _Tab {
-  final String path;
+class _NavItem extends StatelessWidget {
   final IconData icon;
+  final IconData activeIcon;
   final String label;
-  const _Tab(this.path, this.icon, this.label);
+  final bool selected;
+  final VoidCallback onTap;
+  const _NavItem({required this.icon, required this.activeIcon, required this.label, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => InkWell(onTap: onTap, child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(selected ? activeIcon : icon, size: 22, color: selected ? const Color(0xFF17324D) : StudentUi.muted), const SizedBox(height: 3), Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: selected ? const Color(0xFF17324D) : StudentUi.muted))]));
 }

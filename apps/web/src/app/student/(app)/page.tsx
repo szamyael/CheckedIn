@@ -2,44 +2,39 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { QrCode } from "lucide-react";
+import { Award, CalendarDays, ChevronRight, QrCode, Sparkles, TicketCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
+type StudentSummary = {
+  name: string;
+  studentId: string;
+  program: string;
+  yearLevel: number | null;
+  attended: number;
+  points: number;
+  badges: number;
+};
+
 export default function StudentHomePage() {
-  const [stats, setStats] = useState({
-    attended: 0,
-    points: 0,
-    badges: 0,
+  const [summary, setSummary] = useState<StudentSummary>({
+    name: "Student", studentId: "—", program: "Program not set", yearLevel: null, attended: 0, points: 0, badges: 0,
   });
-  const [name, setName] = useState("");
 
   useEffect(() => {
     const supabase = createClient();
     async function load() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-
-      const { data: student } = await supabase
-        .from("students")
-        .select("first_name, reward_points")
-        .eq("id", user.id)
-        .single();
-
-      const { count: attended } = await supabase
-        .from("attendance_records")
-        .select("*", { count: "exact", head: true })
-        .eq("student_id", user.id)
-        .in("status", ["checked_in", "late", "excused", "checked_out"]);
-
-      const { count: badges } = await supabase
-        .from("student_achievements")
-        .select("*", { count: "exact", head: true })
-        .eq("student_id", user.id);
-
-      setName(student?.first_name ?? "Student");
-      setStats({
+      const [{ data: student }, { count: attended }, { count: badges }] = await Promise.all([
+        supabase.from("students").select("first_name, student_id, program, year_level, reward_points").eq("id", user.id).single(),
+        supabase.from("attendance_records").select("*", { count: "exact", head: true }).eq("student_id", user.id).in("status", ["checked_in", "late", "excused", "checked_out"]),
+        supabase.from("student_achievements").select("*", { count: "exact", head: true }).eq("student_id", user.id),
+      ]);
+      setSummary({
+        name: student?.first_name ?? "Student",
+        studentId: student?.student_id ?? "—",
+        program: student?.program ?? "Program not set",
+        yearLevel: student?.year_level ?? null,
         attended: attended ?? 0,
         points: student?.reward_points ?? 0,
         badges: badges ?? 0,
@@ -49,47 +44,49 @@ export default function StudentHomePage() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <p className="text-sm text-slate-500">Welcome back</p>
-        <h1 className="text-2xl font-bold text-slate-900">{name}</h1>
-      </div>
+    <div className="mx-auto max-w-3xl space-y-7">
+      <header className="flex items-end justify-between gap-4">
+        <div><p className="text-sm text-[#697178]">Good morning,</p><h1 className="mt-1 text-3xl font-semibold tracking-tight text-[#0c2238]">{summary.name}.</h1></div>
+        <Link href="/student/events" className="hidden items-center gap-1 text-sm font-semibold text-[#17324d] hover:underline sm:inline-flex">View events <ChevronRight size={16} /></Link>
+      </header>
 
-      <div className="grid grid-cols-3 gap-3">
-        {[
-          { label: "Attended", value: stats.attended },
-          { label: "Points", value: stats.points },
-          { label: "Badges", value: stats.badges },
-        ].map((s) => (
-          <div
-            key={s.label}
-            className="rounded-2xl border border-slate-200 bg-white p-3 text-center shadow-sm"
-          >
-            <p className="text-xl font-bold text-teal-600">{s.value}</p>
-            <p className="text-[11px] text-slate-500">{s.label}</p>
+      <section className="relative overflow-hidden border border-[#0c2238] bg-[#17324d] p-6 text-white shadow-[0_12px_30px_rgba(12,34,56,0.12)] sm:p-7">
+        <div className="absolute -right-12 -top-14 h-48 w-48 rounded-full border border-white/10" />
+        <div className="absolute -bottom-20 right-20 h-40 w-40 rounded-full border border-white/10" />
+        <div className="relative flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
+          <div>
+            <p className="text-xs font-semibold tracking-[0.14em] text-slate-300">YOUR CAMPUS PASS</p>
+            <h2 className="mt-8 text-2xl font-semibold tracking-tight sm:text-3xl">{summary.name}</h2>
+            <p className="mt-2 text-sm text-slate-300">{summary.program}{summary.yearLevel ? ` · ${summary.yearLevel}${summary.yearLevel === 1 ? "st" : summary.yearLevel === 2 ? "nd" : summary.yearLevel === 3 ? "rd" : "th"} Year` : ""}</p>
+            <p className="mt-5 font-mono text-xs tracking-[0.12em] text-slate-300">STUDENT ID · {summary.studentId}</p>
           </div>
-        ))}
-      </div>
+          <Link href="/student/attendance/scan" className="group flex min-h-28 w-full flex-col items-center justify-center border border-white/25 bg-white/10 p-4 text-center hover:bg-white/15 sm:w-32">
+            <QrCode size={42} strokeWidth={1.6} aria-hidden="true" />
+            <span className="mt-2 text-xs font-semibold">Scan to check in</span>
+          </Link>
+        </div>
+      </section>
 
-      <Link
-        href="/student/attendance/scan"
-        className="flex items-center justify-center gap-3 rounded-2xl bg-teal-600 px-4 py-4 text-base font-semibold text-white shadow-lg shadow-teal-600/20 hover:bg-teal-500"
-      >
-        <QrCode className="h-6 w-6" />
-        Scan Event QR
-      </Link>
+      <section className="grid gap-3 sm:grid-cols-3">
+        {[
+          { label: "Events attended", value: summary.attended, icon: TicketCheck },
+          { label: "Reward points", value: summary.points, icon: Sparkles },
+          { label: "Achievements", value: summary.badges, icon: Award },
+        ].map(({ label, value, icon: Icon }) => <div key={label} className="border border-[#e2e5e7] bg-white p-4"><Icon size={18} className="text-[#17324d]" aria-hidden="true" /><p className="mt-5 text-2xl font-semibold tracking-tight text-[#0c2238]">{value}</p><p className="mt-1 text-xs font-medium text-[#697178]">{label}</p></div>)}
+      </section>
 
-      <Link
-        href="/student/bingo"
-        className="block rounded-2xl border border-teal-100 bg-teal-50 px-4 py-3 text-center text-sm font-semibold text-teal-800 hover:bg-teal-100"
-      >
-        View Bingo board
-      </Link>
+      <section className="grid gap-4 sm:grid-cols-[1.15fr_.85fr]">
+        <Link href="/student/attendance/scan" className="group border border-[#d5dcde] bg-white p-5 hover:border-[#17324d]">
+          <div className="flex items-start justify-between"><div className="flex h-10 w-10 items-center justify-center bg-[#e7eef4] text-[#17324d]"><QrCode size={21} /></div><ChevronRight size={19} className="text-[#697178] transition-transform group-hover:translate-x-0.5" /></div>
+          <p className="mt-7 text-xs font-semibold tracking-[0.12em] text-[#697178]">ATTENDANCE</p><h2 className="mt-2 text-lg font-semibold text-[#0c2238]">Scan event QR</h2><p className="mt-2 text-sm leading-6 text-[#697178]">Check in to an event with a secure QR scan and transparent verification.</p>
+        </Link>
+        <Link href="/student/bingo" className="group border border-[#d9c38d] bg-[#fffaf0] p-5 hover:border-[#a46618]">
+          <div className="flex items-start justify-between"><div className="flex h-10 w-10 items-center justify-center bg-[#f7edcf] text-[#a46618]"><Sparkles size={20} /></div><ChevronRight size={19} className="text-[#a46618] transition-transform group-hover:translate-x-0.5" /></div>
+          <p className="mt-7 text-xs font-semibold tracking-[0.12em] text-[#a46618]">ENGAGEMENT</p><h2 className="mt-2 text-lg font-semibold text-[#0c2238]">Your Bingo progress</h2><p className="mt-2 text-sm leading-6 text-[#697178]">Check your active card and see what participation can unlock next.</p>
+        </Link>
+      </section>
 
-      <p className="text-center text-xs text-slate-500">
-        Scan once to check in (location → OTP → selfie). Scan again after
-        check-in to check out — no OTP or selfie needed.
-      </p>
+      <Link href="/student/events" className="flex items-center justify-between border-t border-[#e2e5e7] py-5 text-sm"><span className="flex items-center gap-2 font-semibold text-[#17324d]"><CalendarDays size={18} />Find your next event</span><ChevronRight size={18} className="text-[#697178]" /></Link>
     </div>
   );
 }

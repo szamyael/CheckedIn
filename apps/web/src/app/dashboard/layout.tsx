@@ -2,19 +2,13 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import {
   LogOut,
-  Calendar,
-  Users,
-  BarChart3,
-  Radio,
-  LineChart,
-  Settings,
-  LayoutGrid,
 } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 import { DashboardNav, type DashboardNavItem } from "@/components/DashboardNav";
 import { DashboardRealtimeSync } from "@/components/DashboardRealtimeSync";
 import { SessionTimeoutGuard } from "@/components/SessionTimeoutGuard";
 import { BrandLogo } from "@/components/BrandLogo";
+import { ThemePanelButton } from "@/components/ThemePanelButton";
 import type { UserRole } from "@/lib/types";
 
 async function signOut() {
@@ -120,6 +114,7 @@ export default async function DashboardLayout({
         <DashboardRealtimeSync />
         <SessionTimeoutGuard />
         <header className="flex items-center justify-end border-b border-[#e2e5e7] bg-white px-8 py-3">
+          <ThemePanelButton />
           <NotificationBell />
         </header>
         <div className="flex-1 p-8">{children}</div>

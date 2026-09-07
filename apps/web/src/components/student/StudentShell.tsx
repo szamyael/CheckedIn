@@ -2,14 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, CalendarDays, Home, LayoutGrid, Trophy, UserRound } from "lucide-react";
+import { Bell, CalendarDays, Home, LayoutGrid, QrCode, UserRound } from "lucide-react";
 import { BrandMark } from "@/components/BrandLogo";
+import { ThemePanelButton } from "@/components/ThemePanelButton";
 
-const TABS = [
+const LEFT_TABS = [
   { href: "/student", label: "Home", icon: Home, exact: true },
   { href: "/student/events", label: "Events", icon: CalendarDays, exact: false },
+];
+const RIGHT_TABS = [
   { href: "/student/bingo", label: "Bingo", icon: LayoutGrid, exact: false },
-  { href: "/student/profile#rewards", label: "Rewards", icon: Trophy, exact: false },
   { href: "/student/profile", label: "Profile", icon: UserRound, exact: false },
 ];
 
@@ -29,6 +31,7 @@ export function StudentShell({
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur">
         <BrandMark size={36} />
         <div className="flex items-center gap-2">
+          <ThemePanelButton />
           <Link
             href="/student/notifications"
             className="relative rounded-full p-2 text-slate-600 hover:bg-slate-100"
@@ -53,9 +56,9 @@ export function StudentShell({
 
       <main className="flex-1 overflow-y-auto px-4 pb-24 pt-4">{children}</main>
 
-      <nav className="fixed bottom-0 left-1/2 z-20 w-full max-w-md -translate-x-1/2 border-t border-[#e2e5e7] bg-white/95 backdrop-blur">
+      <nav className="fixed bottom-0 left-1/2 z-20 w-full max-w-md -translate-x-1/2 border-t border-[#e2e5e7] bg-white/95 backdrop-blur" aria-label="Student navigation">
         <ul className="grid grid-cols-5">
-          {TABS.map(({ href, label, icon: Icon, exact }) => {
+          {LEFT_TABS.map(({ href, label, icon: Icon, exact }) => {
             const active = exact
               ? pathname === href
               : pathname === href || pathname.startsWith(`${href}/`);
@@ -70,6 +73,22 @@ export function StudentShell({
                   <Icon className="h-5 w-5" />
                   {label}
                 </Link>
+              </li>
+            );
+          })}
+          <li className="relative">
+            <Link href="/student/attendance/scan" className="absolute -top-7 left-1/2 flex h-16 w-16 -translate-x-1/2 flex-col items-center justify-center rounded-full border-4 border-[var(--background)] bg-[var(--primary)] text-white shadow-lg hover:brightness-90" aria-label="Scan event QR">
+              <QrCode className="h-6 w-6" />
+            </Link>
+            <span className="block h-[68px]" aria-hidden="true" />
+          </li>
+          {RIGHT_TABS.map(({ href, label, icon: Icon, exact }) => {
+            const active = exact
+              ? pathname === href
+              : pathname === href || pathname.startsWith(`${href}/`);
+            return (
+              <li key={href}>
+                <Link href={href} className={`flex flex-col items-center gap-1 py-3 text-xs font-medium ${active ? "text-[#17324d]" : "text-[#697178]"}`}><Icon className="h-5 w-5" />{label}</Link>
               </li>
             );
           })}

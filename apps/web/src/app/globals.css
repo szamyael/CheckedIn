@@ -16,6 +16,20 @@
   --accent: #c18a2e;
 }
 
+:root[data-color-theme="forest"] { --primary: #275d46; --primary-strong: #183d2e; --primary-soft: #e7f1eb; --accent: #b68032; }
+:root[data-color-theme="burgundy"] { --primary: #6b2e3d; --primary-strong: #481d28; --primary-soft: #f4e9ec; --accent: #bd8a31; }
+:root[data-color-theme="indigo"] { --primary: #3f4b88; --primary-strong: #28325f; --primary-soft: #e9ebf6; --accent: #b98a36; }
+:root[data-color-theme="slate"] { --primary: #3f515c; --primary-strong: #28363e; --primary-soft: #e9edef; --accent: #b78335; }
+
+:root[data-mode="dark"] {
+  --background: #11191e;
+  --foreground: #ffffff;
+  --muted: #d5dce0;
+  --surface: #182329;
+  --surface-muted: #223037;
+  --border: #34434b;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -28,6 +42,25 @@ body {
   color: var(--foreground);
   font-family: "Aptos", "Segoe UI", sans-serif;
 }
+
+:root[data-mode="dark"] .bg-white { background-color: var(--surface) !important; }
+:root[data-mode="dark"] .bg-white\/95 { background-color: color-mix(in srgb, var(--surface) 95%, transparent) !important; }
+:root[data-mode="dark"] .bg-\[\#f6f7f5\], :root[data-mode="dark"] .bg-slate-50 { background-color: var(--background) !important; }
+:root[data-mode="dark"] .text-\[\#0c2238\], :root[data-mode="dark"] .text-slate-900 { color: var(--foreground) !important; }
+:root[data-mode="dark"] .text-\[\#202428\], :root[data-mode="dark"] .text-\[\#3f484f\] { color: #ffffff !important; }
+:root[data-mode="dark"] .text-\[\#697178\], :root[data-mode="dark"] .text-slate-500 { color: var(--muted) !important; }
+:root[data-mode="dark"] .border-\[\#e2e5e7\], :root[data-mode="dark"] .border-slate-200 { border-color: var(--border) !important; }
+:root[data-mode="dark"] .text-slate-600, :root[data-mode="dark"] .text-slate-700 { color: #ffffff !important; }
+
+/* Make curated themes visibly influence existing component utility classes. */
+:root[data-color-theme] .bg-\[\#17324d\] { background-color: var(--primary) !important; }
+:root[data-color-theme] .bg-\[\#0c2238\] { background-color: var(--primary-strong) !important; }
+:root[data-color-theme] .text-\[\#17324d\] { color: var(--primary) !important; }
+:root[data-color-theme] .text-\[\#0c2238\] { color: var(--primary-strong) !important; }
+:root[data-color-theme] .border-\[\#17324d\], :root[data-color-theme] .border-\[\#0c2238\] { border-color: var(--primary) !important; }
+:root[data-color-theme] .bg-\[\#e7eef4\] { background-color: var(--primary-soft) !important; }
+:root[data-color-theme] .text-\[\#c18a2e\], :root[data-color-theme] .text-\[\#a46618\] { color: var(--accent) !important; }
+:root[data-color-theme] .bg-\[\#c18a2e\] { background-color: var(--accent) !important; }
 
 label {
   color: var(--primary-strong);

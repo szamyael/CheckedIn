@@ -43,7 +43,7 @@ class _EventsScreenState extends State<EventsScreen> {
             return ListView(
               padding: const EdgeInsets.all(24),
               children: [
-                const StudentPageTitle(title: 'Events'),
+                const _EventsHeader(),
                 const SizedBox(height: 16),
                 StudentErrorBanner(message: '${snapshot.error}'),
               ],
@@ -68,7 +68,7 @@ class _EventsScreenState extends State<EventsScreen> {
             return ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
               children: [
-                const StudentPageTitle(title: 'Events'),
+                const _EventsHeader(),
                 const SizedBox(height: 12),
                 SegmentedButton<bool>(
                   segments: const [
@@ -98,7 +98,7 @@ class _EventsScreenState extends State<EventsScreen> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const StudentPageTitle(title: 'Events'),
+                    const _EventsHeader(),
                     const SizedBox(height: 12),
                     SegmentedButton<bool>(
                       segments: const [
@@ -134,30 +134,29 @@ class _EventTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final fmt = DateFormat('MMM d, yyyy • h:mm a');
     return StudentCard(
-      padding: EdgeInsets.zero,
+      padding: const EdgeInsets.all(16),
       onTap: onTap,
-      child: ListTile(
-        title: Text(event.title, style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Text(event.venueName),
-            Text(fmt.format(event.startsAt.toLocal())),
-            const SizedBox(height: 4),
-            Text(
-              event.isAttendanceOpen ? 'Check-in open' : 'Check-in opens ${fmt.format(event.attendanceStartsAt.toLocal())}',
-              style: TextStyle(
-                color: event.isAttendanceOpen ? StudentUi.teal : StudentUi.muted,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
-        trailing: const Icon(Icons.chevron_right),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(width: 42, height: 42, color: const Color(0xFFE7EEF4), child: const Icon(Icons.event_outlined, color: Color(0xFF17324D))),
+          const SizedBox(width: 12),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [Expanded(child: Text(event.title, style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF0C2238))), if (event.isAttendanceOpen) const Padding(padding: EdgeInsets.only(left: 6), child: Text('LIVE', style: TextStyle(color: Color(0xFF237A57), fontSize: 10, fontWeight: FontWeight.w700)))]),
+            const SizedBox(height: 5), Text(event.venueName, style: const TextStyle(color: StudentUi.muted, fontSize: 13)), const SizedBox(height: 3), Text(fmt.format(event.startsAt.toLocal()), style: const TextStyle(color: StudentUi.muted, fontSize: 12)),
+            const SizedBox(height: 8), Text(event.isAttendanceOpen ? 'Attendance is open' : 'Check-in opens ${fmt.format(event.attendanceStartsAt.toLocal())}', style: TextStyle(color: event.isAttendanceOpen ? const Color(0xFF237A57) : StudentUi.muted, fontSize: 12, fontWeight: FontWeight.w600)),
+          ])),
+          const Icon(Icons.chevron_right, color: StudentUi.muted),
+        ],
       ),
     );
   }
+}
+
+class _EventsHeader extends StatelessWidget {
+  const _EventsHeader();
+  @override
+  Widget build(BuildContext context) => const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('CAMPUS CALENDAR', style: TextStyle(color: StudentUi.muted, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.4)), SizedBox(height: 8), Text('Events', style: TextStyle(color: Color(0xFF0C2238), fontSize: 27, fontWeight: FontWeight.w700)), SizedBox(height: 4), Text('Find an event and scan the organizer QR when attendance opens.', style: TextStyle(color: StudentUi.muted, fontSize: 13))]);
 }
 
 class _MonthCalendar extends StatelessWidget {

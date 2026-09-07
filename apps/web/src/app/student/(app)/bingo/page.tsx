@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Award, Check, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 type Cell = {
@@ -125,65 +126,58 @@ export default function StudentBingoPage() {
   }, [cells, completed]);
 
   if (loading) {
-    return <p className="text-sm text-slate-500">Loading bingo…</p>;
+    return <p className="text-sm text-[#697178]">Loading your Bingo card…</p>;
   }
 
   if (!card) {
     return (
-      <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
+      <div className="border border-dashed border-[#cbd2d4] bg-white p-10 text-center text-sm text-[#697178]">
         No active bingo card yet. Check back when an organization publishes one.
       </div>
     );
   }
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-xl font-bold">{card.title}</h1>
-        <p className="text-sm text-slate-500">
-          Season {card.season_label} · Streak goal {card.streak_threshold}
-        </p>
-      </div>
+    <div className="mx-auto max-w-3xl space-y-6">
+      <header className="border-l-2 border-[#c18a2e] pl-4"><p className="text-xs font-semibold tracking-[0.14em] text-[#697178]">EVENT BINGO</p><h1 className="mt-2 text-3xl font-semibold tracking-tight text-[#0c2238]">{card.title}</h1><p className="mt-2 text-sm text-[#697178]">{completed.size} / {cells.length || 9} completed · {card.season_label}</p></header>
 
-      <div className="grid grid-cols-2 gap-3 text-center text-sm">
-        <div className="rounded-2xl border bg-white p-3">
-          <p className="text-lg font-bold text-teal-600">{streak}</p>
-          <p className="text-xs text-slate-500">Event streak</p>
+      <div className="grid grid-cols-2 border border-[#e2e5e7] bg-white text-center">
+        <div className="border-r border-[#e2e5e7] p-4">
+          <p className="text-2xl font-semibold text-[#17324d]">{streak}</p>
+          <p className="mt-1 text-xs font-medium text-[#697178]">Event streak</p>
         </div>
-        <div className="rounded-2xl border bg-white p-3">
-          <p className="text-lg font-bold text-teal-600">
-            {hasLine ? "Yes" : "No"}
-          </p>
-          <p className="text-xs text-slate-500">Line complete</p>
+        <div className="p-4">
+          <p className="text-2xl font-semibold text-[#a46618]">{hasLine ? "1" : "0"}</p>
+          <p className="mt-1 text-xs font-medium text-[#697178]">Lines completed</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-1.5 border border-[#17324d] bg-[#17324d] p-1.5">
         {Array.from({ length: 9 }, (_, position) => {
           const cell = cells.find((c) => c.position === position);
           const done = cell ? completed.has(cell.id) : false;
           return (
             <div
               key={position}
-              className={`flex aspect-square flex-col items-center justify-center rounded-xl border p-2 text-center text-[11px] ${
+              className={`flex aspect-square flex-col items-center justify-center border p-2 text-center text-[11px] ${
                 done
-                  ? "border-teal-400 bg-teal-50 text-teal-800"
-                  : "border-slate-200 bg-white text-slate-600"
+                  ? "border-[#d9c38d] bg-[#fff6df] text-[#7c5311]"
+                  : "border-[#e2e5e7] bg-white text-[#3f484f]"
               }`}
             >
-              <span className="font-semibold leading-tight">
+              <span className="text-[10px] font-semibold leading-tight sm:text-xs">
                 {cell?.events?.title ?? cell?.label ?? "Empty"}
               </span>
-              {done && <span className="mt-1 text-teal-600">✓</span>}
+              {done && <span className="mt-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#c18a2e] text-white"><Check size={14} /></span>}
             </div>
           );
         })}
       </div>
 
-      <section>
-        <h2 className="mb-2 text-sm font-semibold">Your org badges</h2>
+      <section className="border-t border-[#e2e5e7] pt-6">
+        <div className="mb-3 flex items-center gap-2"><Award size={18} className="text-[#a46618]" /><h2 className="text-base font-semibold text-[#0c2238]">Recognition earned</h2></div>
         {awards.length === 0 ? (
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-[#697178]">
             Complete a line or streak to earn badges.
           </p>
         ) : (
@@ -191,12 +185,10 @@ export default function StudentBingoPage() {
             {awards.map((a) => (
               <li
                 key={a.id}
-                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                className="flex items-center justify-between border border-[#e2e5e7] bg-white px-4 py-3 text-sm"
               >
-                <span className="font-medium">
-                  {a.org_badges?.name ?? "Badge"}
-                </span>
-                <span className="text-teal-600"> +{a.points_awarded}</span>
+                <span className="flex items-center gap-2 font-medium text-[#0c2238]"><Sparkles size={16} className="text-[#c18a2e]" />{a.org_badges?.name ?? "Badge"}</span>
+                <span className="font-semibold text-[#a46618]">+{a.points_awarded}</span>
               </li>
             ))}
           </ul>

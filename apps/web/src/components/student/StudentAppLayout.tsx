@@ -18,6 +18,7 @@ export function StudentAppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const supabase = createClient();
     let channel: ReturnType<typeof supabase.channel> | null = null;
+    let cancelled = false;
 
     async function boot() {
       if (!isStudentOnboardingComplete()) {
@@ -32,6 +33,7 @@ export function StudentAppLayout({ children }: { children: React.ReactNode }) {
       const {
         data: { user },
       } = await supabase.auth.getUser();
+      if (cancelled) return;
       if (!user) {
         router.replace("/student/login");
         return;
@@ -42,6 +44,7 @@ export function StudentAppLayout({ children }: { children: React.ReactNode }) {
         .select("role, status")
         .eq("id", user.id)
         .single();
+      if (cancelled) return;
 
       if (profile?.role !== "student") {
         router.replace("/dashboard");
@@ -52,6 +55,7 @@ export function StudentAppLayout({ children }: { children: React.ReactNode }) {
       if (profile.status === "disabled") {
         setError("This account has been disabled.");
         await supabase.auth.signOut();
+        if (cancelled) return;
         router.replace("/student/login");
         return;
       }
@@ -61,11 +65,12 @@ export function StudentAppLayout({ children }: { children: React.ReactNode }) {
         .select("*", { count: "exact", head: true })
         .eq("user_id", user.id)
         .is("read_at", null);
+      if (cancelled) return;
 
       setUnread(count ?? 0);
       setReady(true);
 
-      channel = supabase
+      const nextChannel = supabase
         .channel(`student-notif-${user.id}`)
         .on(
           "postgres_changes",
@@ -78,10 +83,17 @@ export function StudentAppLayout({ children }: { children: React.ReactNode }) {
           () => setUnread((n) => n + 1),
         )
         .subscribe();
+
+      if (cancelled) {
+        await supabase.removeChannel(nextChannel);
+        return;
+      }
+      channel = nextChannel;
     }
 
     void boot();
     return () => {
+      cancelled = true;
       if (channel) void supabase.removeChannel(channel);
     };
   }, [router]);
