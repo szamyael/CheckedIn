@@ -37,6 +37,7 @@ export interface Event {
   title: string;
   description: string | null;
   venue_name: string;
+  venue_address?: string | null;
   latitude: number;
   longitude: number;
   location_radius_m: number;

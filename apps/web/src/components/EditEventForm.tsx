@@ -55,6 +55,7 @@ export function EditEventForm({ event }: { event: Event }) {
 
   const [location, setLocation] = useState<EventLocation>({
     venueName: event.venue_name,
+    address: event.venue_address ?? "",
     latitude: event.latitude,
     longitude: event.longitude,
   });
@@ -91,6 +92,7 @@ export function EditEventForm({ event }: { event: Event }) {
             title: title.trim(),
             description: description.trim() || null,
             venue_name: location.venueName.trim(),
+            venue_address: location.address.trim() || null,
             latitude: location.latitude,
             longitude: location.longitude,
             location_radius_m: locationRadiusM,

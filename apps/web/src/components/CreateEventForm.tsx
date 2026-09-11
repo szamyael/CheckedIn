@@ -39,6 +39,7 @@ export function CreateEventForm({
 
   const [location, setLocation] = useState<EventLocation>({
     venueName: "",
+    address: "",
     latitude: DEFAULT_MAP_CENTER.lat,
     longitude: DEFAULT_MAP_CENTER.lng,
   });
@@ -91,6 +92,7 @@ export function CreateEventForm({
     setAttendanceCustomized(false);
     setLocation({
       venueName: "",
+      address: "",
       latitude: DEFAULT_MAP_CENTER.lat,
       longitude: DEFAULT_MAP_CENTER.lng,
     });
@@ -150,6 +152,7 @@ export function CreateEventForm({
           title: title.trim(),
           description: description.trim() || null,
           venue_name: location.venueName.trim(),
+          venue_address: location.address.trim() || null,
           latitude: location.latitude,
           longitude: location.longitude,
           location_radius_m: locationRadiusM,
@@ -177,9 +180,13 @@ export function CreateEventForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-4 rounded-xl border border-slate-200 bg-white p-6"
+      className="space-y-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6"
     >
-      <h2 className="text-lg font-semibold text-slate-900">Create Event</h2>
+      <div className="border-b border-slate-200 pb-4">
+        <p className="text-xs font-semibold tracking-[0.14em] text-blue-700">EVENT SETUP</p>
+        <h2 className="mt-1 text-xl font-semibold text-slate-900">Create an event</h2>
+        <p className="mt-1 text-sm text-slate-600">Add the essentials first, then set the attendance location and schedule.</p>
+      </div>
 
       {organizationId && (
         <p className="text-xs text-slate-700">
@@ -188,8 +195,10 @@ export function CreateEventForm({
         </p>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="sm:col-span-2">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,.9fr)]">
+        <section className="space-y-5">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2">
           <label className="mb-1 block text-sm font-medium text-slate-800">
             Title
           </label>
@@ -200,9 +209,9 @@ export function CreateEventForm({
             placeholder={formPlaceholders.eventTitle}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
           />
-        </div>
+            </div>
 
-        <div className="sm:col-span-2">
+            <div className="sm:col-span-2">
           <label className="mb-1 block text-sm font-medium">Description</label>
           <textarea
             value={description}
@@ -211,17 +220,9 @@ export function CreateEventForm({
             placeholder={formPlaceholders.eventDescription}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
           />
-        </div>
+            </div>
 
-        <div className="sm:col-span-2">
-          <EventLocationPicker
-            value={location}
-            radiusMeters={locationRadiusM}
-            onChange={setLocation}
-          />
-        </div>
-
-        <div>
+            <div>
           <label className="mb-1 block text-sm font-medium">
             Check-in radius (meters)
           </label>
@@ -238,9 +239,9 @@ export function CreateEventForm({
             required
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
           />
-        </div>
+            </div>
 
-        <div>
+            <div>
           <label className="mb-1 block text-sm font-medium">Status</label>
           <select
             value={status}
@@ -250,27 +251,35 @@ export function CreateEventForm({
             <option value="draft">Draft</option>
             <option value="published">Published</option>
           </select>
-        </div>
+            </div>
+          </div>
 
-        <div className="sm:col-span-2">
-          <EventScheduleFieldsInput
-            value={schedule}
-            onChange={setSchedule}
-            attendanceCustomized={attendanceCustomized}
-            onAttendanceCustomizedChange={setAttendanceCustomized}
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <p className="mb-3 text-sm font-semibold text-slate-900">Schedule and attendance window</p>
+            <EventScheduleFieldsInput
+              value={schedule}
+              onChange={setSchedule}
+              attendanceCustomized={attendanceCustomized}
+              onAttendanceCustomizedChange={setAttendanceCustomized}
+            />
+          </div>
+        </section>
+
+        <aside className="rounded-xl border border-slate-200 bg-slate-50 p-4 lg:sticky lg:top-4 lg:self-start">
+          <EventLocationPicker
+            value={location}
+            radiusMeters={locationRadiusM}
+            onChange={setLocation}
           />
-        </div>
+        </aside>
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
-      <button
-        type="submit"
-        disabled={!canSubmit}
-        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        Create Event
-      </button>
+      <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs text-slate-500">A venue name, location, and valid schedule are required.</p>
+        <button type="submit" disabled={!canSubmit} className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">Create event</button>
+      </div>
     </form>
   );
 }

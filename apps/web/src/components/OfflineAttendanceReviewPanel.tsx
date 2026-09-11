@@ -39,6 +39,7 @@ export function OfflineAttendanceReviewPanel({ eventId }: { eventId: string }) {
   const [schemaUnavailable, setSchemaUnavailable] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [draft, setDraft] = useState<ReviewDraft | null>(null);
+  const [selfieToView, setSelfieToView] = useState<ViewSubmission | null>(null);
 
   const load = useCallback(async () => {
     const supabase = createClient();
@@ -141,13 +142,13 @@ export function OfflineAttendanceReviewPanel({ eventId }: { eventId: string }) {
         <div className="mt-4 space-y-3">
           {items.map((item) => (
             <article key={item.id} className="grid gap-3 rounded-lg border border-amber-200 bg-white p-3 sm:grid-cols-[96px_1fr_auto]">
-              <a href={item.selfieSignedUrl} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-md bg-slate-100">
+              <div className="overflow-hidden rounded-md bg-slate-100">
                 {item.selfieSignedUrl ? (
                   // A review image is deliberately available only through a short-lived signed URL.
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={item.selfieSignedUrl} alt="Offline attendance selfie" className="h-24 w-24 object-cover" />
                 ) : <div className="grid h-24 w-24 place-items-center text-xs text-slate-500">Selfie unavailable</div>}
-              </a>
+              </div>
               <div className="min-w-0">
                 <p className="font-medium text-slate-900">
                   {item.students?.first_name} {item.students?.last_name}
@@ -161,6 +162,9 @@ export function OfflineAttendanceReviewPanel({ eventId }: { eventId: string }) {
                 </p>
               </div>
               <div className="flex self-center gap-2 sm:flex-col">
+                <button type="button" disabled={!item.selfieSignedUrl} onClick={() => setSelfieToView(item)} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">
+                  View selfie
+                </button>
                 <button type="button" disabled={busyId === item.id} onClick={() => setDraft({ item, approve: true, note: "", markLate: false })} className="rounded-lg bg-emerald-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50">
                   Approve
                 </button>
@@ -170,6 +174,23 @@ export function OfflineAttendanceReviewPanel({ eventId }: { eventId: string }) {
               </div>
             </article>
           ))}
+        </div>
+      )}
+
+      {selfieToView?.selfieSignedUrl && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 p-4" role="dialog" aria-modal="true" aria-labelledby="offline-selfie-title" onClick={() => setSelfieToView(null)}>
+          <div className="w-full max-w-lg rounded-xl bg-white p-4 shadow-xl" onClick={(event) => event.stopPropagation()}>
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div>
+                <h4 id="offline-selfie-title" className="font-semibold text-slate-900">Offline attendance selfie</h4>
+                <p className="text-sm text-slate-600">{selfieToView.students?.first_name} {selfieToView.students?.last_name}</p>
+              </div>
+              <button type="button" onClick={() => setSelfieToView(null)} className="rounded-md px-2 py-1 text-sm font-medium text-slate-700 hover:bg-slate-100" aria-label="Close selfie viewer">Close</button>
+            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={selfieToView.selfieSignedUrl} alt={`Offline attendance selfie for ${selfieToView.students?.first_name ?? "student"}`} className="max-h-[70vh] w-full rounded-lg bg-slate-100 object-contain" />
+            <a href={selfieToView.selfieSignedUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex text-sm font-medium text-blue-700 hover:underline">Open full size</a>
+          </div>
         </div>
       )}
 

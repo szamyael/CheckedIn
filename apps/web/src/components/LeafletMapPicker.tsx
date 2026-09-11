@@ -39,6 +39,7 @@ interface LeafletMapPickerProps {
     latitude: number;
     longitude: number;
     venueName?: string;
+    address?: string;
   }) => void;
 }
 
@@ -144,7 +145,27 @@ export function LeafletMapPicker({
       latitude: place.latitude,
       longitude: place.longitude,
       venueName: place.label,
+      address: place.displayName,
     });
+  }
+
+  async function reverseGeocode(latitude: number, longitude: number) {
+    try {
+      const res = await fetch(`/api/places/reverse?lat=${latitude}&lon=${longitude}`);
+      const data = (await res.json()) as { label?: string; displayName?: string };
+      if (!res.ok) return {};
+      return {
+        venueName: data.label || undefined,
+        address: data.displayName || undefined,
+      };
+    } catch {
+      return {};
+    }
+  }
+
+  async function pickCoordinates(latitude: number, longitude: number) {
+    const place = await reverseGeocode(latitude, longitude);
+    onLocationChange({ latitude, longitude, ...place });
   }
 
   function submitSearch() {
@@ -197,10 +218,7 @@ export function LeafletMapPicker({
     setSearchError(null);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        onLocationChange({
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-        });
+        void pickCoordinates(pos.coords.latitude, pos.coords.longitude);
         setLocating(false);
       },
       () => {
@@ -289,9 +307,7 @@ export function LeafletMapPicker({
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <MapClickHandler
-            onPick={(lat, lng) =>
-              onLocationChange({ latitude: lat, longitude: lng })
-            }
+            onPick={(lat, lng) => void pickCoordinates(lat, lng)}
           />
           <Recenter lat={latitude} lng={longitude} />
           <Circle
@@ -312,7 +328,7 @@ export function LeafletMapPicker({
               dragend: (e) => {
                 const marker = e.target as L.Marker;
                 const { lat, lng } = marker.getLatLng();
-                onLocationChange({ latitude: lat, longitude: lng });
+                void pickCoordinates(lat, lng);
               },
             }}
           />

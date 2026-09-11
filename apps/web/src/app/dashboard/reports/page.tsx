@@ -28,6 +28,7 @@ type AttendanceRow = {
     last_name: string;
     program: string;
     year_level: number | null;
+    section: string | null;
   };
 };
 
@@ -42,11 +43,12 @@ export default async function ReportsPage({
     to?: string;
     program?: string;
     year?: string;
+    section?: string;
   }>;
 }) {
   const params = await searchParams;
   const mode = params.mode ?? "single";
-  const { event: eventId, events: eventsParam, from, to, program, year } =
+  const { event: eventId, events: eventsParam, from, to, program, year, section } =
     params;
 
   const supabase = await createClient();
@@ -80,6 +82,8 @@ export default async function ReportsPage({
   const includeEvent = mode !== "single";
   let attendance: AttendanceRow[] = [];
   const programs = new Set<string>();
+  const years = new Set<number>();
+  const sections = new Set<string>();
 
   if (targetEventIds.length > 0) {
     const eventTitleById = new Map(
@@ -89,7 +93,7 @@ export default async function ReportsPage({
     const { data } = await supabase
       .from("attendance_records")
       .select(
-        "id, event_id, status, checked_in_at, break_out_at, break_in_at, checked_out_at, distance_from_venue_m, selfie_url, students(student_id, first_name, last_name, program, year_level)",
+        "id, event_id, status, checked_in_at, break_out_at, break_in_at, checked_out_at, distance_from_venue_m, selfie_url, students(student_id, first_name, last_name, program, year_level, section)",
       )
       .in("event_id", targetEventIds)
       .in("status", ["checked_in", "late", "excused", "on_break", "checked_out"])
@@ -103,6 +107,8 @@ export default async function ReportsPage({
         const s = student as AttendanceRow["students"];
 
         programs.add(s.program);
+        if (s.year_level != null) years.add(s.year_level);
+        if (s.section) sections.add(s.section);
 
         let selfieSignedUrl: string | null = null;
         if (row.selfie_url) {
@@ -137,6 +143,9 @@ export default async function ReportsPage({
         (r) => String(r.students.year_level) === year,
       );
     }
+    if (section) {
+      attendance = attendance.filter((r) => r.students.section === section);
+    }
   }
 
   const exportRows: ExportRow[] = attendance.map((r) => ({
@@ -145,6 +154,7 @@ export default async function ReportsPage({
     last_name: r.students.last_name,
     program: r.students.program,
     year_level: r.students.year_level,
+    section: r.students.section,
     checked_in_at: r.checked_in_at,
     break_out_at: r.break_out_at,
     break_in_at: r.break_in_at,
@@ -190,7 +200,11 @@ export default async function ReportsPage({
       {hasReport && (
         <>
           <Suspense fallback={null}>
-            <ReportFilters programs={[...programs]} />
+            <ReportFilters
+              programs={[...programs].sort()}
+              years={[...years].sort((a, b) => a - b)}
+              sections={[...sections].sort()}
+            />
           </Suspense>
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium">
@@ -223,6 +237,7 @@ export default async function ReportsPage({
                 <th className="px-4 py-3 font-medium">Student ID</th>
                 <th className="px-4 py-3 font-medium">Name</th>
                 <th className="px-4 py-3 font-medium">Program</th>
+                <th className="px-4 py-3 font-medium">Section</th>
                 <th className="px-4 py-3 font-medium">Year</th>
                 <th className="px-4 py-3 font-medium">Checked In</th>
                 <th className="px-4 py-3 font-medium">Break Out</th>
@@ -244,6 +259,7 @@ export default async function ReportsPage({
                   </td>
                   <td className="px-4 py-3 text-slate-700">{row.students.program}</td>
                   <td className="px-4 py-3">{row.students.year_level ?? "—"}</td>
+                  <td className="px-4 py-3">{row.students.section ?? "—"}</td>
                   <td className="px-4 py-3">
                     {format(new Date(row.checked_in_at), "MMM d, yyyy h:mm:ss a")}
                   </td>
@@ -272,7 +288,7 @@ export default async function ReportsPage({
               {attendance.length === 0 && (
                 <tr>
                   <td
-                    colSpan={includeEvent ? 11 : 10}
+                    colSpan={includeEvent ? 12 : 11}
                     className="px-4 py-6 text-center text-slate-700"
                   >
                     No attendance records for this selection.

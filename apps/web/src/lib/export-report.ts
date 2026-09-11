@@ -4,6 +4,7 @@ export interface ExportRow {
   last_name: string;
   program: string;
   year_level: number | null;
+  section: string | null;
   checked_in_at: string;
   break_out_at?: string | null;
   break_in_at?: string | null;
@@ -18,6 +19,7 @@ export const EXPORT_HEADERS = [
   "Last Name",
   "Program",
   "Year Level",
+  "Section",
   "Checked In",
   "Break Out",
   "Break In",
@@ -40,6 +42,7 @@ export function exportRowsToMatrix(
     r.last_name,
     r.program,
     r.year_level != null ? String(r.year_level) : "",
+    r.section ?? "",
     r.checked_in_at,
     r.break_out_at ?? "",
     r.break_in_at ?? "",

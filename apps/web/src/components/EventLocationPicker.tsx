@@ -35,6 +35,7 @@ export type LocationMode = "preset" | "map" | "manual";
 
 export interface EventLocation {
   venueName: string;
+  address: string;
   latitude: number;
   longitude: number;
 }
@@ -84,6 +85,7 @@ export function EventLocationPicker({
     if (!b) return;
     onChange({
       venueName: value.venueName || b.venueName,
+      address: value.address || `${b.venueName}, ${campusData?.name ?? "Campus"}`,
       latitude: b.latitude,
       longitude: b.longitude,
     });
@@ -143,6 +145,18 @@ export function EventLocationPicker({
         />
       </div>
 
+      <div>
+        <label className="mb-1 block text-sm font-medium text-slate-800">Full address</label>
+        <input
+          type="text"
+          value={value.address}
+          onChange={(e) => onChange({ ...value, address: e.target.value })}
+          placeholder="Search or place a pin to fetch the full address"
+          className={inputClass}
+        />
+        <p className="mt-1 text-xs text-slate-500">Search results and map pins fill this automatically; you can correct it when needed.</p>
+      </div>
+
       {mode === "preset" && (
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
@@ -190,9 +204,10 @@ export function EventLocationPicker({
           latitude={value.latitude || DEFAULT_MAP_CENTER.lat}
           longitude={value.longitude || DEFAULT_MAP_CENTER.lng}
           radiusMeters={radiusMeters}
-          onLocationChange={({ latitude, longitude, venueName }) => {
+          onLocationChange={({ latitude, longitude, venueName, address }) => {
             onChange({
               venueName: venueName ?? value.venueName,
+              address: address ?? value.address,
               latitude,
               longitude,
             });

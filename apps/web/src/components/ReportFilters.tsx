@@ -2,11 +2,20 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 
-export function ReportFilters({ programs }: { programs: string[] }) {
+export function ReportFilters({
+  programs,
+  years,
+  sections,
+}: {
+  programs: string[];
+  years: number[];
+  sections: string[];
+}) {
   const router = useRouter();
   const params = useSearchParams();
   const program = params.get("program") ?? "";
   const year = params.get("year") ?? "";
+  const section = params.get("section") ?? "";
 
   function update(key: string, value: string) {
     const next = new URLSearchParams(params.toString());
@@ -38,8 +47,21 @@ export function ReportFilters({ programs }: { programs: string[] }) {
           className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
         >
           <option value="">All years</option>
-          {[1, 2, 3, 4, 5].map((y) => (
+          {years.map((y) => (
             <option key={y} value={String(y)}>Year {y}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="mb-1 block text-sm font-medium text-slate-800">Section</label>
+        <select
+          value={section}
+          onChange={(e) => update("section", e.target.value)}
+          className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
+        >
+          <option value="">All sections</option>
+          {sections.map((value) => (
+            <option key={value} value={value}>{value}</option>
           ))}
         </select>
       </div>
