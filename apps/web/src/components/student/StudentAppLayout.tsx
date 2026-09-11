@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 import { isStudentOnboardingComplete } from "@/lib/student/onboarding";
 import { isStudentTermsAccepted } from "@/lib/student/terms";
 import { StudentShell } from "@/components/student/StudentShell";
+import { playNotificationSound } from "@/lib/notification-sound";
+import type { NotificationPopupItem } from "@/components/NotificationPopup";
 
 /** Authenticated student chrome with bottom nav (Home / Events / Profile). */
 export function StudentAppLayout({ children }: { children: React.ReactNode }) {
@@ -14,6 +16,7 @@ export function StudentAppLayout({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [popup, setPopup] = useState<NotificationPopupItem | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -80,7 +83,12 @@ export function StudentAppLayout({ children }: { children: React.ReactNode }) {
             table: "notifications",
             filter: `user_id=eq.${user.id}`,
           },
-          () => setUnread((n) => n + 1),
+          (payload) => {
+            const notification = payload.new as NotificationPopupItem;
+            setUnread((n) => n + 1);
+            setPopup(notification);
+            playNotificationSound();
+          },
         )
         .subscribe();
 
@@ -121,7 +129,12 @@ export function StudentAppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <StudentShell notificationCount={unread} onSignOut={() => void signOut()}>
+    <StudentShell
+      notificationCount={unread}
+      notificationPopup={popup}
+      onDismissNotification={() => setPopup(null)}
+      onSignOut={() => void signOut()}
+    >
       {pending && (
         <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
           Your account is pending admin approval. You can browse, but check-in

@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { Bell, CalendarDays, Home, LayoutGrid, QrCode, UserRound } from "lucide-react";
 import { BrandMark } from "@/components/BrandLogo";
 import { ThemePanelButton } from "@/components/ThemePanelButton";
+import { NotificationPopup, type NotificationPopupItem } from "@/components/NotificationPopup";
+import { NotificationSoundToggle } from "@/components/NotificationSoundToggle";
 
 const LEFT_TABS = [
   { href: "/student", label: "Home", icon: Home, exact: true },
@@ -18,20 +20,30 @@ const RIGHT_TABS = [
 export function StudentShell({
   children,
   notificationCount = 0,
+  notificationPopup = null,
+  onDismissNotification = () => undefined,
   onSignOut,
 }: {
   children: React.ReactNode;
   notificationCount?: number;
   onSignOut: () => void;
+  notificationPopup?: NotificationPopupItem | null;
+  onDismissNotification?: () => void;
 }) {
   const pathname = usePathname();
 
   return (
     <div className="student-portal mx-auto flex min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-slate-50 text-slate-900 shadow-xl">
+      <NotificationPopup
+        item={notificationPopup}
+        onDismiss={onDismissNotification}
+        href="/student/notifications"
+      />
       <header className="sticky top-0 z-20 flex min-w-0 items-center justify-between border-b border-slate-200 bg-white/95 px-3 py-3 sm:px-4 backdrop-blur">
         <BrandMark size={36} />
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           <ThemePanelButton />
+          <NotificationSoundToggle />
           <Link
             href="/student/notifications"
             className="relative rounded-full p-2 text-slate-600 hover:bg-slate-100"

@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { Bell } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { NotificationPopup, type NotificationPopupItem } from "@/components/NotificationPopup";
+import { NotificationSoundToggle } from "@/components/NotificationSoundToggle";
+import { playNotificationSound } from "@/lib/notification-sound";
 
 interface NotificationRow {
   id: string;
@@ -17,6 +20,7 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<NotificationRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [popup, setPopup] = useState<NotificationPopupItem | null>(null);
 
   const unread = items.filter((n) => !n.read_at).length;
 
@@ -56,7 +60,10 @@ export function NotificationBell() {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications" },
-        () => {
+        (payload) => {
+          const notification = payload.new as NotificationRow;
+          setPopup(notification);
+          playNotificationSound();
           void load();
         },
       )
@@ -95,6 +102,7 @@ export function NotificationBell() {
 
   return (
     <div className="relative">
+      <NotificationPopup item={popup} onDismiss={() => setPopup(null)} />
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -120,15 +128,18 @@ export function NotificationBell() {
           <div className="absolute right-0 z-50 mt-2 w-80 rounded-xl border border-slate-200 bg-white shadow-lg">
             <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
               <p className="text-sm font-semibold text-slate-900">Notifications</p>
-              {unread > 0 && (
-                <button
-                  type="button"
-                  onClick={markAllRead}
-                  className="text-xs text-blue-600 hover:underline"
-                >
-                  Mark all read
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                <NotificationSoundToggle />
+                {unread > 0 && (
+                  <button
+                    type="button"
+                    onClick={markAllRead}
+                    className="text-xs text-blue-600 hover:underline"
+                  >
+                    Mark all read
+                  </button>
+                )}
+              </div>
             </div>
             <div className="max-h-96 overflow-y-auto">
               {loading && (
