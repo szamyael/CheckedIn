@@ -8,6 +8,8 @@ export type OrgBadgeRow = {
   slug: string;
   name: string;
   description: string | null;
+  earning_criteria?: string | null;
+  minimum_points?: number | null;
   points: number;
   kind: OrgBadgeKind;
   status: OrgBadgeStatus;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { ImagePlus, X } from "lucide-react";
 import { useLoader } from "@/components/LoaderProvider";
 import {
   badgeStatusClass,
@@ -23,6 +24,8 @@ interface OrgBadgesPanelProps {
 const EMPTY_EDIT = {
   name: "",
   description: "",
+  earningCriteria: "",
+  minimumPoints: "",
   points: 0,
 };
 
@@ -41,8 +44,18 @@ export function OrgBadgesPanel({
     name: "",
     description: "",
     points: 25,
+    earningCriteria: "",
+    minimumPoints: "",
   });
   const [badgeImage, setBadgeImage] = useState<File | null>(null);
+  const [badgeImagePreview, setBadgeImagePreview] = useState<string | null>(null);
+
+  function selectBadgeImage(file: File | null) {
+    if (!file) return;
+    if (file.type !== "image/png") { setError("Badge artwork must be a PNG file."); return; }
+    if (file.size > 2 * 1024 * 1024) { setError("Badge artwork must be 2 MB or smaller."); return; }
+    setError(null); setBadgeImage(file); setBadgeImagePreview(URL.createObjectURL(file));
+  }
 
   const filtered = useMemo(() => {
     if (filter === "all") return badges;
@@ -55,6 +68,8 @@ export function OrgBadgesPanel({
     setEditForm({
       name: badge.name,
       description: badge.description ?? "",
+      earningCriteria: badge.earning_criteria ?? "",
+      minimumPoints: badge.minimum_points?.toString() ?? "",
       points: badge.points,
     });
     setError(null);
@@ -79,6 +94,8 @@ export function OrgBadgesPanel({
         .update({
           name: editForm.name.trim(),
           description: editForm.description.trim() || null,
+          earning_criteria: editForm.earningCriteria.trim() || null,
+          minimum_points: editForm.minimumPoints ? Math.max(0, Number(editForm.minimumPoints)) : null,
           points: Math.max(0, editForm.points),
         })
         .eq("id", badge.id);
@@ -112,6 +129,8 @@ export function OrgBadgesPanel({
         slug,
         name: newForm.name.trim(),
         description: newForm.description.trim() || null,
+        earning_criteria: newForm.earningCriteria.trim() || null,
+        minimum_points: newForm.minimumPoints ? Math.max(0, Number(newForm.minimumPoints)) : null,
         points: Math.max(0, newForm.points),
         kind: "custom",
         status: "active",
@@ -130,8 +149,9 @@ export function OrgBadgesPanel({
       }
 
       setCreating(false);
-      setNewForm({ name: "", description: "", points: 25 });
+      setNewForm({ name: "", description: "", earningCriteria: "", minimumPoints: "", points: 25 });
       setBadgeImage(null);
+      setBadgeImagePreview(null);
       await onChanged();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create badge");
@@ -270,10 +290,24 @@ export function OrgBadgesPanel({
               />
             </label>
             <label className="text-sm">
-              Badge artwork (PNG)
-              <input type="file" accept="image/png" onChange={(e) => setBadgeImage(e.target.files?.[0] ?? null)} className="mt-1 block w-full text-sm" />
-              <span className="mt-1 block text-xs text-slate-500">Optional · max 2 MB</span>
+              Minimum student points
+              <input type="number" min={0} value={newForm.minimumPoints} onChange={(e) => setNewForm({ ...newForm, minimumPoints: e.target.value })} className="mt-1 w-full rounded-lg border px-3 py-2" placeholder="e.g. 20" />
+              <span className="mt-1 block text-xs text-slate-500">Leave blank if this badge is earned another way.</span>
             </label>
+            <label className="text-sm sm:col-span-2">
+              How students earn this badge
+              <textarea value={newForm.earningCriteria} onChange={(e) => setNewForm({ ...newForm, earningCriteria: e.target.value })} rows={2} className="mt-1 w-full rounded-lg border px-3 py-2" placeholder="e.g. Complete a full bingo line during the Welcome Week card." />
+            </label>
+            <div className="text-sm sm:col-span-2">
+              <p className="font-medium text-slate-800">Badge artwork</p>
+              <label className="mt-2 flex cursor-pointer items-center gap-4 rounded-xl border-2 border-dashed border-teal-200 bg-white p-3 transition hover:border-teal-500 hover:bg-teal-50/40">
+                {badgeImagePreview ? <img src={badgeImagePreview} alt="Badge preview" className="h-14 w-14 rounded-lg object-cover" /> : <span className="grid h-14 w-14 place-items-center rounded-lg bg-teal-50 text-teal-700"><ImagePlus size={23} /></span>}
+                <span className="min-w-0 flex-1"><span className="block font-semibold text-slate-800">{badgeImage ? badgeImage.name : "Upload a PNG badge icon"}</span><span className="mt-1 block text-xs text-slate-500">PNG only · up to 2 MB · square artwork works best</span></span>
+                <span className="rounded-lg bg-teal-600 px-3 py-2 text-xs font-semibold text-white">Choose file</span>
+                <input type="file" accept="image/png" className="sr-only" onChange={(e) => selectBadgeImage(e.target.files?.[0] ?? null)} />
+              </label>
+              {badgeImage && <button type="button" onClick={() => { setBadgeImage(null); setBadgeImagePreview(null); }} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-red-600"><X size={13} /> Remove image</button>}
+            </div>
           </div>
           <div className="flex flex-wrap gap-2">
             <button
@@ -331,6 +365,10 @@ export function OrgBadgesPanel({
                           className="mt-1 w-full rounded-lg border px-3 py-2"
                         />
                       </label>
+                      <label className="text-sm sm:col-span-2">
+                        How students earn this badge
+                        <textarea value={editForm.earningCriteria} onChange={(e) => setEditForm({ ...editForm, earningCriteria: e.target.value })} rows={2} className="mt-1 w-full rounded-lg border px-3 py-2" />
+                      </label>
                       <label className="text-sm">
                         Points
                         <input
@@ -345,6 +383,10 @@ export function OrgBadgesPanel({
                           }
                           className="mt-1 w-full rounded-lg border px-3 py-2"
                         />
+                      </label>
+                      <label className="text-sm">
+                        Minimum student points
+                        <input type="number" min={0} value={editForm.minimumPoints} onChange={(e) => setEditForm({ ...editForm, minimumPoints: e.target.value })} className="mt-1 w-full rounded-lg border px-3 py-2" placeholder="No point condition" />
                       </label>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -375,6 +417,8 @@ export function OrgBadgesPanel({
                           {badge.description}
                         </p>
                       )}
+                      {badge.earning_criteria && <p className="mt-2 text-xs leading-5 text-slate-500"><span className="font-semibold text-slate-700">How to earn:</span> {badge.earning_criteria}</p>}
+                      {badge.minimum_points != null && <p className="mt-1 text-xs font-medium text-teal-700">Earns automatically at {badge.minimum_points} reward points.</p>}
                       <div className="mt-2 flex flex-wrap gap-2 text-xs">
                         <span className="rounded-full bg-slate-100 px-2 py-0.5 text-slate-600">
                           {kindLabel(badge.kind)}

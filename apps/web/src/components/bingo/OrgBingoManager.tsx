@@ -128,7 +128,7 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
     setCards(list);
 
     const badgeSelect =
-      "id, organization_id, name, slug, points, kind, description, status, created_at";
+      "id, organization_id, name, slug, points, kind, description, earning_criteria, minimum_points, image_url, status, created_at";
     let { data: badgeRows, error: badgeError } = await supabase
       .from("org_badges")
       .select(badgeSelect)
@@ -138,7 +138,10 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
     if (
       badgeError &&
       (isMissingColumnError(badgeError.message, "status") ||
-        isMissingColumnError(badgeError.message, "description"))
+        isMissingColumnError(badgeError.message, "description") ||
+        isMissingColumnError(badgeError.message, "earning_criteria") ||
+        isMissingColumnError(badgeError.message, "minimum_points") ||
+        isMissingColumnError(badgeError.message, "image_url"))
     ) {
       const fallbackResult = await supabase
         .from("org_badges")
