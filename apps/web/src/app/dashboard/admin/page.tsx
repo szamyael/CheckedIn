@@ -10,6 +10,7 @@ import { PendingStudentsBatchActions } from "@/components/PendingStudentsBatchAc
 import { StudentAchievementsPanel } from "@/components/StudentAchievementsPanel";
 import { AdminBingoOverview } from "@/components/bingo/AdminBingoOverview";
 import { OrganizationProgramAlignmentPanel } from "@/components/OrganizationProgramAlignmentPanel";
+import { OrganizationModerationPanel } from "@/components/OrganizationModerationPanel";
 import { formatStudentDisplayName } from "@/lib/student/display-name";
 import { DashboardPageHeader, DashboardSection, DashboardStat } from "@/components/DashboardUi";
 
@@ -31,7 +32,7 @@ export default async function AdminPage() {
 
   const { data: organizations } = await supabase
     .from("organizations")
-    .select("id, name")
+    .select("id, name, description, moderation_status, moderation_note, moderated_at")
     .order("name");
 
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -133,6 +134,13 @@ export default async function AdminPage() {
       <EventApprovalPanel events={allEvents ?? []} />
 
       <AdminBingoOverview />
+
+      <OrganizationModerationPanel organizations={(organizations ?? []).map((organization) => ({
+        ...organization,
+        moderation_status: organization.moderation_status ?? "active",
+        moderation_note: organization.moderation_note ?? null,
+        moderated_at: organization.moderated_at ?? null,
+      }))} />
 
       <OrganizationProgramAlignmentPanel
         organizations={organizations ?? []}
