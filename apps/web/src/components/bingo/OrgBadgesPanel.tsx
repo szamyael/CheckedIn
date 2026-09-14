@@ -56,12 +56,21 @@ export function OrgBadgesPanel({
   const [badgeImage, setBadgeImage] = useState<File | null>(null);
   const [badgeImagePreview, setBadgeImagePreview] = useState<string | null>(null);
   const [eligibleStudents, setEligibleStudents] = useState<EligibleStudent[]>([]);
+  const [studentsLoadError, setStudentsLoadError] = useState<string | null>(null);
   const [rewardStudentId, setRewardStudentId] = useState("");
 
   useEffect(() => {
     const supabase = createClient();
     void supabase.rpc("organization_badge_students", { p_organization_id: organizationId })
-      .then(({ data }) => setEligibleStudents((data as EligibleStudent[]) ?? []));
+      .then(({ data, error: studentsError }) => {
+        if (studentsError) {
+          setStudentsLoadError(studentsError.message);
+          setEligibleStudents([]);
+          return;
+        }
+        setStudentsLoadError(null);
+        setEligibleStudents((data as EligibleStudent[]) ?? []);
+      });
   }, [organizationId]);
 
   function selectBadgeImage(file: File | null) {
@@ -493,11 +502,11 @@ export function OrgBadgesPanel({
                       </div>
                     </div></div>
                     <div className="flex flex-wrap gap-2">
-                      <select value={rewardStudentId} onChange={(e) => setRewardStudentId(e.target.value)} className="max-w-52 rounded-lg border px-2 py-1.5 text-xs">
-                        <option value="">Reward badge to…</option>
+                      <select value={rewardStudentId} onChange={(e) => setRewardStudentId(e.target.value)} disabled={eligibleStudents.length === 0} className="max-w-52 rounded-lg border px-2 py-1.5 text-xs disabled:cursor-not-allowed disabled:bg-slate-100">
+                        <option value="">{eligibleStudents.length ? "Reward badge to…" : "No eligible mapped students"}</option>
                         {eligibleStudents.map((student) => <option key={student.id} value={student.id}>{student.last_name}, {student.first_name} · {student.student_id}</option>)}
                       </select>
-                      <button type="button" onClick={() => void rewardBadge(badge)} className="rounded-lg border border-teal-300 px-3 py-1.5 text-xs text-teal-700 hover:bg-teal-50">Reward</button>
+                      <button type="button" onClick={() => void rewardBadge(badge)} disabled={!eligibleStudents.length} className="rounded-lg border border-teal-300 px-3 py-1.5 text-xs text-teal-700 hover:bg-teal-50 disabled:cursor-not-allowed disabled:opacity-50">Reward</button>
                       <button
                         type="button"
                         onClick={() => startEdit(badge)}
@@ -530,6 +539,7 @@ export function OrgBadgesPanel({
                         Delete
                       </button>
                     </div>
+                    {studentsLoadError && <p className="basis-full text-xs text-red-600">Could not load eligible students: {studentsLoadError}</p>}
                   </div>
                 )}
               </li>
