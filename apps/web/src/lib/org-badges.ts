@@ -1,6 +1,7 @@
 export type OrgBadgeStatus = "active" | "archived";
 
 export type OrgBadgeKind = "bingo_line" | "streak" | "custom";
+export type OrgBadgeAwardRule = "manual" | "point_threshold" | "mapped_program" | "new_registration";
 
 export type OrgBadgeRow = {
   id: string;
@@ -10,6 +11,7 @@ export type OrgBadgeRow = {
   description: string | null;
   earning_criteria?: string | null;
   minimum_points?: number | null;
+  award_rule?: OrgBadgeAwardRule;
   points: number;
   kind: OrgBadgeKind;
   status: OrgBadgeStatus;
@@ -24,6 +26,15 @@ export function slugifyBadgeName(name: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
   return base || "badge";
+}
+
+export function awardRuleLabel(rule: OrgBadgeAwardRule | undefined) {
+  switch (rule) {
+    case "point_threshold": return "Point threshold";
+    case "mapped_program": return "Mapped program / course";
+    case "new_registration": return "New registrations";
+    default: return "Manual reward";
+  }
 }
 
 export function badgeStatusLabel(status: OrgBadgeStatus): string {

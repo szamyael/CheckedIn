@@ -1,15 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ImagePlus, X } from "lucide-react";
 import { useLoader } from "@/components/LoaderProvider";
 import {
   badgeStatusClass,
   badgeStatusLabel,
+  awardRuleLabel,
   kindLabel,
   slugifyBadgeName,
   type OrgBadgeRow,
   type OrgBadgeStatus,
+  type OrgBadgeAwardRule,
 } from "@/lib/org-badges";
 import { createClient } from "@/lib/supabase/client";
 
@@ -26,8 +28,11 @@ const EMPTY_EDIT = {
   description: "",
   earningCriteria: "",
   minimumPoints: "",
+  awardRule: "manual" as OrgBadgeAwardRule,
   points: 0,
 };
+
+type EligibleStudent = { id: string; student_id: string; first_name: string; last_name: string; program: string; reward_points: number };
 
 export function OrgBadgesPanel({
   organizationId,
@@ -46,9 +51,18 @@ export function OrgBadgesPanel({
     points: 25,
     earningCriteria: "",
     minimumPoints: "",
+    awardRule: "manual" as OrgBadgeAwardRule,
   });
   const [badgeImage, setBadgeImage] = useState<File | null>(null);
   const [badgeImagePreview, setBadgeImagePreview] = useState<string | null>(null);
+  const [eligibleStudents, setEligibleStudents] = useState<EligibleStudent[]>([]);
+  const [rewardStudentId, setRewardStudentId] = useState("");
+
+  useEffect(() => {
+    const supabase = createClient();
+    void supabase.rpc("organization_badge_students", { p_organization_id: organizationId })
+      .then(({ data }) => setEligibleStudents((data as EligibleStudent[]) ?? []));
+  }, [organizationId]);
 
   function selectBadgeImage(file: File | null) {
     if (!file) return;
@@ -70,6 +84,7 @@ export function OrgBadgesPanel({
       description: badge.description ?? "",
       earningCriteria: badge.earning_criteria ?? "",
       minimumPoints: badge.minimum_points?.toString() ?? "",
+      awardRule: badge.award_rule ?? (badge.minimum_points != null ? "point_threshold" : "manual"),
       points: badge.points,
     });
     setError(null);
@@ -96,6 +111,7 @@ export function OrgBadgesPanel({
           description: editForm.description.trim() || null,
           earning_criteria: editForm.earningCriteria.trim() || null,
           minimum_points: editForm.minimumPoints ? Math.max(0, Number(editForm.minimumPoints)) : null,
+          award_rule: editForm.awardRule,
           points: Math.max(0, editForm.points),
         })
         .eq("id", badge.id);
@@ -131,6 +147,7 @@ export function OrgBadgesPanel({
         description: newForm.description.trim() || null,
         earning_criteria: newForm.earningCriteria.trim() || null,
         minimum_points: newForm.minimumPoints ? Math.max(0, Number(newForm.minimumPoints)) : null,
+        award_rule: newForm.awardRule,
         points: Math.max(0, newForm.points),
         kind: "custom",
         status: "active",
@@ -141,15 +158,22 @@ export function OrgBadgesPanel({
         if (badgeImage.type !== "image/png") throw new Error("Badge artwork must be a PNG file.");
         if (badgeImage.size > 2 * 1024 * 1024) throw new Error("Badge artwork must be 2 MB or smaller.");
         const path = `${organizationId}/${badge.id}.png`;
-        const { error: uploadError } = await supabase.storage.from("badge-images").upload(path, badgeImage, { contentType: "image/png", upsert: true });
-        if (uploadError) throw uploadError;
+        // A new badge ID produces a new object path, so an upsert is neither
+        // needed nor desirable: Storage upserts require extra read/update RLS
+        // permissions and can mask an authorization problem as an insert error.
+        const { error: uploadError } = await supabase.storage.from("badge-images").upload(path, badgeImage, { contentType: "image/png" });
+        if (uploadError) {
+          throw new Error(`Badge was created, but its icon could not be uploaded: ${uploadError.message}`);
+        }
         const { data: publicUrl } = supabase.storage.from("badge-images").getPublicUrl(path);
         const { error: imageError } = await supabase.from("org_badges").update({ image_url: publicUrl.publicUrl }).eq("id", badge.id);
-        if (imageError) throw imageError;
+        if (imageError) {
+          throw new Error(`Badge icon was uploaded, but its URL could not be saved: ${imageError.message}`);
+        }
       }
 
       setCreating(false);
-      setNewForm({ name: "", description: "", earningCriteria: "", minimumPoints: "", points: 25 });
+      setNewForm({ name: "", description: "", earningCriteria: "", minimumPoints: "", awardRule: "manual", points: 25 });
       setBadgeImage(null);
       setBadgeImagePreview(null);
       await onChanged();
@@ -158,6 +182,20 @@ export function OrgBadgesPanel({
     } finally {
       hideLoader();
     }
+  }
+
+  async function rewardBadge(badge: OrgBadgeRow) {
+    if (!rewardStudentId) { setError("Choose a student to reward."); return; }
+    setError(null); showLoader("Rewarding badge…");
+    try {
+      const { data, error: rewardError } = await createClient().rpc("reward_org_badge_to_student", {
+        p_badge_id: badge.id, p_student_id: rewardStudentId,
+      });
+      if (rewardError) throw rewardError;
+      if (!data) throw new Error("This student already has the badge.");
+      await onChanged();
+    } catch (err) { setError(err instanceof Error ? err.message : "Could not reward badge"); }
+    finally { hideLoader(); }
   }
 
   async function setStatus(badge: OrgBadgeRow, status: OrgBadgeStatus) {
@@ -290,10 +328,22 @@ export function OrgBadgesPanel({
               />
             </label>
             <label className="text-sm">
+              Award condition
+              <select value={newForm.awardRule} onChange={(e) => setNewForm({ ...newForm, awardRule: e.target.value as OrgBadgeAwardRule, minimumPoints: e.target.value === "point_threshold" ? newForm.minimumPoints : "" })} className="mt-1 w-full rounded-lg border px-3 py-2">
+                <option value="manual">Manual reward only</option>
+                <option value="point_threshold">Student reaches a point total</option>
+                <option value="mapped_program">Student is in a mapped program / course</option>
+                <option value="new_registration">All newly registered eligible students</option>
+              </select>
+              <span className="mt-1 block text-xs text-slate-500">Mapped and newly registered presets respect this organization&apos;s program/course mappings.</span>
+            </label>
+            {newForm.awardRule === "point_threshold" && (
+            <label className="text-sm">
               Minimum student points
               <input type="number" min={0} value={newForm.minimumPoints} onChange={(e) => setNewForm({ ...newForm, minimumPoints: e.target.value })} className="mt-1 w-full rounded-lg border px-3 py-2" placeholder="e.g. 20" />
               <span className="mt-1 block text-xs text-slate-500">Leave blank if this badge is earned another way.</span>
             </label>
+            )}
             <label className="text-sm sm:col-span-2">
               How students earn this badge
               <textarea value={newForm.earningCriteria} onChange={(e) => setNewForm({ ...newForm, earningCriteria: e.target.value })} rows={2} className="mt-1 w-full rounded-lg border px-3 py-2" placeholder="e.g. Complete a full bingo line during the Welcome Week card." />
@@ -385,9 +435,17 @@ export function OrgBadgesPanel({
                         />
                       </label>
                       <label className="text-sm">
+                        Award condition
+                        <select value={editForm.awardRule} onChange={(e) => setEditForm({ ...editForm, awardRule: e.target.value as OrgBadgeAwardRule, minimumPoints: e.target.value === "point_threshold" ? editForm.minimumPoints : "" })} className="mt-1 w-full rounded-lg border px-3 py-2">
+                          <option value="manual">Manual reward only</option><option value="point_threshold">Student reaches a point total</option><option value="mapped_program">Mapped program / course</option><option value="new_registration">New registrations</option>
+                        </select>
+                      </label>
+                      {editForm.awardRule === "point_threshold" && (
+                      <label className="text-sm">
                         Minimum student points
                         <input type="number" min={0} value={editForm.minimumPoints} onChange={(e) => setEditForm({ ...editForm, minimumPoints: e.target.value })} className="mt-1 w-full rounded-lg border px-3 py-2" placeholder="No point condition" />
                       </label>
+                      )}
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <button
@@ -419,6 +477,7 @@ export function OrgBadgesPanel({
                       )}
                       {badge.earning_criteria && <p className="mt-2 text-xs leading-5 text-slate-500"><span className="font-semibold text-slate-700">How to earn:</span> {badge.earning_criteria}</p>}
                       {badge.minimum_points != null && <p className="mt-1 text-xs font-medium text-teal-700">Earns automatically at {badge.minimum_points} reward points.</p>}
+                      <p className="mt-1 text-xs font-medium text-slate-500">Condition: {awardRuleLabel(badge.award_rule)}</p>
                       <div className="mt-2 flex flex-wrap gap-2 text-xs">
                         <span className="rounded-full bg-slate-100 px-2 py-0.5 text-slate-600">
                           {kindLabel(badge.kind)}
@@ -434,6 +493,11 @@ export function OrgBadgesPanel({
                       </div>
                     </div></div>
                     <div className="flex flex-wrap gap-2">
+                      <select value={rewardStudentId} onChange={(e) => setRewardStudentId(e.target.value)} className="max-w-52 rounded-lg border px-2 py-1.5 text-xs">
+                        <option value="">Reward badge to…</option>
+                        {eligibleStudents.map((student) => <option key={student.id} value={student.id}>{student.last_name}, {student.first_name} · {student.student_id}</option>)}
+                      </select>
+                      <button type="button" onClick={() => void rewardBadge(badge)} className="rounded-lg border border-teal-300 px-3 py-1.5 text-xs text-teal-700 hover:bg-teal-50">Reward</button>
                       <button
                         type="button"
                         onClick={() => startEdit(badge)}
