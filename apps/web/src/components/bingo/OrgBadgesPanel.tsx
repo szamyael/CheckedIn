@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ImagePlus, X } from "lucide-react";
+import { ImagePlus, Search, UserRound, X } from "lucide-react";
 import { useLoader } from "@/components/LoaderProvider";
 import {
   badgeStatusClass,
@@ -32,7 +32,7 @@ const EMPTY_EDIT = {
   points: 0,
 };
 
-type EligibleStudent = { id: string; student_id: string; first_name: string; last_name: string; program: string; reward_points: number };
+type EligibleStudent = { id: string; student_id: string; first_name: string; last_name: string; program: string; year_level: number | null; section: string | null; profile_photo_url: string | null; avatar_url?: string | null; reward_points: number };
 
 export function OrgBadgesPanel({
   organizationId,
@@ -58,18 +58,26 @@ export function OrgBadgesPanel({
   const [eligibleStudents, setEligibleStudents] = useState<EligibleStudent[]>([]);
   const [studentsLoadError, setStudentsLoadError] = useState<string | null>(null);
   const [rewardStudentId, setRewardStudentId] = useState("");
+  const [rewardingBadgeId, setRewardingBadgeId] = useState<string | null>(null);
+  const [studentSearch, setStudentSearch] = useState("");
 
   useEffect(() => {
     const supabase = createClient();
-    void supabase.rpc("organization_badge_students", { p_organization_id: organizationId })
-      .then(({ data, error: studentsError }) => {
+    void supabase.rpc("organization_badge_student_cards", { p_organization_id: organizationId })
+      .then(async ({ data, error: studentsError }) => {
         if (studentsError) {
           setStudentsLoadError(studentsError.message);
           setEligibleStudents([]);
           return;
         }
+        const students = (data as EligibleStudent[]) ?? [];
+        const withAvatars = await Promise.all(students.map(async (student) => {
+          if (!student.profile_photo_url) return student;
+          const { data: signed } = await supabase.storage.from("student-ids").createSignedUrl(student.profile_photo_url, 3600);
+          return { ...student, avatar_url: signed?.signedUrl ?? null };
+        }));
         setStudentsLoadError(null);
-        setEligibleStudents((data as EligibleStudent[]) ?? []);
+        setEligibleStudents(withAvatars);
       });
   }, [organizationId]);
 
@@ -84,6 +92,15 @@ export function OrgBadgesPanel({
     if (filter === "all") return badges;
     return badges.filter((b) => b.status === filter);
   }, [badges, filter]);
+
+  const matchingStudents = useMemo(() => {
+    const query = studentSearch.trim().toLowerCase();
+    if (!query) return eligibleStudents.slice(0, 12);
+    return eligibleStudents.filter((student) =>
+      `${student.first_name} ${student.last_name} ${student.student_id} ${student.program} ${student.year_level ?? ""} ${student.section ?? ""}`
+        .toLowerCase().includes(query),
+    ).slice(0, 12);
+  }, [eligibleStudents, studentSearch]);
 
   function startEdit(badge: OrgBadgeRow) {
     setCreating(false);
@@ -502,11 +519,7 @@ export function OrgBadgesPanel({
                       </div>
                     </div></div>
                     <div className="flex flex-wrap gap-2">
-                      <select value={rewardStudentId} onChange={(e) => setRewardStudentId(e.target.value)} disabled={eligibleStudents.length === 0} className="max-w-52 rounded-lg border px-2 py-1.5 text-xs disabled:cursor-not-allowed disabled:bg-slate-100">
-                        <option value="">{eligibleStudents.length ? "Reward badge to…" : "No eligible mapped students"}</option>
-                        {eligibleStudents.map((student) => <option key={student.id} value={student.id}>{student.last_name}, {student.first_name} · {student.student_id}</option>)}
-                      </select>
-                      <button type="button" onClick={() => void rewardBadge(badge)} disabled={!eligibleStudents.length} className="rounded-lg border border-teal-300 px-3 py-1.5 text-xs text-teal-700 hover:bg-teal-50 disabled:cursor-not-allowed disabled:opacity-50">Reward</button>
+                      <button type="button" onClick={() => { setRewardingBadgeId(rewardingBadgeId === badge.id ? null : badge.id); setRewardStudentId(""); setStudentSearch(""); }} disabled={!eligibleStudents.length} className="rounded-lg border border-teal-300 px-3 py-1.5 text-xs text-teal-700 hover:bg-teal-50 disabled:cursor-not-allowed disabled:opacity-50">Reward badge to…</button>
                       <button
                         type="button"
                         onClick={() => startEdit(badge)}
@@ -539,6 +552,24 @@ export function OrgBadgesPanel({
                         Delete
                       </button>
                     </div>
+                    {rewardingBadgeId === badge.id && (
+                      <div className="basis-full rounded-lg border border-teal-200 bg-teal-50/40 p-3">
+                        <label className="relative block"><Search size={15} className="absolute left-3 top-3 text-slate-400" /><input value={studentSearch} onChange={(event) => setStudentSearch(event.target.value)} placeholder="Search name, student number, program, year, or section" className="w-full rounded-lg border bg-white py-2 pl-9 pr-3 text-sm" autoFocus /></label>
+                        <p className="mt-2 text-xs text-slate-500">Showing students in this organization&apos;s mapped programs/courses.</p>
+                        <div className="mt-3 grid max-h-72 gap-2 overflow-y-auto sm:grid-cols-2">
+                          {matchingStudents.map((student) => {
+                            const selected = rewardStudentId === student.id;
+                            const initials = `${student.first_name[0] ?? ""}${student.last_name[0] ?? ""}`.toUpperCase();
+                            return <button key={student.id} type="button" onClick={() => setRewardStudentId(student.id)} className={`flex items-center gap-3 rounded-lg border p-3 text-left ${selected ? "border-teal-600 bg-teal-50" : "border-slate-200 bg-white hover:border-teal-300"}`}>
+                              {student.avatar_url ? <img src={student.avatar_url} alt="" className="h-10 w-10 rounded-full object-cover" /> : <span className="grid h-10 w-10 place-items-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">{initials || <UserRound size={17} />}</span>}
+                              <span className="min-w-0"><span className="block truncate text-sm font-semibold text-slate-900">{student.first_name} {student.last_name}</span><span className="block text-xs text-slate-600">{student.student_id} · Year {student.year_level ?? "—"} · {student.section ?? "No section"}</span><span className="block truncate text-xs text-slate-500">{student.program}</span></span>
+                            </button>;
+                          })}
+                          {matchingStudents.length === 0 && <p className="p-2 text-sm text-slate-500">No mapped students match that search.</p>}
+                        </div>
+                        <div className="mt-3 flex justify-end"><button type="button" onClick={() => void rewardBadge(badge)} disabled={!rewardStudentId} className="rounded-lg bg-teal-600 px-3 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50">Reward selected student</button></div>
+                      </div>
+                    )}
                     {studentsLoadError && <p className="basis-full text-xs text-red-600">Could not load eligible students: {studentsLoadError}</p>}
                   </div>
                 )}
