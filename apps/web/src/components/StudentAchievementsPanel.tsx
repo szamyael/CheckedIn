@@ -30,7 +30,7 @@ export function StudentAchievementsPanel({
   return (
     <div>
       <h2 className="mb-4 text-lg font-semibold">Student Achievements</h2>
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <div className="table-scroll rounded-xl border border-slate-200 bg-white">
         <table className="w-full text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-left">
             <tr>

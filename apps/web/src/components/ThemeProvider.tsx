@@ -30,11 +30,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return ["navy", "forest", "burgundy", "indigo", "slate"].includes(saved ?? "") ? saved! : "navy";
   });
   const [mode, setModeState] = useState<ThemeMode>(() => {
-    if (typeof window === "undefined") return "system";
+    if (typeof window === "undefined") return "light";
     const saved = localStorage.getItem(modeKey) as ThemeMode | null;
-    return ["light", "dark", "system"].includes(saved ?? "") ? saved! : "system";
+    return ["light", "dark", "system"].includes(saved ?? "") ? saved! : "light";
   });
-  const [resolvedMode, setResolvedMode] = useState<"light" | "dark">(() => typeof window === "undefined" ? "light" : resolveMode((localStorage.getItem(modeKey) as ThemeMode | null) ?? "system"));
+  const [resolvedMode, setResolvedMode] = useState<"light" | "dark">(() => typeof window === "undefined" ? "light" : resolveMode((localStorage.getItem(modeKey) as ThemeMode | null) ?? "light"));
 
   useEffect(() => {
     if (mode !== "system") return;

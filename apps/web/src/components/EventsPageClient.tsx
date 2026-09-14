@@ -10,6 +10,7 @@ import { format, isAfter, isBefore, isWithinInterval } from "date-fns";
 import type { Event } from "@/lib/types";
 import Link from "next/link";
 import { DashboardPageHeader, DashboardSection } from "@/components/DashboardUi";
+import { EventStreamPanel } from "@/components/EventStreamPanel";
 
 type ListCategory = "upcoming" | "ended";
 type ViewMode = "list" | "calendar";
@@ -82,6 +83,10 @@ export function EventsPageClient({
           Event creation is limited to Organization accounts. Use Reports and
           Live Monitor for attendance oversight.
         </p>
+      )}
+
+      {publishedUpcoming.length > 0 && (
+        <EventStreamPanel events={publishedUpcoming} />
       )}
 
       {publishedUpcoming.length > 0 && (

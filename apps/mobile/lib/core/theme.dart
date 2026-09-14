@@ -51,6 +51,11 @@ class AppTheme {
         bodyLarge: TextStyle(color: text), bodyMedium: TextStyle(color: secondary), bodySmall: TextStyle(color: muted),
         titleMedium: TextStyle(color: text, fontWeight: FontWeight.w600), titleLarge: TextStyle(color: text, fontWeight: FontWeight.bold),
       ),
+      iconTheme: IconThemeData(color: dark ? Colors.white : selected.primary),
+      primaryIconTheme: const IconThemeData(color: Colors.white),
+      listTileTheme: ListTileThemeData(textColor: text, iconColor: dark ? Colors.white : selected.primary),
+      dividerTheme: DividerThemeData(color: border),
+      dialogTheme: DialogThemeData(backgroundColor: surface, titleTextStyle: TextStyle(color: text, fontSize: 20, fontWeight: FontWeight.w600), contentTextStyle: TextStyle(color: secondary)),
       appBarTheme: AppBarTheme(centerTitle: true, backgroundColor: surface, foregroundColor: text, elevation: 0, scrolledUnderElevation: 0),
       cardTheme: CardThemeData(color: surface, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: border))),
       inputDecorationTheme: InputDecorationTheme(

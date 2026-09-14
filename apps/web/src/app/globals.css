@@ -51,6 +51,11 @@ body {
 :root[data-mode="dark"] .text-\[\#697178\], :root[data-mode="dark"] .text-slate-500 { color: var(--muted) !important; }
 :root[data-mode="dark"] .border-\[\#e2e5e7\], :root[data-mode="dark"] .border-slate-200 { border-color: var(--border) !important; }
 :root[data-mode="dark"] .text-slate-600, :root[data-mode="dark"] .text-slate-700 { color: #ffffff !important; }
+:root[data-mode="dark"] .text-slate-800, :root[data-mode="dark"] .text-slate-900,
+:root[data-mode="dark"] .text-blue-700, :root[data-mode="dark"] .text-blue-800,
+:root[data-mode="dark"] .text-amber-800, :root[data-mode="dark"] .text-amber-900,
+:root[data-mode="dark"] .text-amber-950 { color: #ffffff !important; }
+:root[data-mode="dark"] svg:not([class*="text-white"]) { color: currentColor; }
 
 /* Make curated themes visibly influence existing component utility classes. */
 :root[data-color-theme] .bg-\[\#17324d\] { background-color: var(--primary) !important; }
@@ -85,6 +90,10 @@ th {
 td {
   color: #3f484f;
 }
+
+:root[data-mode="dark"] label,
+:root[data-mode="dark"] th,
+:root[data-mode="dark"] td { color: #ffffff; }
 
 button,
 a,
@@ -127,6 +136,16 @@ select {
 .dashboard-workspace table tbody tr:hover {
   background: var(--primary-soft);
 }
+
+/* Keep operational tables usable with long records: the panel stays bounded
+   and the table scrolls in either direction rather than expanding the page. */
+.table-scroll {
+  max-height: 28rem;
+  overflow: auto;
+}
+
+.table-scroll table { min-width: 42rem; }
+.table-scroll thead { position: sticky; top: 0; z-index: 1; }
 
 .dashboard-workspace button,
 .dashboard-workspace a {

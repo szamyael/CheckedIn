@@ -227,7 +227,7 @@ export default async function ReportsPage({
       )}
 
       {hasReport && (
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <div className="table-scroll rounded-xl border border-slate-200 bg-white">
           <table className="w-full text-sm">
             <thead className="border-b border-slate-200 bg-slate-50 text-left">
               <tr>
@@ -237,8 +237,8 @@ export default async function ReportsPage({
                 <th className="px-4 py-3 font-medium">Student ID</th>
                 <th className="px-4 py-3 font-medium">Name</th>
                 <th className="px-4 py-3 font-medium">Program</th>
-                <th className="px-4 py-3 font-medium">Section</th>
                 <th className="px-4 py-3 font-medium">Year</th>
+                <th className="px-4 py-3 font-medium">Section</th>
                 <th className="px-4 py-3 font-medium">Checked In</th>
                 <th className="px-4 py-3 font-medium">Break Out</th>
                 <th className="px-4 py-3 font-medium">Break In</th>

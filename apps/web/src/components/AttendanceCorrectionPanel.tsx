@@ -65,7 +65,7 @@ export function AttendanceCorrectionPanel({ isAdmin }: { isAdmin: boolean }) {
   }
 
   return (
-    <div className="overflow-auto rounded-xl border border-slate-200 bg-white">
+    <div className="table-scroll rounded-xl border border-slate-200 bg-white">
       <table className="w-full text-sm">
         <thead className="border-b bg-slate-50 text-left">
           <tr>

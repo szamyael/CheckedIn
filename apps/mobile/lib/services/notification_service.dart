@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'auth_service.dart';
@@ -173,7 +174,12 @@ class NotificationService {
         column: 'user_id',
         value: userId ?? '',
       ),
-      callback: (_) => onInsert(),
+      callback: (_) {
+        // A brief native alert makes incoming realtime notifications noticeable
+        // while the app is open, without interrupting the current task.
+        SystemSound.play(SystemSoundType.alert);
+        onInsert();
+      },
     );
 
     channel.subscribe();

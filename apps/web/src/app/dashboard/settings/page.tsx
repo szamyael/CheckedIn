@@ -32,7 +32,7 @@ export default async function SettingsPage() {
 
       <DashboardSection title="Audit trail" description="Recent administrative actions across CheckedIn.">
       <section className="rounded-xl border border-slate-200 bg-white p-6">
-        <div className="mt-4 overflow-auto">
+        <div className="table-scroll mt-4">
           <table className="w-full text-sm">
             <thead className="border-b text-left text-slate-600">
               <tr>

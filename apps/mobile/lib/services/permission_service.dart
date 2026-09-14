@@ -5,6 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 enum AppPermission {
   camera,
   location,
+  notifications,
 }
 
 class PermissionService {
@@ -17,6 +18,8 @@ class PermissionService {
         return Permission.camera;
       case AppPermission.location:
         return Permission.locationWhenInUse;
+      case AppPermission.notifications:
+        return Permission.notification;
     }
   }
 
@@ -26,6 +29,8 @@ class PermissionService {
         return 'Camera access needed';
       case AppPermission.location:
         return 'Location access needed';
+      case AppPermission.notifications:
+        return 'Notifications access needed';
     }
   }
 
@@ -37,6 +42,8 @@ class PermissionService {
       case AppPermission.location:
         return 'CheckedIn uses your location to confirm you are at the event venue '
             'before you can check in.';
+      case AppPermission.notifications:
+        return 'CheckedIn uses notifications to alert you about published events, attendance updates, and announcements.';
     }
   }
 
@@ -47,6 +54,8 @@ class PermissionService {
       case AppPermission.location:
         return 'Open Settings → CheckedIn → Permissions → allow Location, '
             'and make sure GPS is turned on.';
+      case AppPermission.notifications:
+        return 'Open Settings â†’ CheckedIn â†’ Notifications â†’ allow notifications.';
     }
   }
 
@@ -61,12 +70,15 @@ class PermissionService {
           return false;
         }
         return await Geolocator.isLocationServiceEnabled();
+      case AppPermission.notifications:
+        return (await _nativePermission(type).status).isGranted;
     }
   }
 
   Future<PermissionRequestResult> request(AppPermission type) async {
     switch (type) {
       case AppPermission.camera:
+      case AppPermission.notifications:
         final status = await _nativePermission(type).request();
         if (status.isGranted) {
           return PermissionRequestResult.granted;

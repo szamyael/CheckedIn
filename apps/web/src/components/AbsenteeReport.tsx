@@ -67,7 +67,7 @@ export function AbsenteeReport({ eventId }: { eventId: string }) {
       <p className="mt-1 text-sm text-slate-600">
         {checkedInCount} checked in · {rows.length} absent (active students)
       </p>
-      <div className="mt-4 max-h-96 overflow-auto">
+      <div className="table-scroll mt-4">
         <table className="w-full text-sm">
           <thead className="border-b text-left text-slate-600">
             <tr>

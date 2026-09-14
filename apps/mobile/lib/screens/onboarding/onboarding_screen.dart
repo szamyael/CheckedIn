@@ -20,8 +20,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   bool _cameraGranted = false;
   bool _locationGranted = false;
+  bool _notificationsGranted = false;
   bool _requestingCamera = false;
   bool _requestingLocation = false;
+  bool _requestingNotifications = false;
   bool _termsAccepted = false;
   bool _finishing = false;
 
@@ -72,10 +74,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final camera = await PermissionService.instance.isGranted(AppPermission.camera);
     final location =
         await PermissionService.instance.isGranted(AppPermission.location);
+    final notifications = await PermissionService.instance.isGranted(AppPermission.notifications);
     if (mounted) {
       setState(() {
         _cameraGranted = camera;
         _locationGranted = location;
+        _notificationsGranted = notifications;
       });
     }
   }
@@ -84,8 +88,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     setState(() {
       if (type == AppPermission.camera) {
         _requestingCamera = true;
-      } else {
+      } else if (type == AppPermission.location) {
         _requestingLocation = true;
+      } else {
+        _requestingNotifications = true;
       }
     });
 
@@ -99,10 +105,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       setState(() {
         _requestingCamera = false;
         _requestingLocation = false;
+        _requestingNotifications = false;
         if (type == AppPermission.camera) {
           _cameraGranted = granted;
-        } else {
+        } else if (type == AppPermission.location) {
           _locationGranted = granted;
+        } else {
+          _notificationsGranted = granted;
         }
       });
     }
@@ -205,10 +214,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     child: _PermissionsPage(
                       cameraGranted: _cameraGranted,
                       locationGranted: _locationGranted,
+                      notificationsGranted: _notificationsGranted,
                       requestingCamera: _requestingCamera,
                       requestingLocation: _requestingLocation,
+                      requestingNotifications: _requestingNotifications,
                       onRequestCamera: () => _requestPermission(AppPermission.camera),
                       onRequestLocation: () => _requestPermission(AppPermission.location),
+                      onRequestNotifications: () => _requestPermission(AppPermission.notifications),
                     ),
                   ),
                   SwipeAnimatedPage(
@@ -407,18 +419,24 @@ class _WalkthroughPage extends StatelessWidget {
 class _PermissionsPage extends StatelessWidget {
   final bool cameraGranted;
   final bool locationGranted;
+  final bool notificationsGranted;
   final bool requestingCamera;
   final bool requestingLocation;
+  final bool requestingNotifications;
   final VoidCallback onRequestCamera;
   final VoidCallback onRequestLocation;
+  final VoidCallback onRequestNotifications;
 
   const _PermissionsPage({
     required this.cameraGranted,
     required this.locationGranted,
+    required this.notificationsGranted,
     required this.requestingCamera,
     required this.requestingLocation,
+    required this.requestingNotifications,
     required this.onRequestCamera,
     required this.onRequestLocation,
+    required this.onRequestNotifications,
   });
 
   @override
@@ -443,6 +461,15 @@ class _PermissionsPage extends StatelessWidget {
             granted: cameraGranted,
             loading: requestingCamera,
             onAllow: onRequestCamera,
+          ),
+          const SizedBox(height: 12),
+          _PermissionCard(
+            icon: Icons.notifications_outlined,
+            title: 'Notifications',
+            description: 'Receive event and attendance updates on this device.',
+            granted: notificationsGranted,
+            loading: requestingNotifications,
+            onAllow: onRequestNotifications,
           ),
           const SizedBox(height: 12),
           _PermissionCard(

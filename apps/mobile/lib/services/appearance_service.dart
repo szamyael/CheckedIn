@@ -8,7 +8,9 @@ class AppearanceService extends ChangeNotifier {
   static final AppearanceService instance = AppearanceService._();
   static const _cacheKey = 'appearance_settings';
   AppColorTheme _colorTheme = AppColorTheme.navy;
-  ThemeMode _themeMode = ThemeMode.system;
+  // Light is intentional: following the device is opt-in through the System
+  // choice in Appearance.
+  ThemeMode _themeMode = ThemeMode.light;
 
   AppColorTheme get colorTheme => _colorTheme;
   ThemeMode get themeMode => _themeMode;
@@ -18,7 +20,7 @@ class AppearanceService extends ChangeNotifier {
     final colorName = saved?['color_theme'] as String?;
     final modeName = saved?['theme_mode'] as String?;
     _colorTheme = AppColorTheme.values.where((item) => item.name == colorName).firstOrNull ?? AppColorTheme.navy;
-    _themeMode = ThemeMode.values.where((item) => item.name == modeName).firstOrNull ?? ThemeMode.system;
+    _themeMode = ThemeMode.values.where((item) => item.name == modeName).firstOrNull ?? ThemeMode.light;
     notifyListeners();
   }
 

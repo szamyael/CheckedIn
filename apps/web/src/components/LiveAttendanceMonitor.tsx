@@ -84,7 +84,7 @@ export function LiveAttendanceMonitor({ eventId }: { eventId: string }) {
           Live attendance: <span className="text-[var(--primary)]">{count}</span> records
         </p>
       </div>
-      <div className="max-h-96 overflow-auto">
+      <div className="table-scroll">
         <table className="w-full text-sm">
           <thead className="sticky top-0 bg-slate-50 text-left">
             <tr>

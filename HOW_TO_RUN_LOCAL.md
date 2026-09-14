@@ -2,6 +2,8 @@
 
 This guide covers the local setup for the web app, mobile app, and Supabase backend used by this project.
 
+For a complete Android APK build, installation, troubleshooting, and release-signing guide, see [BUILD_APK_GUIDE.md](BUILD_APK_GUIDE.md).
+
 ## Prerequisites
 
 Install the following before starting:

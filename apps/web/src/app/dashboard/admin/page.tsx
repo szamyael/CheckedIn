@@ -146,7 +146,7 @@ export default async function AdminPage() {
       </div>
 
       <DashboardSection title="Staff accounts" description="Role, account status, and access controls for campus staff.">
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <div className="table-scroll rounded-xl border border-slate-200 bg-white">
           <table className="w-full text-sm">
             <thead className="border-b border-slate-200 bg-slate-50 text-left">
               <tr>
@@ -186,7 +186,7 @@ export default async function AdminPage() {
 
       <DashboardSection title="Student accounts" description={pendingCount > 0 ? `${pendingCount} account${pendingCount === 1 ? " is" : "s are"} awaiting approval.` : "Student identity and account-status review."}>
         <PendingStudentsBatchActions pendingIds={pendingIds} />
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <div className="table-scroll rounded-xl border border-slate-200 bg-white">
           <table className="w-full text-sm">
             <thead className="border-b border-slate-200 bg-slate-50 text-left">
               <tr>
