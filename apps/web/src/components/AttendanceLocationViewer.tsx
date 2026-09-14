@@ -1,0 +1,12 @@
+"use client";
+
+import dynamic from "next/dynamic";
+import { useState } from "react";
+import { MapPin, X } from "lucide-react";
+
+const AttendanceLocationMap = dynamic(() => import("@/components/AttendanceLocationMap").then((module) => module.AttendanceLocationMap), { ssr: false, loading: () => <div className="grid h-80 place-items-center bg-slate-50 text-sm text-slate-500">Loading map…</div> });
+
+export function AttendanceLocationViewer({ distanceMeters, venueLatitude, venueLongitude, scanLatitude, scanLongitude, radiusMeters, venueName }: { distanceMeters: number; venueLatitude: number; venueLongitude: number; scanLatitude: number; scanLongitude: number; radiusMeters: number; venueName: string }) {
+  const [open, setOpen] = useState(false);
+  return <><button type="button" onClick={() => setOpen(true)} className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"><MapPin size={14} />{distanceMeters.toFixed(1)} m</button>{open && <div role="dialog" aria-modal="true" aria-label="Check-in location" className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 p-4"><div className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl"><div className="flex items-start justify-between gap-4 p-5"><div><p className="text-[11px] font-bold tracking-[0.14em] text-blue-600">CHECK-IN LOCATION</p><h2 className="mt-1 text-lg font-semibold text-slate-900">{venueName}</h2><p className="mt-1 text-sm text-slate-600">Student scanned <span className="font-semibold text-slate-900">{distanceMeters.toFixed(1)} m</span> from the venue center. The blue circle is the {radiusMeters} m allowed radius.</p></div><button type="button" onClick={() => setOpen(false)} aria-label="Close location map" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"><X size={20} /></button></div><AttendanceLocationMap venueLatitude={venueLatitude} venueLongitude={venueLongitude} scanLatitude={scanLatitude} scanLongitude={scanLongitude} radiusMeters={radiusMeters} /><div className="flex items-center gap-4 p-4 text-xs text-slate-600"><span className="inline-flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-full bg-blue-600" />Venue center</span><span className="inline-flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-full bg-rose-500" />Student scan</span></div></div></div>}</>;
+}

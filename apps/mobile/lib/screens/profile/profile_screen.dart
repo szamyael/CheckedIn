@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -30,6 +33,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _load() {
     _future = _loadData();
+  }
+
+  Future<void> _pickAvatar(ImageSource source) async {
+    if (AuthService.instance.isOfflineMode) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Connect to the internet to update your profile photo.')));
+      return;
+    }
+    final file = await ImagePicker().pickImage(source: source, imageQuality: 85, maxWidth: 1000);
+    if (file == null) return;
+    final userId = AuthService.instance.currentUserId;
+    if (userId == null) return;
+    try {
+      final extension = file.mimeType == 'image/png' ? 'png' : 'jpg';
+      final path = '$userId/avatar-${DateTime.now().millisecondsSinceEpoch}.$extension';
+      await Supabase.instance.client.storage.from('student-ids').upload(path, File(file.path), fileOptions: FileOptions(contentType: file.mimeType ?? 'image/jpeg'));
+      await Supabase.instance.client.from('students').update({'profile_photo_url': path}).eq('id', userId);
+      if (!mounted) return;
+      setState(() => _future = _loadData());
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not upload profile photo. Try again.')));
+    }
+  }
+
+  void _showAvatarSourcePicker() {
+    showModalBottomSheet<void>(context: context, builder: (sheetContext) => SafeArea(child: Wrap(children: [ListTile(leading: const Icon(Icons.camera_alt_outlined), title: const Text('Take photo'), onTap: () { Navigator.pop(sheetContext); _pickAvatar(ImageSource.camera); }), ListTile(leading: const Icon(Icons.photo_library_outlined), title: const Text('Choose from gallery'), onTap: () { Navigator.pop(sheetContext); _pickAvatar(ImageSource.gallery); })])));
   }
 
   Future<_ProfileData> _loadData() async {
@@ -94,22 +122,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       Row(
                         children: [
-                          CircleAvatar(
-                            radius: 36,
-                            backgroundColor: const Color(0xFFE7EEF4),
-                            backgroundImage: _avatarUrl != null
-                                ? NetworkImage(_avatarUrl!)
-                                : null,
-                            child: _avatarUrl == null
-                                ? Text(
-                                    _initials(student),
-                                    style: const TextStyle(
-                                      color: const Color(0xFF17324D),
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 20,
-                                    ),
-                                  )
-                                : null,
+                          Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              CircleAvatar(radius: 36, backgroundColor: const Color(0xFFE7EEF4), backgroundImage: _avatarUrl != null ? NetworkImage(_avatarUrl!) : null, child: _avatarUrl == null ? Text(_initials(student), style: const TextStyle(color: Color(0xFF17324D), fontWeight: FontWeight.w700, fontSize: 20)) : null),
+                              Positioned(right: -4, bottom: -4, child: Material(color: const Color(0xFFF0C46D), shape: const CircleBorder(), child: IconButton(onPressed: _showAvatarSourcePicker, icon: const Icon(Icons.camera_alt_outlined, size: 17), color: const Color(0xFF17324D), tooltip: 'Update profile photo'))),
+                            ],
                           ),
                           const SizedBox(width: 16),
                           Expanded(

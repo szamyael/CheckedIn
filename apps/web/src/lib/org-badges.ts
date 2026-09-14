@@ -11,6 +11,7 @@ export type OrgBadgeRow = {
   points: number;
   kind: OrgBadgeKind;
   status: OrgBadgeStatus;
+  image_url?: string | null;
   created_at: string;
 };
 

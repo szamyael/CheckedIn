@@ -6,10 +6,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-function randomOtp(): string {
-  return String(Math.floor(100000 + Math.random() * 900000));
-}
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -77,37 +73,32 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { data: settings } = await supabase
-      .from("system_settings")
-      .select("otp_expiry_seconds")
-      .eq("id", 1)
-      .single();
-
-    const expirySeconds = settings?.otp_expiry_seconds ?? 60;
-    const code = randomOtp();
-    const expiresAt = new Date(Date.now() + expirySeconds * 1000);
-
-    await supabase.from("event_otp_codes").insert({
-      event_id,
-      code,
-      expires_at: expiresAt.toISOString(),
-      created_by: userId,
-    });
+    const { data: otpRows, error: otpError } = await supabase.rpc(
+      "get_or_create_event_otp",
+      { p_event_id: event_id, p_created_by: userId },
+    );
+    const otp = otpRows?.[0];
+    if (otpError || !otp) {
+      throw new Error(otpError?.message ?? "Failed to create or retrieve the shared OTP");
+    }
 
     await supabase.from("events").update({ requires_otp: true }).eq("id", event_id);
 
-    await supabase.rpc("log_audit", {
-      p_action: "generate_event_otp",
-      p_entity_type: "event",
-      p_entity_id: event_id,
-      p_details: { expires_at: expiresAt.toISOString() },
-    });
+    if (otp.generated) {
+      await supabase.rpc("log_audit", {
+        p_action: "generate_event_otp",
+        p_entity_type: "event",
+        p_entity_id: event_id,
+        p_details: { expires_at: otp.expires_at },
+      });
+    }
 
     return new Response(
       JSON.stringify({
-        code,
-        expires_at: expiresAt.toISOString(),
-        expires_in_seconds: expirySeconds,
+        code: otp.code,
+        expires_at: otp.expires_at,
+        expires_in_seconds: Math.max(1, Math.round((new Date(otp.expires_at).getTime() - Date.now()) / 1000)),
+        generated: otp.generated,
         event_title: event.title,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },

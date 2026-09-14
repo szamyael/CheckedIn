@@ -8,6 +8,7 @@ import {
   type EventLocation,
 } from "@/components/EventLocationPicker";
 import { EventScheduleFieldsInput } from "@/components/EventScheduleFields";
+import { CheckInRadiusInput } from "@/components/CheckInRadiusInput";
 import { formPlaceholders } from "@/lib/form-placeholders";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import {
@@ -145,19 +146,7 @@ export function EditEventForm({ event }: { event: Event }) {
         onChange={setLocation}
         compact
       />
-      <input
-        type="number"
-        value={locationRadiusM}
-        onChange={(e) =>
-          setLocationRadiusM(
-            Math.min(5000, Math.max(10, parseInt(e.target.value, 10) || 10)),
-          )
-        }
-        min={10}
-        max={5000}
-        className="w-full rounded border px-2 py-1 text-sm"
-        placeholder="Radius (m)"
-      />
+      <CheckInRadiusInput value={locationRadiusM} onChange={setLocationRadiusM} compact />
       <EventScheduleFieldsInput
         value={schedule}
         onChange={setSchedule}

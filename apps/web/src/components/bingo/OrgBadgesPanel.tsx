@@ -42,6 +42,7 @@ export function OrgBadgesPanel({
     description: "",
     points: 25,
   });
+  const [badgeImage, setBadgeImage] = useState<File | null>(null);
 
   const filtered = useMemo(() => {
     if (filter === "all") return badges;
@@ -106,7 +107,7 @@ export function OrgBadgesPanel({
       if (!user) throw new Error("Not signed in");
 
       const slug = `${slugifyBadgeName(newForm.name)}-${Date.now().toString(36)}`;
-      const { error: insErr } = await supabase.from("org_badges").insert({
+      const { data: badge, error: insErr } = await supabase.from("org_badges").insert({
         organization_id: organizationId,
         slug,
         name: newForm.name.trim(),
@@ -115,11 +116,22 @@ export function OrgBadgesPanel({
         kind: "custom",
         status: "active",
         created_by: user.id,
-      });
+      }).select("id").single();
       if (insErr) throw insErr;
+      if (badgeImage && badge) {
+        if (badgeImage.type !== "image/png") throw new Error("Badge artwork must be a PNG file.");
+        if (badgeImage.size > 2 * 1024 * 1024) throw new Error("Badge artwork must be 2 MB or smaller.");
+        const path = `${organizationId}/${badge.id}.png`;
+        const { error: uploadError } = await supabase.storage.from("badge-images").upload(path, badgeImage, { contentType: "image/png", upsert: true });
+        if (uploadError) throw uploadError;
+        const { data: publicUrl } = supabase.storage.from("badge-images").getPublicUrl(path);
+        const { error: imageError } = await supabase.from("org_badges").update({ image_url: publicUrl.publicUrl }).eq("id", badge.id);
+        if (imageError) throw imageError;
+      }
 
       setCreating(false);
       setNewForm({ name: "", description: "", points: 25 });
+      setBadgeImage(null);
       await onChanged();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create badge");
@@ -257,6 +269,11 @@ export function OrgBadgesPanel({
                 className="mt-1 w-full rounded-lg border px-3 py-2"
               />
             </label>
+            <label className="text-sm">
+              Badge artwork (PNG)
+              <input type="file" accept="image/png" onChange={(e) => setBadgeImage(e.target.files?.[0] ?? null)} className="mt-1 block w-full text-sm" />
+              <span className="mt-1 block text-xs text-slate-500">Optional · max 2 MB</span>
+            </label>
           </div>
           <div className="flex flex-wrap gap-2">
             <button
@@ -349,6 +366,8 @@ export function OrgBadgesPanel({
                   </div>
                 ) : (
                   <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="flex min-w-0 gap-3">
+                      {badge.image_url ? <img src={badge.image_url} alt="" className="h-12 w-12 shrink-0 rounded-lg object-cover" /> : <div className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-teal-50 text-lg">🏅</div>}
                     <div className="min-w-0">
                       <p className="font-medium text-slate-900">{badge.name}</p>
                       {badge.description && (
@@ -369,7 +388,7 @@ export function OrgBadgesPanel({
                           +{badge.points} pts
                         </span>
                       </div>
-                    </div>
+                    </div></div>
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"

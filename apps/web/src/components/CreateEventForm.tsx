@@ -10,6 +10,7 @@ import {
   type EventLocation,
 } from "@/components/EventLocationPicker";
 import { EventScheduleFieldsInput } from "@/components/EventScheduleFields";
+import { CheckInRadiusInput } from "@/components/CheckInRadiusInput";
 import { DEFAULT_MAP_CENTER } from "@/lib/campus-locations";
 import {
   defaultEventSchedule,
@@ -226,19 +227,7 @@ export function CreateEventForm({
           <label className="mb-1 block text-sm font-medium">
             Check-in radius (meters)
           </label>
-          <input
-            type="number"
-            value={locationRadiusM}
-            onChange={(e) =>
-              setLocationRadiusM(
-                Math.min(5000, Math.max(10, parseInt(e.target.value, 10) || 10)),
-              )
-            }
-            min={10}
-            max={5000}
-            required
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-          />
+          <CheckInRadiusInput value={locationRadiusM} onChange={setLocationRadiusM} />
             </div>
 
             <div>

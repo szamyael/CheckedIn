@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Award, CalendarDays, ChevronRight, Pencil } from "lucide-react";
+import { Award, CalendarDays, Camera, ChevronRight, Pencil } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { formatStudentDisplayName } from "@/lib/student/display-name";
 import { createClient } from "@/lib/supabase/client";
@@ -36,6 +36,24 @@ export default function StudentProfilePage() {
   const [history, setHistory] = useState<HistoryRow[]>([]);
   const [showAllBadges, setShowAllBadges] = useState(false);
   const [showAllHistory, setShowAllHistory] = useState(false);
+  const avatarInput = useRef<HTMLInputElement>(null);
+
+  async function uploadAvatar(file: File | null) {
+    if (!file) return;
+    if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) return;
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const extension = file.type === "image/png" ? "png" : "jpg";
+    const path = `${user.id}/avatar-${Date.now()}.${extension}`;
+    const { error: uploadError } = await supabase.storage.from("student-ids").upload(path, file, { contentType: file.type });
+    if (uploadError) return;
+    const { error: updateError } = await supabase.from("students").update({ profile_photo_url: path }).eq("id", user.id);
+    if (updateError) return;
+    const { data: signed } = await supabase.storage.from("student-ids").createSignedUrl(path, 3600);
+    setAvatarUrl(signed?.signedUrl ?? null);
+    setProfile((current) => current ? { ...current, profile_photo_url: path } : current);
+  }
 
   useEffect(() => {
     async function load() {
@@ -93,7 +111,7 @@ export default function StudentProfilePage() {
       <section className="border border-[#0c2238] p-6 shadow-sm" style={{ backgroundColor: "#17324D", color: "#FFFFFF" }}>
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
-            {avatarUrl ? (
+            <div className="relative shrink-0">{avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={avatarUrl}
@@ -104,7 +122,7 @@ export default function StudentProfilePage() {
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#e7eef4] text-lg font-bold text-[#17324d]">
                 {initials}
               </div>
-            )}
+            )}<button type="button" onClick={() => avatarInput.current?.click()} className="absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full border-2 border-[#17324d] bg-[#c18a2e] text-white" aria-label="Upload profile photo"><Camera size={14} /></button><input ref={avatarInput} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(event) => void uploadAvatar(event.target.files?.[0] ?? null)} /></div>
             <div>
               <h2 className="text-xl font-bold" style={{ color: "#FFFFFF" }}>
                 {formatStudentDisplayName(profile)}
