@@ -27,7 +27,7 @@ export async function PATCH(
   }
 
   const body = await request.json();
-  const { status, first_name, last_name, department, organization_id } = body;
+  const { status, account_status_reason, first_name, last_name, department, organization_id } = body;
 
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!serviceKey) {
@@ -40,12 +40,21 @@ export async function PATCH(
   );
 
   if (status) {
+    if (!["active", "disabled", "suspended"].includes(status)) {
+      return NextResponse.json({ error: "Invalid account status" }, { status: 400 });
+    }
+    const { data: target } = await admin.from("users").select("role").eq("id", id).single();
+    if (status === "suspended" && target?.role === "student" && !String(account_status_reason ?? "").trim()) {
+      return NextResponse.json({ error: "A reason is required when denying a student account" }, { status: 400 });
+    }
     const updates: Record<string, unknown> = { status };
-    if (status === "disabled") {
+    if (status === "disabled" || status === "suspended") {
       updates.disabled_at = new Date().toISOString();
     } else if (status === "active") {
       updates.disabled_at = null;
+      updates.account_status_reason = null;
     }
+    if (status === "suspended") updates.account_status_reason = String(account_status_reason).trim();
 
     const { error } = await admin.from("users").update(updates).eq("id", id);
     if (error) {

@@ -69,7 +69,7 @@ export default async function AdminPage() {
     ...(studentRows ?? []).map((student) => student.id),
   ])];
   const { data: accountRows } = accountIds.length
-    ? await supabase.from("users").select("id, email, role, status").in("id", accountIds)
+    ? await supabase.from("users").select("id, email, role, status, account_status_reason").in("id", accountIds)
     : { data: [] };
   const accountById = new Map((accountRows ?? []).map((account) => [account.id, account]));
   const staff = (staffRows ?? []).map((staffMember) => ({
@@ -162,6 +162,7 @@ export default async function AdminPage() {
                 <th className="px-4 py-3 font-medium">Email</th>
                 <th className="px-4 py-3 font-medium">Role</th>
                 <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Review reason</th>
                 <th className="px-4 py-3 font-medium">Actions</th>
               </tr>
             </thead>
@@ -233,6 +234,7 @@ export default async function AdminPage() {
                         {userRow?.status ?? "—"}
                       </span>
                     </td>
+                    <td className="max-w-xs px-4 py-3 text-slate-700">{userRow?.account_status_reason ?? "—"}</td>
                     <td className="px-4 py-3">
                       <StudentActions
                         student={{
@@ -243,6 +245,7 @@ export default async function AdminPage() {
                           program: s.program,
                           year_level: s.year_level,
                           status: userRow?.status ?? "active",
+                          account_status_reason: userRow?.account_status_reason ?? null,
                         }}
                       />
                     </td>
@@ -251,7 +254,7 @@ export default async function AdminPage() {
               })}
               {(students ?? []).length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-6 text-center text-slate-700">
+                  <td colSpan={7} className="px-4 py-6 text-center text-slate-700">
                     No students registered yet.
                   </td>
                 </tr>

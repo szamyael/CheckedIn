@@ -14,7 +14,6 @@ export function StudentAppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [unread, setUnread] = useState(0);
   const [ready, setReady] = useState(false);
-  const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [popup, setPopup] = useState<NotificationPopupItem | null>(null);
 
@@ -44,7 +43,7 @@ export function StudentAppLayout({ children }: { children: React.ReactNode }) {
 
       const { data: profile } = await supabase
         .from("users")
-        .select("role, status")
+        .select("role, status, account_status_reason")
         .eq("id", user.id)
         .single();
       if (cancelled) return;
@@ -54,9 +53,11 @@ export function StudentAppLayout({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      if (profile.status === "pending") setPending(true);
-      if (profile.status === "disabled") {
-        setError("This account has been disabled.");
+      if (profile.status !== "active") {
+        const reason = profile.account_status_reason ? ` Reason: ${profile.account_status_reason}` : "";
+        setError(profile.status === "pending"
+          ? "Your account is still under review. Contact your program's organization to settle your account status."
+          : `Your account is suspended. Contact your program's organization to settle your account status.${reason}`);
         await supabase.auth.signOut();
         if (cancelled) return;
         router.replace("/student/login");
@@ -135,12 +136,6 @@ export function StudentAppLayout({ children }: { children: React.ReactNode }) {
       onDismissNotification={() => setPopup(null)}
       onSignOut={() => void signOut()}
     >
-      {pending && (
-        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          Your account is pending admin approval. You can browse, but check-in
-          may be limited until approved.
-        </div>
-      )}
       {children}
     </StudentShell>
   );

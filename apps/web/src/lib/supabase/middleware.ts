@@ -101,13 +101,24 @@ export async function updateSession(request: NextRequest) {
     const role = profile?.role as string | undefined;
     const isStudent = role === "student";
 
+    // Approval is an access gate, not merely a check-in restriction. Clear an
+    // existing session before it can reach either application workspace.
+    if (profile && profile.status !== "active" && !isPublicPath(path)) {
+      await supabase.auth.signOut();
+      const url = request.nextUrl.clone();
+      url.pathname = isStudent ? "/student/login" : "/login";
+      const response = NextResponse.redirect(url);
+      supabaseResponse.cookies.getAll().forEach((cookie) => response.cookies.set(cookie));
+      return response;
+    }
+
     if (path === "/login" || path === "/student/login") {
-      if (isStudent) {
+      if (isStudent && profile?.status === "active") {
         const url = request.nextUrl.clone();
         url.pathname = "/student";
         return NextResponse.redirect(url);
       }
-      if (profile?.role && profile.role !== "student") {
+      if (profile?.role && profile.role !== "student" && profile.status === "active") {
         const url = request.nextUrl.clone();
         url.pathname = "/dashboard";
         return NextResponse.redirect(url);

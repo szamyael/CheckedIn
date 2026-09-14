@@ -33,19 +33,18 @@ export default function LoginPage() {
         if (!user) return setError("Your session could not be created. Please try again.");
 
         const { data: profile, error: profileError } = await supabase
-          .from("users").select("status, role").eq("id", user.id).single();
+          .from("users").select("status, role, account_status_reason").eq("id", user.id).single();
 
         if (profileError || !profile) {
           await supabase.auth.signOut();
           return setError("Your account profile could not be loaded. Contact an administrator.");
         }
-        if (profile.status === "disabled") {
+        if (profile.status !== "active") {
           await supabase.auth.signOut();
-          return setError("This account has been disabled.");
-        }
-        if (profile.status === "pending") {
-          await supabase.auth.signOut();
-          return setError("Your account is pending admin approval.");
+          const reason = profile.account_status_reason ? ` Reason: ${profile.account_status_reason}` : "";
+          return setError(profile.status === "pending"
+            ? "Your account is still under review. Contact your program's organization to settle your account status."
+            : `Your account is suspended. Contact your program's organization to settle your account status.${reason}`);
         }
 
         router.push(profile.role === "student" ? "/student" : "/dashboard");

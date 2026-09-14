@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 
-type BatchAction = "approve" | "deny";
+type BatchAction = "approve";
 
 /**
  * Batch approve or deny pending student accounts.
@@ -37,9 +37,9 @@ export async function POST(request: Request) {
     ? (body.ids as string[]).filter((id) => typeof id === "string")
     : null;
 
-  if (action !== "approve" && action !== "deny") {
+  if (action !== "approve") {
     return NextResponse.json(
-      { error: 'action must be "approve" or "deny"' },
+      { error: 'action must be "approve"' },
       { status: 400 },
     );
   }
@@ -86,10 +86,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, updated: 0 });
   }
 
-  const status = action === "approve" ? "active" : "disabled";
+  const status = "active";
   const updates: Record<string, unknown> = {
     status,
-    disabled_at: action === "deny" ? new Date().toISOString() : null,
+    disabled_at: null,
+    account_status_reason: null,
   };
 
   const { error } = await admin

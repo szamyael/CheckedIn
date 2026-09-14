@@ -312,14 +312,11 @@ class AuthService extends ChangeNotifier {
 
     final status = profile?['status'] as String? ?? 'pending';
 
-    if (status == 'disabled') {
+    if (status != 'active') {
       await signOut();
-      throw Exception('This account has been disabled.');
-    }
-
-    if (status != 'active' && status != 'pending') {
-      await signOut();
-      throw Exception('Your account is not active.');
+      throw Exception(status == 'pending'
+          ? "Your account is still under review. Contact your program's organization to settle your account status."
+          : "Your account is suspended. Contact your program's organization to settle your account status.");
     }
 
     await _client.from('users').update({
@@ -356,8 +353,10 @@ class AuthService extends ChangeNotifier {
       throw Exception('Offline credentials missing. Sign in online first.');
     }
 
-    if (creds.accountStatus == 'disabled') {
-      throw Exception('This account has been disabled.');
+    if (creds.accountStatus != 'active') {
+      throw Exception(creds.accountStatus == 'pending'
+          ? "Your account is still under review. Contact your program's organization to settle your account status."
+          : "Your account is suspended. Contact your program's organization to settle your account status.");
     }
 
     // Prefer a still-valid persisted Supabase session when present.

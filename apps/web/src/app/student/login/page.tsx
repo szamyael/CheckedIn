@@ -73,10 +73,13 @@ export default function StudentLoginPage() {
         setError("Sign-in failed.");
         return;
       }
-      const { data: profile } = await supabase.from("users").select("role, status").eq("id", user.id).single();
-      if (profile?.status === "disabled") {
+      const { data: profile } = await supabase.from("users").select("role, status, account_status_reason").eq("id", user.id).single();
+      if (profile?.status !== "active") {
         await supabase.auth.signOut();
-        setError("This account has been disabled.");
+        const reason = profile?.account_status_reason ? ` Reason: ${profile.account_status_reason}` : "";
+        setError(profile?.status === "pending"
+          ? "Your account is still under review. Contact your program's organization to settle your account status."
+          : `Your account is suspended. Contact your program's organization to settle your account status.${reason}`);
         return;
       }
       if (profile?.role !== "student") {

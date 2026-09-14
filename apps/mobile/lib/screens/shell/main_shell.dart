@@ -28,6 +28,7 @@ class _MainShellState extends State<MainShell> {
   final _connectivity = ConnectivityService.instance;
   int _unreadCount = 0;
   String? _accountStatus;
+  bool _accessBlocked = false;
 
   @override
   void initState() {
@@ -42,7 +43,10 @@ class _MainShellState extends State<MainShell> {
 
   Future<void> _loadAccountStatus() async {
     final status = await _auth.fetchAccountStatus();
-    if (mounted) setState(() => _accountStatus = status);
+    if (mounted) setState(() {
+      _accountStatus = status;
+      _accessBlocked = status != null && status != 'active';
+    });
   }
 
   @override
@@ -64,6 +68,25 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
+    if (_accessBlocked) {
+      final underReview = _accountStatus == 'pending';
+      return Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Icon(underReview ? Icons.hourglass_top : Icons.block, size: 48, color: Theme.of(context).colorScheme.error),
+              const SizedBox(height: 16),
+              Text(underReview ? 'Your account is still under review.' : 'Your account is suspended.', textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 8),
+              const Text("Contact your program's organization to settle your account status.", textAlign: TextAlign.center),
+              const SizedBox(height: 20),
+              FilledButton(onPressed: () async { await _auth.signOut(); if (context.mounted) context.go('/login'); }, child: const Text('Return to sign in')),
+            ]),
+          ),
+        ),
+      );
+    }
     final pages = [
       HomeScreen(
         onScan: () => context.push('/attendance/scan'),
@@ -114,7 +137,6 @@ class _MainShellState extends State<MainShell> {
       body: Column(
         children: [
           if (offline ||
-              _accountStatus == 'pending' ||
               _offlineSync.pendingCount > 0)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -130,18 +152,7 @@ class _MainShellState extends State<MainShell> {
                       border: StudentUi.border,
                       foreground: StudentUi.muted,
                     ),
-                  if (offline &&
-                      (_accountStatus == 'pending' ||
-                          _offlineSync.pendingCount > 0))
-                    const SizedBox(height: 8),
-                  if (_accountStatus == 'pending')
-                    const StudentInfoBanner(
-                      message:
-                          'Your account is pending admin approval. You can browse the app, but check-in unlocks once approved.',
-                      icon: Icons.hourglass_top,
-                    ),
-                  if (_accountStatus == 'pending' &&
-                      _offlineSync.pendingCount > 0)
+                  if (offline && _offlineSync.pendingCount > 0)
                     const SizedBox(height: 8),
                   if (_offlineSync.pendingCount > 0)
                     StudentInfoBanner(
