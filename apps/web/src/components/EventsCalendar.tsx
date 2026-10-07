@@ -17,7 +17,7 @@ import { EventQrCode } from "@/components/EventQrCode";
 import { EditEventForm } from "@/components/EditEventForm";
 import Link from "next/link";
 
-export function EventsCalendar({ events }: { events: Event[] }) {
+export function EventsCalendar({ events, canRestrict = false, restrictionsOnly = false }: { events: Event[]; canRestrict?: boolean; restrictionsOnly?: boolean }) {
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [selected, setSelected] = useState<Event | null>(null);
 
@@ -140,7 +140,7 @@ export function EventsCalendar({ events }: { events: Event[] }) {
             </div>
 
             <div className="mt-4">
-              <EditEventForm event={selected} />
+              {canRestrict && <EditEventForm event={selected} restrictionsOnly={restrictionsOnly} />}
             </div>
 
             {selected.status === "published" ? (

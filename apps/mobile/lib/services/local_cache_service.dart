@@ -71,5 +71,6 @@ class CacheKeys {
   static const dashboardStats = 'dashboard_stats';
   static const events = 'published_events';
   static const notifications = 'notifications';
+  static const bingoSelectedCard = 'bingo_selected_card';
   static String checkInMeta(String qrToken) => 'checkin_meta_$qrToken';
 }

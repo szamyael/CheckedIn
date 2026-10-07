@@ -13,6 +13,7 @@ import 'services/offline_sync_service.dart';
 import 'services/onboarding_service.dart';
 import 'services/session_timeout_service.dart';
 import 'services/terms_service.dart';
+import 'services/push_notification_service.dart';
 import 'widgets/universal_loader.dart';
 
 Future<void> main() async {
@@ -33,6 +34,7 @@ Future<void> main() async {
   await AppearanceService.instance.init();
   await ConnectivityService.instance.init();
   await OfflineSyncService.instance.init();
+  await PushNotificationService.instance.init();
 
   runApp(CheckedInApp(router: createRouter(auth, onboarding, terms)));
 }

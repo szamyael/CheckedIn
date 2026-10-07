@@ -9,6 +9,8 @@ import {
 } from "@/components/EventLocationPicker";
 import { EventScheduleFieldsInput } from "@/components/EventScheduleFields";
 import { CheckInRadiusInput } from "@/components/CheckInRadiusInput";
+import { BreakTimeLimitInput } from "@/components/BreakTimeLimitInput";
+import { AllowedYearLevelsInput } from "@/components/AllowedYearLevelsInput";
 import { formPlaceholders } from "@/lib/form-placeholders";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import {
@@ -39,7 +41,7 @@ function attendanceIsCustom(event: Event): boolean {
   );
 }
 
-export function EditEventForm({ event }: { event: Event }) {
+export function EditEventForm({ event, restrictionsOnly = false }: { event: Event; restrictionsOnly?: boolean }) {
   const router = useRouter();
   const run = useAsyncAction();
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +50,12 @@ export function EditEventForm({ event }: { event: Event }) {
   const [title, setTitle] = useState(event.title);
   const [description, setDescription] = useState(event.description ?? "");
   const [locationRadiusM, setLocationRadiusM] = useState(event.location_radius_m);
+  const [breakTimeLimitMinutes, setBreakTimeLimitMinutes] = useState<number | null>(
+    event.break_time_limit_minutes ?? null,
+  );
+  const [allowedYearLevels, setAllowedYearLevels] = useState<number[]>(
+    event.allowed_year_levels ?? [],
+  );
   const [eventStatus, setEventStatus] = useState(event.status);
   const [schedule, setSchedule] = useState(() => initialSchedule(event));
   const [attendanceCustomized, setAttendanceCustomized] = useState(() =>
@@ -63,20 +71,20 @@ export function EditEventForm({ event }: { event: Event }) {
 
   const scheduleValidation = validateEventSchedule(schedule);
   const canSubmit =
-    title.trim().length > 0 &&
+    restrictionsOnly || (title.trim().length > 0 &&
     location.venueName.trim().length > 0 &&
-    scheduleValidation.valid;
+    scheduleValidation.valid);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
 
-    if (!location.venueName.trim()) {
+    if (!restrictionsOnly && !location.venueName.trim()) {
       setError("Venue name is required.");
       return;
     }
 
-    if (!scheduleValidation.valid) {
+    if (!restrictionsOnly && !scheduleValidation.valid) {
       setError(scheduleValidation.errors[0] ?? "Fix schedule errors before saving.");
       return;
     }
@@ -85,6 +93,14 @@ export function EditEventForm({ event }: { event: Event }) {
       await run("Saving event…", async () => {
         const { createClient } = await import("@/lib/supabase/client");
         const supabase = createClient();
+        if (restrictionsOnly) {
+          const { error: restrictionError } = await supabase.rpc("set_event_allowed_year_levels", {
+            p_event_id: event.id,
+            p_allowed_year_levels: allowedYearLevels,
+          });
+          if (restrictionError) throw new Error(restrictionError.message);
+          return;
+        }
         const times = scheduleFieldsToIso(schedule);
 
         const { error: updateError } = await supabase
@@ -97,6 +113,8 @@ export function EditEventForm({ event }: { event: Event }) {
             latitude: location.latitude,
             longitude: location.longitude,
             location_radius_m: locationRadiusM,
+            break_time_limit_minutes: breakTimeLimitMinutes,
+            allowed_year_levels: allowedYearLevels,
             ...times,
             status: eventStatus,
           })
@@ -119,14 +137,14 @@ export function EditEventForm({ event }: { event: Event }) {
         onClick={() => setOpen(true)}
         className="text-sm text-blue-600 hover:underline"
       >
-        Edit
+        {restrictionsOnly ? "Set eligibility" : "Edit"}
       </button>
     );
   }
 
   return (
     <form onSubmit={handleSubmit} className="mt-4 space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
-      <input
+      {!restrictionsOnly && <><input
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         required
@@ -147,6 +165,10 @@ export function EditEventForm({ event }: { event: Event }) {
         compact
       />
       <CheckInRadiusInput value={locationRadiusM} onChange={setLocationRadiusM} compact />
+      <div>
+        <label className="mb-1 block text-sm font-medium text-slate-800">Break time limit</label>
+        <BreakTimeLimitInput value={breakTimeLimitMinutes} onChange={setBreakTimeLimitMinutes} compact />
+      </div>
       <EventScheduleFieldsInput
         value={schedule}
         onChange={setSchedule}
@@ -163,7 +185,8 @@ export function EditEventForm({ event }: { event: Event }) {
         <option value="published">Published</option>
         <option value="cancelled">Cancelled</option>
         <option value="completed">Completed</option>
-      </select>
+      </select></>}
+      <AllowedYearLevelsInput value={allowedYearLevels} onChange={setAllowedYearLevels} compact />
       {error && <p className="text-sm text-red-600">{error}</p>}
       <div className="flex gap-2">
         <button

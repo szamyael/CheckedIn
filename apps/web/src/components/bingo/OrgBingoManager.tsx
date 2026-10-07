@@ -451,8 +451,9 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Bingo &amp; Badges</h1>
           <p className="mt-1 text-sm text-slate-700">
-            Create multiple 3×3 bingo cards. Publish one active card for students;
-            keep drafts while building and archive past seasons.
+            Create multiple 3×3 bingo cards. Publish as many as you need; students
+            pick which published card to play. Keep drafts while building and archive
+            past seasons.
           </p>
         </div>
         <button
@@ -620,7 +621,7 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
                   onClick={() => void changeCardStatus("active")}
                   className="rounded-lg border border-teal-300 px-4 py-2 text-sm text-teal-800 hover:bg-teal-50"
                 >
-                  Publish (activate)
+                  Publish for students
                 </button>
               )}
               {selectedCard.status !== "archived" && (

@@ -1,4 +1,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  BREAK_LIMIT_EXPIRED_MESSAGE,
+  breakDeadlineAt,
+  isBreakTimeExpired,
+} from "../_shared/break-time-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -49,7 +54,7 @@ Deno.serve(async (req) => {
     const { data: event } = await supabase
       .from("events")
       .select(
-        "id, title, requires_otp, venue_name, latitude, longitude, location_radius_m, attendance_starts_at, attendance_ends_at, starts_at, ends_at, status",
+        "id, title, requires_otp, venue_name, latitude, longitude, location_radius_m, attendance_starts_at, attendance_ends_at, starts_at, ends_at, status, break_time_limit_minutes, allowed_year_levels",
       )
       .eq("qr_token", qr_token)
       .eq("status", "published")
@@ -60,6 +65,26 @@ Deno.serve(async (req) => {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    const allowedYearLevels = Array.isArray(event.allowed_year_levels)
+      ? event.allowed_year_levels.map(Number)
+      : [];
+    if (allowedYearLevels.length > 0) {
+      const { data: student } = await supabase
+        .from("students")
+        .select("year_level")
+        .eq("id", userData.user.id)
+        .maybeSingle();
+
+      if (student?.year_level == null || !allowedYearLevels.includes(student.year_level)) {
+        return new Response(
+          JSON.stringify({
+            error: `This event is only open to Year ${allowedYearLevels.join(", ")} students`,
+          }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
     }
 
     const now = new Date();
@@ -77,9 +102,19 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     const myStatus = (myAttendance?.status as string | undefined) ?? null;
-    const canCheckOut = myStatus === "checked_in" || myStatus === "late";
-    const canBreakOut = myStatus === "checked_in" || myStatus === "late";
-    const canBreakIn = myStatus === "on_break";
+    const limitMinutes = (event.break_time_limit_minutes as number | null) ?? null;
+    const breakExpired = isBreakTimeExpired({
+      status: myStatus,
+      breakOutAt: myAttendance?.break_out_at as string | null,
+      limitMinutes,
+      now,
+    });
+    const deadline = myStatus === "on_break"
+      ? breakDeadlineAt(myAttendance?.break_out_at as string | null, limitMinutes)
+      : null;
+    const canCheckOut = !breakExpired && (myStatus === "checked_in" || myStatus === "late");
+    const canBreakOut = !breakExpired && (myStatus === "checked_in" || myStatus === "late");
+    const canBreakIn = !breakExpired && myStatus === "on_break";
     const alreadyCheckedOut = myStatus === "checked_out";
 
     const base = {
@@ -103,6 +138,9 @@ Deno.serve(async (req) => {
       break_in_at: myAttendance?.break_in_at ?? null,
       break_count: myAttendance?.break_count ?? 0,
       checked_out_at: myAttendance?.checked_out_at ?? null,
+      break_time_limit_minutes: limitMinutes,
+      break_deadline_at: deadline?.toISOString() ?? null,
+      break_time_expired: breakExpired,
     };
 
     // Location verification gate — required before OTP / selfie.

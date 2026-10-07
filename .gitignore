@@ -18,6 +18,7 @@ apps/web/.next/
 apps/web/out/
 
 # Flutter / mobile builds
+.tool/
 apps/mobile/build/
 apps/mobile/.dart_tool/
 apps/mobile/.packages

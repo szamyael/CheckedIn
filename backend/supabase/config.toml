@@ -38,3 +38,6 @@ enable_confirmations = false
 
 [functions.complete-student-registration]
 verify_jwt = false
+
+[functions.send-push-notification]
+verify_jwt = false

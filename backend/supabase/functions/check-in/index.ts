@@ -215,6 +215,26 @@ Deno.serve(async (req) => {
       );
     }
 
+    const allowedYearLevels = Array.isArray(event.allowed_year_levels)
+      ? event.allowed_year_levels.map(Number)
+      : [];
+    if (allowedYearLevels.length > 0) {
+      const { data: student } = await supabase
+        .from("students")
+        .select("year_level")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (student?.year_level == null || !allowedYearLevels.includes(student.year_level)) {
+        return new Response(
+          JSON.stringify({
+            error: `This event is only open to Year ${allowedYearLevels.join(", ")} students`,
+          }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    }
+
     if (event.latitude == null || event.longitude == null) {
       return new Response(
         JSON.stringify({ error: "Event venue location is not configured" }),

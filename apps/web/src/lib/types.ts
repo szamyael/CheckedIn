@@ -49,6 +49,8 @@ export interface Event {
   status: EventStatus;
   qr_token: string;
   requires_otp?: boolean;
+  break_time_limit_minutes?: number | null;
+  allowed_year_levels?: number[];
   qr_rotated_at?: string | null;
   created_by: string;
   organization_id: string | null;

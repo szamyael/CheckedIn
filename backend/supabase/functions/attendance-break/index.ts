@@ -1,4 +1,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  BREAK_LIMIT_EXPIRED_MESSAGE,
+  breakDeadlineAt,
+  isBreakTimeExpired,
+} from "../_shared/break-time-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,19 +33,36 @@ Deno.serve(async (req) => {
       return response({ error: "A QR token and a valid break action are required" }, 400);
     }
 
-    const { data: event } = await supabase.from("events").select("id, title, status").eq("qr_token", qrToken).eq("status", "published").maybeSingle();
+    const { data: event } = await supabase
+      .from("events")
+      .select("id, title, status, break_time_limit_minutes")
+      .eq("qr_token", qrToken)
+      .eq("status", "published")
+      .maybeSingle();
     if (!event) return response({ error: "Invalid or expired QR code" }, 404);
 
     const { data: attendance } = await supabase
       .from("attendance_records")
-      .select("id, status, break_count")
+      .select("id, status, break_count, break_out_at")
       .eq("event_id", event.id)
       .eq("student_id", userData.user.id)
       .maybeSingle();
     if (!attendance) return response({ error: "Check in before recording a break" }, 404);
 
-    const now = new Date().toISOString();
+    const nowDate = new Date();
+    const now = nowDate.toISOString();
     const isOut = body.action === "break_out";
+    const limitMinutes = (event.break_time_limit_minutes as number | null) ?? null;
+    if (
+      isBreakTimeExpired({
+        status: attendance.status,
+        breakOutAt: attendance.break_out_at,
+        limitMinutes,
+        now: nowDate,
+      })
+    ) {
+      return response({ error: BREAK_LIMIT_EXPIRED_MESSAGE, break_time_expired: true }, 409);
+    }
     if (isOut && !["checked_in", "late"].includes(attendance.status)) {
       return response({ error: "Break out is only available while you are checked in" }, 409);
     }
@@ -54,7 +76,15 @@ Deno.serve(async (req) => {
     const { data: updated, error } = await supabase.from("attendance_records").update(update).eq("id", attendance.id).select().single();
     if (error) return response({ error: error.message }, 500);
 
-    return response({ success: true, action: body.action, attendance: updated, event: { id: event.id, title: event.title }, recorded_at: now });
+    const deadline = isOut ? breakDeadlineAt(now, limitMinutes) : null;
+    return response({
+      success: true,
+      action: body.action,
+      attendance: updated,
+      event: { id: event.id, title: event.title, break_time_limit_minutes: limitMinutes },
+      recorded_at: now,
+      break_deadline_at: deadline?.toISOString() ?? null,
+    });
   } catch (error) {
     return response({ error: error instanceof Error ? error.message : String(error) }, 500);
   }

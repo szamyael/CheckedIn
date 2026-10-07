@@ -16,6 +16,7 @@ export default async function EventsPage() {
 
   const canCreate =
     profile?.role === "org_member" || profile?.role === "admin";
+  const canRestrict = canCreate || profile?.role === "faculty";
 
   let organizationId: string | null = null;
   if (canCreate) {
@@ -36,6 +37,7 @@ export default async function EventsPage() {
     <EventsPageClient
       events={(events ?? []) as Event[]}
       canCreate={canCreate}
+      canRestrict={canRestrict}
       organizationId={organizationId}
     />
   );

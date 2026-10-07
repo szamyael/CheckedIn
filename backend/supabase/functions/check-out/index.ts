@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { BREAK_LIMIT_EXPIRED_MESSAGE, isBreakTimeExpired } from "../_shared/break-time-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -80,7 +81,7 @@ Deno.serve(async (req) => {
 
     const { data: event } = await supabase
       .from("events")
-      .select("id, title, status, attendance_starts_at, attendance_ends_at, starts_at, ends_at")
+      .select("id, title, status, attendance_starts_at, attendance_ends_at, starts_at, ends_at, break_time_limit_minutes")
       .eq("qr_token", qr_token)
       .eq("status", "published")
       .maybeSingle();
@@ -97,7 +98,7 @@ Deno.serve(async (req) => {
 
     const { data: record } = await supabase
       .from("attendance_records")
-      .select("id, status, checked_in_at, checked_out_at")
+      .select("id, status, checked_in_at, checked_out_at, break_out_at")
       .eq("event_id", event.id)
       .eq("student_id", userId)
       .maybeSingle();
@@ -109,6 +110,25 @@ Deno.serve(async (req) => {
         }),
         {
           status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
+
+    if (
+      isBreakTimeExpired({
+        status: record.status,
+        breakOutAt: record.break_out_at,
+        limitMinutes: event.break_time_limit_minutes,
+      })
+    ) {
+      return new Response(
+        JSON.stringify({
+          error: BREAK_LIMIT_EXPIRED_MESSAGE,
+          break_time_expired: true,
+        }),
+        {
+          status: 409,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         },
       );

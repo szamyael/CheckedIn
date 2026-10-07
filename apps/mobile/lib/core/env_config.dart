@@ -9,6 +9,7 @@ class EnvConfig {
   static String? get veryfiUsername => dotenv.env['VERYFI_USERNAME'];
   static String? get veryfiApiKey => dotenv.env['VERYFI_API_KEY'];
   static String? get googleMapsApiKey => dotenv.env['GOOGLE_MAPS_API_KEY'];
+  static String? get oneSignalAppId => dotenv.env['ONESIGNAL_APP_ID'];
 
   static String _require(String key) {
     final value = dotenv.env[key];

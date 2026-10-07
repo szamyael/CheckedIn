@@ -61,6 +61,9 @@ export type CheckInMeta = {
   can_break_in?: boolean;
   already_checked_out?: boolean;
   my_attendance_status?: string | null;
+  break_time_limit_minutes?: number | null;
+  break_deadline_at?: string | null;
+  break_time_expired?: boolean;
   location_ok?: boolean;
   distance_m?: number;
   allowed_radius_m?: number;

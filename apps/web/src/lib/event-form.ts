@@ -110,3 +110,19 @@ export function scheduleFieldsToIso(fields: EventScheduleFields) {
     qr_expires_at: attEnd.toISOString(),
   };
 }
+
+export function formatBreakTimeLimit(minutes: number | null | undefined): string | null {
+  if (minutes == null || minutes < 1) return null;
+  if (minutes % 60 === 0) {
+    const hours = minutes / 60;
+    return hours === 1 ? "1 hour" : `${hours} hours`;
+  }
+  if (minutes < 60) {
+    return minutes === 1 ? "1 minute" : `${minutes} minutes`;
+  }
+  const hours = Math.floor(minutes / 60);
+  const remaining = minutes % 60;
+  const hourLabel = hours === 1 ? "1 hour" : `${hours} hours`;
+  const minuteLabel = remaining === 1 ? "1 minute" : `${remaining} minutes`;
+  return `${hourLabel} ${minuteLabel}`;
+}

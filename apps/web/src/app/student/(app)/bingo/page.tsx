@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Award, Check, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { studentInputClass } from "@/components/student/StudentUi";
 
 type Cell = {
   id: string;
@@ -37,56 +38,102 @@ const LINES = [
   [2, 4, 6],
 ];
 
+const SELECTED_CARD_KEY = "checkedin.bingo.selectedCardId";
+
 export default function StudentBingoPage() {
-  const [card, setCard] = useState<Card | null>(null);
+  const [cards, setCards] = useState<Card[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [cells, setCells] = useState<Cell[]>([]);
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [awards, setAwards] = useState<OrgBadgeAward[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const card = useMemo(
+    () => cards.find((item) => item.id === selectedId) ?? null,
+    [cards, selectedId],
+  );
+
   useEffect(() => {
-    async function load() {
+    async function loadCards() {
       const supabase = createClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: cards } = await supabase
+      const { data: cardRows } = await supabase
         .from("bingo_cards")
         .select("id, title, season_label, streak_threshold")
         .eq("is_active", true)
-        .limit(5);
+        .order("updated_at", { ascending: false });
 
-      const active = (cards?.[0] as Card | undefined) ?? null;
-      setCard(active);
+      const list = (cardRows as Card[] | null) ?? [];
+      setCards(list);
 
-      if (active) {
-        const { data: cellRows } = await supabase
-          .from("bingo_cells")
-          .select("id, position, event_id, label, events(title, starts_at)")
-          .eq("card_id", active.id)
-          .order("position");
-        setCells((cellRows as unknown as Cell[]) ?? []);
+      const stored =
+        typeof window !== "undefined"
+          ? window.localStorage.getItem(SELECTED_CARD_KEY)
+          : null;
+      const nextId =
+        (stored && list.some((item) => item.id === stored) ? stored : null) ??
+        list[0]?.id ??
+        null;
+      setSelectedId(nextId);
+      setLoading(false);
+    }
+    void loadCards();
+  }, []);
 
+  useEffect(() => {
+    async function loadBoard() {
+      if (!selectedId) {
+        setCells([]);
+        setCompleted(new Set());
+        setAwards([]);
+        return;
+      }
+
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: cellRows } = await supabase
+        .from("bingo_cells")
+        .select("id, position, event_id, label, events(title, starts_at)")
+        .eq("card_id", selectedId)
+        .order("position");
+      const nextCells = (cellRows as unknown as Cell[]) ?? [];
+      setCells(nextCells);
+
+      const cellIds = nextCells.map((cell) => cell.id);
+      if (cellIds.length > 0) {
         const { data: done } = await supabase
           .from("student_bingo_cells")
           .select("cell_id")
-          .eq("student_id", user.id);
-        setCompleted(new Set((done ?? []).map((d) => d.cell_id as string)));
-
-        const { data: badgeAwards } = await supabase
-          .from("student_org_badges")
-          .select("id, points_awarded, earned_at, org_badges(name, kind)")
           .eq("student_id", user.id)
-          .order("earned_at", { ascending: false });
-        setAwards((badgeAwards as unknown as OrgBadgeAward[]) ?? []);
+          .in("cell_id", cellIds);
+        setCompleted(new Set((done ?? []).map((d) => d.cell_id as string)));
+      } else {
+        setCompleted(new Set());
       }
 
-      setLoading(false);
+      const { data: badgeAwards } = await supabase
+        .from("student_org_badges")
+        .select("id, points_awarded, earned_at, org_badges(name, kind)")
+        .eq("student_id", user.id)
+        .eq("bingo_card_id", selectedId)
+        .order("earned_at", { ascending: false });
+      setAwards((badgeAwards as unknown as OrgBadgeAward[]) ?? []);
     }
-    void load();
-  }, []);
+    void loadBoard();
+  }, [selectedId]);
+
+  function selectCard(cardId: string) {
+    setSelectedId(cardId);
+    window.localStorage.setItem(SELECTED_CARD_KEY, cardId);
+  }
 
   const completedPositions = useMemo(() => {
     const set = new Set<number>();
@@ -126,20 +173,44 @@ export default function StudentBingoPage() {
   }, [cells, completed]);
 
   if (loading) {
-    return <p className="text-sm text-[#697178]">Loading your Bingo card…</p>;
+    return <p className="text-sm text-[#697178]">Loading your Bingo cards…</p>;
   }
 
   if (!card) {
     return (
       <div className="border border-dashed border-[#cbd2d4] bg-white p-10 text-center text-sm text-[#697178]">
-        No active bingo card yet. Check back when an organization publishes one.
+        No published bingo cards yet. Check back when an organization publishes one.
       </div>
     );
   }
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <header className="border-l-2 border-[#c18a2e] pl-4"><p className="text-xs font-semibold tracking-[0.14em] text-[#697178]">EVENT BINGO</p><h1 className="mt-2 text-3xl font-semibold tracking-tight text-[#0c2238]">{card.title}</h1><p className="mt-2 text-sm text-[#697178]">{completed.size} / {cells.length || 9} completed · {card.season_label}</p></header>
+      <header className="border-l-2 border-[#c18a2e] pl-4">
+        <p className="text-xs font-semibold tracking-[0.14em] text-[#697178]">EVENT BINGO</p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[#0c2238]">{card.title}</h1>
+        <p className="mt-2 text-sm text-[#697178]">
+          {completed.size} / {cells.length || 9} completed · {card.season_label}
+        </p>
+      </header>
+
+      {cards.length > 1 && (
+        <label className="block text-sm font-medium text-[#0c2238]">
+          Choose a bingo card
+          <select
+            className={`${studentInputClass} mt-2`}
+            value={card.id}
+            onChange={(event) => selectCard(event.target.value)}
+          >
+            {cards.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.title}
+                {item.season_label ? ` · ${item.season_label}` : ""}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
 
       <div className="grid grid-cols-2 border border-[#e2e5e7] bg-white text-center">
         <div className="border-r border-[#e2e5e7] p-4">
@@ -178,7 +249,7 @@ export default function StudentBingoPage() {
         <div className="mb-3 flex items-center gap-2"><Award size={18} className="text-[#a46618]" /><h2 className="text-base font-semibold text-[#0c2238]">Recognition earned</h2></div>
         {awards.length === 0 ? (
           <p className="text-sm text-[#697178]">
-            Complete a line or streak to earn badges.
+            Complete a line or streak on this card to earn badges.
           </p>
         ) : (
           <ul className="space-y-2">

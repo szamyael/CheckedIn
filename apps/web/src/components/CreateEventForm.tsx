@@ -11,6 +11,8 @@ import {
 } from "@/components/EventLocationPicker";
 import { EventScheduleFieldsInput } from "@/components/EventScheduleFields";
 import { CheckInRadiusInput } from "@/components/CheckInRadiusInput";
+import { BreakTimeLimitInput } from "@/components/BreakTimeLimitInput";
+import { AllowedYearLevelsInput } from "@/components/AllowedYearLevelsInput";
 import { DEFAULT_MAP_CENTER } from "@/lib/campus-locations";
 import {
   defaultEventSchedule,
@@ -34,6 +36,8 @@ export function CreateEventForm({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [locationRadiusM, setLocationRadiusM] = useState(100);
+  const [breakTimeLimitMinutes, setBreakTimeLimitMinutes] = useState<number | null>(null);
+  const [allowedYearLevels, setAllowedYearLevels] = useState<number[]>([]);
   const [status, setStatus] = useState("published");
   const [schedule, setSchedule] = useState(defaultEventSchedule);
   const [attendanceCustomized, setAttendanceCustomized] = useState(false);
@@ -88,6 +92,8 @@ export function CreateEventForm({
     setTitle("");
     setDescription("");
     setLocationRadiusM(100);
+    setBreakTimeLimitMinutes(null);
+    setAllowedYearLevels([]);
     setStatus("published");
     setSchedule(defaultEventSchedule());
     setAttendanceCustomized(false);
@@ -157,6 +163,8 @@ export function CreateEventForm({
           latitude: location.latitude,
           longitude: location.longitude,
           location_radius_m: locationRadiusM,
+          break_time_limit_minutes: breakTimeLimitMinutes,
+          allowed_year_levels: allowedYearLevels,
           ...times,
           status,
           requires_otp: settings?.default_requires_otp ?? false,
@@ -223,11 +231,22 @@ export function CreateEventForm({
           />
             </div>
 
+            <div className="sm:col-span-2">
+              <AllowedYearLevelsInput value={allowedYearLevels} onChange={setAllowedYearLevels} />
+            </div>
+
             <div>
           <label className="mb-1 block text-sm font-medium">
             Check-in radius (meters)
           </label>
           <CheckInRadiusInput value={locationRadiusM} onChange={setLocationRadiusM} />
+            </div>
+
+            <div className="sm:col-span-2">
+          <label className="mb-1 block text-sm font-medium text-slate-800">
+            Break time limit
+          </label>
+          <BreakTimeLimitInput value={breakTimeLimitMinutes} onChange={setBreakTimeLimitMinutes} />
             </div>
 
             <div>

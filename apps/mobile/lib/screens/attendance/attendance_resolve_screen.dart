@@ -29,6 +29,7 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
   String? _error;
   String? _successTitle;
   String? _successBody;
+  bool _blocked = false;
 
   @override
   void initState() {
@@ -41,6 +42,7 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
       _error = null;
       _successTitle = null;
       _successBody = null;
+      _blocked = false;
     });
 
     final loader = UniversalLoaderController.instance;
@@ -78,6 +80,18 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
         return;
       }
 
+      if (meta['break_time_expired'] == true ||
+          (meta['my_attendance_status'] == 'on_break' && !canBreakIn)) {
+        if (!mounted) return;
+        setState(() {
+          _successTitle = 'Break time ended';
+          _successBody =
+              'Your break time limit has ended. You can no longer break in or check out.';
+          _blocked = true;
+        });
+        return;
+      }
+
       if (canBreakIn) {
         loader.show('Recording break-in…');
         final result = await _attendance.recordBreak(
@@ -97,7 +111,10 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
       if (canCheckOut || canBreakOut) {
         if (!mounted) return;
         loader.hide();
-        final action = await _chooseExitAction(title);
+        final action = await _chooseExitAction(
+          title,
+          _formatBreakLimit(meta['break_time_limit_minutes']),
+        );
         if (!mounted || action == null) return;
         loader.show(action == _ExitAction.breakOut ? 'Recording break-out…' : 'Checking out…');
         if (action == _ExitAction.breakOut) {
@@ -107,9 +124,16 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
           );
           if (!mounted) return;
           final eventTitle = (result['event'] is Map ? result['event']['title'] : null) as String? ?? title;
+          final deadlineRaw = result['break_deadline_at'] as String?;
+          final deadline = deadlineRaw == null ? null : DateTime.tryParse(deadlineRaw)?.toLocal();
+          final deadlineLabel = deadline == null
+              ? null
+              : TimeOfDay.fromDateTime(deadline).format(context);
           setState(() {
             _successTitle = 'Break started';
-            _successBody = 'Your break-out from $eventTitle has been recorded. Scan the event QR again when you return.';
+            _successBody = deadlineLabel == null
+                ? 'Your break-out from $eventTitle has been recorded. Scan the event QR again when you return.'
+                : 'Your break-out from $eventTitle has been recorded. Return by $deadlineLabel. After that you can no longer break in or check out.';
           });
           return;
         }
@@ -143,11 +167,33 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
     }
   }
 
-  Future<_ExitAction?> _chooseExitAction(String title) => showDialog<_ExitAction>(
+  String? _formatBreakLimit(Object? minutes) {
+    if (minutes is! num || minutes < 1) return null;
+    final total = minutes.round();
+    if (total % 60 == 0) {
+      final hours = total ~/ 60;
+      return hours == 1 ? '1 hour' : '$hours hours';
+    }
+    if (total < 60) {
+      return total == 1 ? '1 minute' : '$total minutes';
+    }
+    final hours = total ~/ 60;
+    final remaining = total % 60;
+    final hourLabel = hours == 1 ? '1 hour' : '$hours hours';
+    final minuteLabel = remaining == 1 ? '1 minute' : '$remaining minutes';
+    return '$hourLabel $minuteLabel';
+  }
+
+  Future<_ExitAction?> _chooseExitAction(String title, String? limitLabel) =>
+      showDialog<_ExitAction>(
         context: context,
         builder: (dialogContext) => AlertDialog(
           title: Text(title),
-          content: const Text('Are you taking a temporary break or leaving the event for the day?'),
+          content: Text(
+            limitLabel != null
+                ? 'Are you taking a temporary break (return within $limitLabel) or leaving the event for the day?'
+                : 'Are you taking a temporary break or leaving the event for the day?',
+          ),
           actions: [
             TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('Cancel')),
             OutlinedButton(onPressed: () => Navigator.of(dialogContext).pop(_ExitAction.breakOut), child: const Text('Break out')),
@@ -184,9 +230,11 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
               ),
             ] else if (_successTitle != null) ...[
               Icon(
-                Icons.check_circle,
+                _blocked ? Icons.timer_off : Icons.check_circle,
                 size: 72,
-                color: Theme.of(context).colorScheme.primary,
+                color: _blocked
+                    ? Theme.of(context).colorScheme.error
+                    : Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(height: 16),
               Text(

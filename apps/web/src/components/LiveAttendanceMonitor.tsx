@@ -24,18 +24,28 @@ interface MonitorRow {
 export function LiveAttendanceMonitor({ eventId }: { eventId: string }) {
   const [rows, setRows] = useState<MonitorRow[]>([]);
   const [count, setCount] = useState(0);
+  const [breakLimitMinutes, setBreakLimitMinutes] = useState<number | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
 
     async function load() {
-      const { data } = await supabase
-        .from("attendance_records")
-        .select(
-          "id, status, checked_in_at, break_out_at, break_in_at, checked_out_at, fraud_flag, is_manual_override, students(student_id, first_name, last_name, program)",
-        )
-        .eq("event_id", eventId)
-        .order("checked_in_at", { ascending: false });
+      const [{ data }, { data: event }] = await Promise.all([
+        supabase
+          .from("attendance_records")
+          .select(
+            "id, status, checked_in_at, break_out_at, break_in_at, checked_out_at, fraud_flag, is_manual_override, students(student_id, first_name, last_name, program)",
+          )
+          .eq("event_id", eventId)
+          .order("checked_in_at", { ascending: false }),
+        supabase
+          .from("events")
+          .select("break_time_limit_minutes")
+          .eq("id", eventId)
+          .maybeSingle(),
+      ]);
+
+      setBreakLimitMinutes((event?.break_time_limit_minutes as number | null) ?? null);
 
       const mapped = (data ?? []).map((row) => {
         const student = Array.isArray(row.students) ? row.students[0] : row.students;
@@ -113,7 +123,7 @@ export function LiveAttendanceMonitor({ eventId }: { eventId: string }) {
                 <td className="px-4 py-2">{row.break_out_at ? format(new Date(row.break_out_at), "h:mm:ss a") : "—"}</td>
                 <td className="px-4 py-2">{row.break_in_at ? format(new Date(row.break_in_at), "h:mm:ss a") : "—"}</td>
                 <td className="px-4 py-2">{row.checked_out_at ? format(new Date(row.checked_out_at), "h:mm:ss a") : "—"}</td>
-                <td className="px-4 py-2"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${row.status === "on_break" ? "bg-amber-100 text-amber-900" : row.status === "checked_out" ? "bg-slate-100 text-slate-700" : "bg-emerald-100 text-emerald-800"}`}>{row.status === "on_break" ? "On break" : row.status === "checked_out" ? "Checked out" : "Present"}</span></td>
+                <td className="px-4 py-2"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${row.status === "on_break" ? "bg-amber-100 text-amber-900" : row.status === "checked_out" ? "bg-slate-100 text-slate-700" : "bg-emerald-100 text-emerald-800"}`}>{row.status === "on_break" ? (breakLimitMinutes && row.break_out_at && Date.now() > new Date(row.break_out_at).getTime() + breakLimitMinutes * 60_000 ? "Break expired" : "On break") : row.status === "checked_out" ? "Checked out" : "Present"}</span></td>
                 <td className="px-4 py-2">
                   {row.fraud_flag && (
                     <span className="mr-1 rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">

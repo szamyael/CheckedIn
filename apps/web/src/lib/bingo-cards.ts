@@ -150,27 +150,11 @@ export async function createBingoCardCells(
 
 export async function setBingoCardStatus(
   supabase: SupabaseClient,
-  organizationId: string,
+  _organizationId: string,
   cardId: string,
   status: BingoCardStatus,
 ) {
   const now = new Date().toISOString();
-
-  if (status === "active") {
-    const demote = await supabase
-      .from("bingo_cards")
-      .update({ status: "draft", updated_at: now })
-      .eq("organization_id", organizationId)
-      .eq("status", "active");
-
-    if (demote.error && isMissingColumnError(demote.error.message, "status")) {
-      await supabase
-        .from("bingo_cards")
-        .update({ is_active: false, updated_at: now })
-        .eq("organization_id", organizationId)
-        .eq("is_active", true);
-    }
-  }
 
   let update = await supabase
     .from("bingo_cards")
@@ -178,13 +162,6 @@ export async function setBingoCardStatus(
     .eq("id", cardId);
 
   if (update.error && isMissingColumnError(update.error.message, "status")) {
-    if (status === "active") {
-      await supabase
-        .from("bingo_cards")
-        .update({ is_active: false, updated_at: now })
-        .eq("organization_id", organizationId)
-        .eq("is_active", true);
-    }
     update = await supabase
       .from("bingo_cards")
       .update({

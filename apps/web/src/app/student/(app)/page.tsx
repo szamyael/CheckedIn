@@ -87,7 +87,7 @@ export default function StudentHomePage() {
         </Link>
         <Link href="/student/bingo" className="group border border-[#d9c38d] bg-[#fffaf0] p-5 hover:border-[#a46618]">
           <div className="flex items-start justify-between"><div className="flex h-10 w-10 items-center justify-center bg-[#f7edcf] text-[#a46618]"><Sparkles size={20} /></div><ChevronRight size={19} className="text-[#a46618] transition-transform group-hover:translate-x-0.5" /></div>
-          <p className="mt-7 text-xs font-semibold tracking-[0.12em] text-[#a46618]">ENGAGEMENT</p><h2 className="mt-2 text-lg font-semibold text-[#0c2238]">Your Bingo progress</h2><p className="mt-2 text-sm leading-6 text-[#697178]">Check your active card and see what participation can unlock next.</p>
+          <p className="mt-7 text-xs font-semibold tracking-[0.12em] text-[#a46618]">ENGAGEMENT</p><h2 className="mt-2 text-lg font-semibold text-[#0c2238]">Your Bingo progress</h2><p className="mt-2 text-sm leading-6 text-[#697178]">Check your published cards and see what participation can unlock next.</p>
         </Link>
       </section>
 

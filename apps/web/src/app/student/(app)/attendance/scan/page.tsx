@@ -14,6 +14,7 @@ import type { CheckInMeta } from "@/lib/student/api";
 import { isPermissionErrorMessage } from "@/lib/student/browser-permissions";
 import { clearFlow, saveFlow } from "@/lib/student/attendance-flow";
 import { createClient } from "@/lib/supabase/client";
+import { formatBreakTimeLimit } from "@/lib/event-form";
 
 export default function AttendanceScanPage() {
   const router = useRouter();
@@ -21,10 +22,14 @@ export default function AttendanceScanPage() {
   const [error, setError] = useState<string | null>(null);
   const [cameraBlocked, setCameraBlocked] = useState(false);
   const [scanKey, setScanKey] = useState(0);
-  const [result, setResult] = useState<{ title: string; body: string } | null>(
+  const [result, setResult] = useState<{ title: string; body: string; blocked?: boolean } | null>(
     null,
   );
-  const [exitChoice, setExitChoice] = useState<{ token: string; title: string } | null>(null);
+  const [exitChoice, setExitChoice] = useState<{
+    token: string;
+    title: string;
+    breakLimitMinutes: number | null;
+  } | null>(null);
 
   const recordExit = useCallback(async (action: "break_out" | "check_out", token: string, title: string) => {
     setExitChoice(null);
@@ -37,13 +42,29 @@ export default function AttendanceScanPage() {
         body: action === "break_out" ? { qr_token: token, action } : { qr_token: token },
       });
       if (actionError) throw new Error(actionError.message);
-      const payload = data as { success?: boolean; error?: string; event?: { title?: string } };
+      const payload = data as {
+        success?: boolean;
+        error?: string;
+        event?: { title?: string };
+        break_deadline_at?: string | null;
+      };
       if (!payload.success) throw new Error(payload.error || "Attendance update failed");
       clearFlow();
       const eventTitle = payload.event?.title ?? title;
-      setResult(action === "break_out"
-        ? { title: "Break started", body: `Your break-out from ${eventTitle} is recorded. Scan the event QR again when you return.` }
-        : { title: "Checked out", body: `Checked out of ${eventTitle}. No OTP or selfie required.` });
+      if (action === "break_out") {
+        const deadline = payload.break_deadline_at ? new Date(payload.break_deadline_at) : null;
+        const deadlineLabel = deadline && !Number.isNaN(deadline.getTime())
+          ? deadline.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+          : null;
+        setResult({
+          title: "Break started",
+          body: deadlineLabel
+            ? `Your break-out from ${eventTitle} is recorded. Return by ${deadlineLabel}. After that you can no longer break in or check out.`
+            : `Your break-out from ${eventTitle} is recorded. Scan the event QR again when you return.`,
+        });
+      } else {
+        setResult({ title: "Checked out", body: `Checked out of ${eventTitle}. No OTP or selfie required.` });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Attendance update failed");
       setScanKey((key) => key + 1);
@@ -74,6 +95,15 @@ export default function AttendanceScanPage() {
           return;
         }
 
+        if (meta.break_time_expired || (meta.my_attendance_status === "on_break" && !meta.can_break_in)) {
+          setResult({
+            title: "Break time ended",
+            body: "Your break time limit has ended. You can no longer break in or check out.",
+            blocked: true,
+          });
+          return;
+        }
+
         if (meta.can_break_in) {
           showLoader("Recording break-in…");
           const { data: breakData, error: breakErr } = await supabase.functions.invoke("attendance-break", {
@@ -88,7 +118,11 @@ export default function AttendanceScanPage() {
         }
 
         if (meta.can_check_out || meta.can_break_out) {
-          setExitChoice({ token, title: meta.title ?? "this event" });
+          setExitChoice({
+            token,
+            title: meta.title ?? "this event",
+            breakLimitMinutes: meta.break_time_limit_minutes ?? null,
+          });
           return;
         }
 
@@ -111,8 +145,8 @@ export default function AttendanceScanPage() {
   if (result) {
     return (
       <div className="space-y-4 text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-teal-100 text-3xl text-teal-600">
-          ✓
+        <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full text-3xl ${result.blocked ? "bg-amber-100 text-amber-700" : "bg-teal-100 text-teal-600"}`}>
+          {result.blocked ? "!" : "✓"}
         </div>
         <h1 className="text-xl font-bold">{result.title}</h1>
         <p className="text-sm text-slate-600">{result.body}</p>
@@ -133,7 +167,12 @@ export default function AttendanceScanPage() {
         <StudentPageTitle title={exitChoice.title} subtitle="Choose the attendance action that matches your plans." />
         <div className="border border-[var(--border)] bg-[var(--surface)] p-5">
           <h2 className="font-semibold text-[var(--primary-strong)]">Leaving temporarily?</h2>
-          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Record a break for lunch or a short exit. Scan the QR again when you return.</p>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+            Record a break for lunch or a short exit. Scan the QR again when you return
+            {exitChoice.breakLimitMinutes
+              ? ` within ${formatBreakTimeLimit(exitChoice.breakLimitMinutes)}.`
+              : "."}
+          </p>
           <button type="button" onClick={() => void recordExit("break_out", exitChoice.token, exitChoice.title)} className={`${studentPrimaryButtonClass} mt-5 w-full`}>Break out</button>
         </div>
         <div className="border border-[var(--border)] bg-[var(--surface)] p-5">

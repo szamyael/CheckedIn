@@ -1,5 +1,21 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'local_cache_service.dart';
+
+class BingoCardSummary {
+  final String id;
+  final String title;
+  final String seasonLabel;
+  final int streakThreshold;
+
+  BingoCardSummary({
+    required this.id,
+    required this.title,
+    required this.seasonLabel,
+    required this.streakThreshold,
+  });
+}
+
 class BingoBoardData {
   final String cardId;
   final String title;
@@ -93,23 +109,51 @@ class BingoBadgeAward {
 class BingoService {
   SupabaseClient get _client => Supabase.instance.client;
 
-  Future<BingoBoardData?> fetchActiveBoard() async {
+  Future<List<BingoCardSummary>> fetchPublishedCards() async {
+    final rows = await _client
+        .from('bingo_cards')
+        .select('id, title, season_label, streak_threshold')
+        .eq('is_active', true)
+        .order('updated_at', ascending: false);
+
+    return (rows as List).map((raw) {
+      final row = raw as Map<String, dynamic>;
+      return BingoCardSummary(
+        id: row['id'] as String,
+        title: row['title'] as String,
+        seasonLabel: row['season_label'] as String? ?? '',
+        streakThreshold: row['streak_threshold'] as int? ?? 3,
+      );
+    }).toList();
+  }
+
+  Future<String?> readSavedCardId() {
+    return LocalCacheService.instance.readJson<String>(
+      CacheKeys.bingoSelectedCard,
+      (raw) => raw is String ? raw : null,
+    );
+  }
+
+  Future<void> saveSelectedCardId(String cardId) {
+    return LocalCacheService.instance.writeJson(CacheKeys.bingoSelectedCard, cardId);
+  }
+
+  Future<BingoBoardData?> fetchBoard(String cardId) async {
     final user = _client.auth.currentUser;
     if (user == null) return null;
 
-    final cards = await _client
+    final cardRow = await _client
         .from('bingo_cards')
         .select('id, title, season_label, streak_threshold')
-      .eq('is_active', true)
-        .limit(1);
-
-    if (cards.isEmpty) return null;
-    final card = cards.first;
+        .eq('id', cardId)
+        .eq('is_active', true)
+        .maybeSingle();
+    if (cardRow == null) return null;
 
     final cellRows = await _client
         .from('bingo_cells')
         .select('id, position, event_id, label, events(title, starts_at)')
-        .eq('card_id', card['id'] as String)
+        .eq('card_id', cardId)
         .order('position');
 
     final cells = (cellRows as List).map((raw) {
@@ -133,20 +177,24 @@ class BingoService {
       );
     }).toList();
 
-    final doneRows = await _client
-        .from('student_bingo_cells')
-        .select('cell_id')
-        .eq('student_id', user.id);
-
-    final completed = {
-      for (final r in (doneRows as List))
-        (r as Map<String, dynamic>)['cell_id'] as String,
-    };
+    final cellIds = cells.map((cell) => cell.id).toList();
+    final completed = <String>{};
+    if (cellIds.isNotEmpty) {
+      final doneRows = await _client
+          .from('student_bingo_cells')
+          .select('cell_id')
+          .eq('student_id', user.id)
+          .inFilter('cell_id', cellIds);
+      for (final r in (doneRows as List)) {
+        completed.add((r as Map<String, dynamic>)['cell_id'] as String);
+      }
+    }
 
     final awardRows = await _client
         .from('student_org_badges')
         .select('id, points_awarded, earned_at, org_badges(name)')
         .eq('student_id', user.id)
+        .eq('bingo_card_id', cardId)
         .order('earned_at', ascending: false);
 
     final awards = (awardRows as List).map((raw) {
@@ -167,10 +215,10 @@ class BingoService {
     }).toList();
 
     return BingoBoardData(
-      cardId: card['id'] as String,
-      title: card['title'] as String,
-      seasonLabel: card['season_label'] as String? ?? '',
-      streakThreshold: card['streak_threshold'] as int? ?? 3,
+      cardId: cardRow['id'] as String,
+      title: cardRow['title'] as String,
+      seasonLabel: cardRow['season_label'] as String? ?? '',
+      streakThreshold: cardRow['streak_threshold'] as int? ?? 3,
       cells: cells,
       completedCellIds: completed,
       awards: awards,
