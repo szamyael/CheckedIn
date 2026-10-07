@@ -4,16 +4,16 @@ import 'app_logo.dart';
 
 /// Shared visual tokens aligned with the web student portal.
 class StudentUi {
-  static const border = Color(0xFFE2E8F0);
-  static const teal = Color(0xFF0D9488);
-  static const tealSoft = Color(0xFFF0FDFA);
-  static const tealBorder = Color(0xFFCCFBF1);
-  static const tealText = Color(0xFF115E59);
-  static const muted = Color(0xFF64748B);
-  static const amberBg = Color(0xFFFFFBEB);
-  static const amberBorder = Color(0xFFFDE68A);
-  static const amberText = Color(0xFF92400E);
-  static const slateBg = Color(0xFFF1F5F9);
+  static const border = Color(0xFFDCE7E2);
+  static const teal = Color(0xFF0D716A);
+  static const tealSoft = Color(0xFFE4F1EC);
+  static const tealBorder = Color(0xFFB7D8CC);
+  static const tealText = Color(0xFF163A45);
+  static const muted = Color(0xFF64747A);
+  static const amberBg = Color(0xFFFFF7E7);
+  static const amberBorder = Color(0xFFEFD49C);
+  static const amberText = Color(0xFF79530F);
+  static const slateBg = Color(0xFFEDF3F0);
 }
 
 class StudentPageTitle extends StatelessWidget {
@@ -249,7 +249,7 @@ class StudentAuthScaffold extends StatelessWidget {
         child: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight - 48),
                 child: Column(

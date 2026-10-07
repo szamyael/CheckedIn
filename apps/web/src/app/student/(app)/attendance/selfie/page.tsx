@@ -32,6 +32,8 @@ export default function AttendanceSelfiePage() {
       router.replace("/student/attendance/scan");
       return;
     }
+    // Restore per-tab attendance state after navigation; sessionStorage is client-only.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFlow(current);
 
     let cancelled = false;
@@ -189,7 +191,7 @@ export default function AttendanceSelfiePage() {
       <h1 className="text-xl font-bold">Step 3 of 3 — Selfie</h1>
       <p className="text-sm text-slate-600">
         Take a live selfie to complete check-in
-        {flow?.eventTitle ? ` for ${flow.eventTitle}` : ""}.
+        {flow?.eventTitle ? ` for ${flow.eventTitle}.` : "."}
       </p>
       <div className="overflow-hidden rounded-2xl bg-black">
         {!cameraBlocked ? (

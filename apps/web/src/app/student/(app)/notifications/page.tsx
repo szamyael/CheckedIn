@@ -20,23 +20,29 @@ type Notif = {
 export default function StudentNotificationsPage() {
   const [items, setItems] = useState<Notif[]>([]);
 
-  async function load() {
+  async function load(): Promise<Notif[]> {
     const supabase = createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) return [];
     const { data } = await supabase
       .from("notifications")
       .select("id, title, body, read_at, created_at, notification_type")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(50);
-    setItems((data as Notif[]) ?? []);
+    return (data as Notif[]) ?? [];
   }
 
   useEffect(() => {
-    void load();
+    let cancelled = false;
+    void load().then((notifications) => {
+      if (!cancelled) setItems(notifications);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function markRead(id: string) {

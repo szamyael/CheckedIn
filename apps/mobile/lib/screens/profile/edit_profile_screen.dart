@@ -61,9 +61,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         yearLevel: _yearLevel,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Profile updated.')));
       context.pop();
     } catch (e) {
       if (!mounted) return;
@@ -125,11 +125,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<int>(
-            value: _yearLevel,
+            initialValue: _yearLevel,
             decoration: const InputDecoration(labelText: 'Year level'),
             items: List.generate(
               5,
-              (i) => DropdownMenuItem(value: i + 1, child: Text('Year ${i + 1}')),
+              (i) =>
+                  DropdownMenuItem(value: i + 1, child: Text('Year ${i + 1}')),
             ),
             onChanged: (v) => setState(() => _yearLevel = v ?? 1),
           ),

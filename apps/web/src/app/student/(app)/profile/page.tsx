@@ -11,6 +11,24 @@ import {
 } from "@/components/student/StudentUi";
 
 type Achievement = { id: string; badge_name: string; earned_at: string };
+type ProfileBorderId = "classic" | "aurora" | "ember" | "royal" | "celestial";
+type OrgBadgeAward = {
+  id: string;
+  earned_at: string;
+  org_badges: { name: string } | { name: string }[] | null;
+};
+const PROFILE_BORDERS: {
+  id: Exclude<ProfileBorderId, "classic">;
+  name: string;
+  description: string;
+  cost: number;
+  color: string;
+}[] = [
+  { id: "aurora", name: "Aurora", description: "Cool teal and violet shimmer", cost: 100, color: "#6ee7d2" },
+  { id: "ember", name: "Ember", description: "Warm copper glow", cost: 150, color: "#fb923c" },
+  { id: "royal", name: "Royal", description: "Deep violet and gold", cost: 250, color: "#a78bfa" },
+  { id: "celestial", name: "Celestial", description: "A bright golden halo", cost: 500, color: "#facc15" },
+];
 type HistoryRow = {
   id: string;
   status: string;
@@ -30,9 +48,14 @@ export default function StudentProfilePage() {
     section: string | null;
     reward_points: number;
     profile_photo_url: string | null;
+    equipped_profile_border: ProfileBorderId;
   } | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [badges, setBadges] = useState<Achievement[]>([]);
+  const [ownedBorders, setOwnedBorders] = useState<ProfileBorderId[]>([]);
+  const [borderAction, setBorderAction] = useState<string | null>(null);
+  const [borderError, setBorderError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [history, setHistory] = useState<HistoryRow[]>([]);
   const [showAllBadges, setShowAllBadges] = useState(false);
   const [showAllHistory, setShowAllHistory] = useState(false);
@@ -66,11 +89,18 @@ export default function StudentProfilePage() {
       const { data: student } = await supabase
         .from("students")
         .select(
-          "student_id, first_name, middle_name, last_name, name_extension, program, year_level, section, reward_points, profile_photo_url",
+          "student_id, first_name, middle_name, last_name, name_extension, program, year_level, section, reward_points, profile_photo_url, equipped_profile_border",
         )
         .eq("id", user.id)
         .single();
       setProfile(student);
+
+      const { data: borderRows, error: borderError } = await supabase
+        .from("student_profile_borders")
+        .select("border_id")
+        .eq("student_id", user.id);
+      if (borderError) throw borderError;
+      setOwnedBorders((borderRows ?? []).map((row) => row.border_id as ProfileBorderId));
 
       if (student?.profile_photo_url) {
         const { data: signed } = await supabase.storage
@@ -79,12 +109,33 @@ export default function StudentProfilePage() {
         setAvatarUrl(signed?.signedUrl ?? null);
       }
 
-      const { data: ach } = await supabase
-        .from("student_achievements")
-        .select("id, badge_name, earned_at")
-        .eq("student_id", user.id)
-        .order("earned_at", { ascending: false });
-      setBadges((ach as Achievement[]) ?? []);
+      const [achievementResult, orgBadgeResult] = await Promise.all([
+        supabase
+          .from("student_achievements")
+          .select("id, badge_name, earned_at")
+          .eq("student_id", user.id),
+        supabase
+          .from("student_org_badges")
+          .select("id, earned_at, org_badges(name)")
+          .eq("student_id", user.id),
+      ]);
+      if (achievementResult.error) throw achievementResult.error;
+      if (orgBadgeResult.error) throw orgBadgeResult.error;
+
+      const orgBadgeRows = (orgBadgeResult.data ?? []) as unknown as OrgBadgeAward[];
+      const orgBadges = orgBadgeRows.map((award) => {
+        const badge = award.org_badges;
+        const badgeName = Array.isArray(badge) ? badge[0]?.name : badge?.name;
+        return {
+          id: award.id,
+          badge_name: badgeName ?? "Badge",
+          earned_at: award.earned_at,
+        };
+      });
+      setBadges(
+        [...((achievementResult.data as Achievement[] | null) ?? []), ...orgBadges]
+          .sort((a, b) => Date.parse(b.earned_at) - Date.parse(a.earned_at)),
+      );
 
       const { data: hist } = await supabase
         .from("attendance_records")
@@ -94,8 +145,52 @@ export default function StudentProfilePage() {
         .limit(20);
       setHistory((hist as unknown as HistoryRow[]) ?? []);
     }
-    void load();
+    void load().catch((error: unknown) => {
+      setLoadError(error instanceof Error ? error.message : "Could not load profile.");
+    });
   }, []);
+
+  async function redeemBorder(borderId: Exclude<ProfileBorderId, "classic">) {
+    setBorderAction(borderId);
+    setBorderError(null);
+    try {
+      const { data, error } = await createClient().rpc("redeem_student_profile_border", {
+        p_border_id: borderId,
+      });
+      if (error) throw error;
+      const result = data as { points_remaining: number };
+      setOwnedBorders((current) => [...current, borderId]);
+      setProfile((current) => current
+        ? { ...current, reward_points: result.points_remaining }
+        : current);
+    } catch (error) {
+      setBorderError(error instanceof Error ? error.message : "Could not redeem this border.");
+    } finally {
+      setBorderAction(null);
+    }
+  }
+
+  async function equipBorder(borderId: ProfileBorderId) {
+    setBorderAction(borderId);
+    setBorderError(null);
+    try {
+      const { error } = await createClient().rpc("equip_student_profile_border", {
+        p_border_id: borderId,
+      });
+      if (error) throw error;
+      setProfile((current) => current
+        ? { ...current, equipped_profile_border: borderId }
+        : current);
+    } catch (error) {
+      setBorderError(error instanceof Error ? error.message : "Could not equip this border.");
+    } finally {
+      setBorderAction(null);
+    }
+  }
+
+  if (loadError) {
+    return <p role="alert" className="text-sm text-red-600">Could not load profile: {loadError}</p>;
+  }
 
   if (!profile) {
     return <p className="text-sm text-slate-500">Loading profile…</p>;
@@ -111,7 +206,7 @@ export default function StudentProfilePage() {
       <section className="border border-[#0c2238] p-6 shadow-sm" style={{ backgroundColor: "#17324D", color: "#FFFFFF" }}>
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
-            <div className="relative shrink-0">{avatarUrl ? (
+            <div className="relative shrink-0 rounded-full p-1" style={{ boxShadow: `0 0 0 3px ${PROFILE_BORDERS.find((border) => border.id === profile.equipped_profile_border)?.color ?? "#d99b32"}` }}>{avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={avatarUrl}
@@ -144,6 +239,55 @@ export default function StudentProfilePage() {
             <Pencil size={13} /> Edit
           </Link>
         </div>
+      </section>
+
+      <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-base font-semibold text-[var(--primary-strong)]">Customize your profile</h2>
+            <p className="mt-1 text-sm text-[var(--muted)]">Unlock a permanent avatar border with reward points.</p>
+          </div>
+          <span className="rounded-full bg-[var(--primary-soft)] px-3 py-1 text-sm font-semibold text-[var(--primary-strong)]">
+            {profile.reward_points} points
+          </span>
+        </div>
+        {borderError && <p role="alert" className="mt-3 text-sm text-red-700">{borderError}</p>}
+        <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+          {PROFILE_BORDERS.map((border) => {
+            const owned = ownedBorders.includes(border.id);
+            const equipped = profile.equipped_profile_border === border.id;
+            return (
+              <li key={border.id} className="flex items-center gap-3 rounded-xl border border-[var(--border)] p-3">
+                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[var(--surface-muted)] p-1">
+                  <span className="grid h-full w-full place-items-center rounded-full border-[3px] text-xs font-bold text-[var(--primary-strong)]" style={{ borderColor: border.color }}>
+                    CI
+                  </span>
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold text-[var(--foreground)]">{border.name}</span>
+                  <span className="block text-xs text-[var(--muted)]">{border.description}</span>
+                  <span className="mt-1 block text-xs font-semibold text-[var(--primary)]">{owned ? "Unlocked" : `${border.cost} points`}</span>
+                </span>
+                {equipped ? (
+                  <span className="text-xs font-semibold text-[var(--primary)]">Equipped</span>
+                ) : owned ? (
+                  <button type="button" disabled={borderAction !== null} onClick={() => void equipBorder(border.id)} className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--primary-strong)] disabled:opacity-50">
+                    {borderAction === border.id ? "Saving…" : "Equip"}
+                  </button>
+                ) : (
+                  <button type="button" disabled={borderAction !== null || profile.reward_points < border.cost} onClick={() => void redeemBorder(border.id)} className="rounded-lg bg-[var(--primary)] px-3 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">
+                    {borderAction === border.id ? "Unlocking…" : "Unlock"}
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+        {profile.equipped_profile_border !== "classic" && (
+          <button type="button" disabled={borderAction !== null} onClick={() => void equipBorder("classic")} className="mt-3 text-sm font-semibold text-[var(--muted)] underline disabled:opacity-50">
+            Use classic border
+          </button>
+        )}
       </section>
 
       <section id="rewards" className="border-t border-[#e2e5e7] pt-6">

@@ -45,6 +45,8 @@ export default function StudentRegisterPage() {
   useEffect(() => {
     const saved = loadRegistrationDraft();
     if (saved) {
+      // Restore browser-persisted draft after hydration to avoid SSR/client mismatch.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDraft(saved);
       setStep(loadRegistrationStep());
     }

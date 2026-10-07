@@ -15,6 +15,7 @@ import {
 export default function StudentEventDetailPage() {
   const params = useParams<{ id: string }>();
   const [event, setEvent] = useState<StudentEvent | null>(null);
+  const [now] = useState(() => Date.now());
 
   useEffect(() => {
     async function load() {
@@ -39,7 +40,6 @@ export default function StudentEventDetailPage() {
     event.attendance_starts_at ?? event.starts_at,
   ).getTime();
   const openEnd = parseISO(event.attendance_ends_at ?? event.ends_at).getTime();
-  const now = Date.now();
   const isOpen = now >= openStart && now <= openEnd;
 
   return (

@@ -11,14 +11,18 @@ class AppearanceService extends ChangeNotifier {
   // Light is intentional: following the device is opt-in through the System
   // choice in Appearance.
   ThemeMode _themeMode = ThemeMode.light;
+  bool _notificationSoundEnabled = true;
 
   AppColorTheme get colorTheme => _colorTheme;
   ThemeMode get themeMode => _themeMode;
+  bool get notificationSoundEnabled => _notificationSoundEnabled;
 
   Future<void> init() async {
     final saved = await LocalCacheService.instance.readJson<Map<String, dynamic>>(_cacheKey, (raw) => raw is Map ? Map<String, dynamic>.from(raw) : null);
     final colorName = saved?['color_theme'] as String?;
     final modeName = saved?['theme_mode'] as String?;
+    _notificationSoundEnabled =
+        saved?['notification_sound_enabled'] as bool? ?? true;
     _colorTheme = AppColorTheme.values.where((item) => item.name == colorName).firstOrNull ?? AppColorTheme.navy;
     _themeMode = ThemeMode.values.where((item) => item.name == modeName).firstOrNull ?? ThemeMode.light;
     notifyListeners();
@@ -26,5 +30,6 @@ class AppearanceService extends ChangeNotifier {
 
   Future<void> setColorTheme(AppColorTheme value) async { if (_colorTheme != value) { _colorTheme = value; notifyListeners(); await _save(); } }
   Future<void> setThemeMode(ThemeMode value) async { if (_themeMode != value) { _themeMode = value; notifyListeners(); await _save(); } }
-  Future<void> _save() => LocalCacheService.instance.writeJson(_cacheKey, {'color_theme': _colorTheme.name, 'theme_mode': _themeMode.name});
+  Future<void> setNotificationSoundEnabled(bool value) async { if (_notificationSoundEnabled != value) { _notificationSoundEnabled = value; notifyListeners(); await _save(); } }
+  Future<void> _save() => LocalCacheService.instance.writeJson(_cacheKey, {'color_theme': _colorTheme.name, 'theme_mode': _themeMode.name, 'notification_sound_enabled': _notificationSoundEnabled});
 }

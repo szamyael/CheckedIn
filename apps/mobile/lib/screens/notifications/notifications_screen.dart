@@ -19,7 +19,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   void initState() {
     super.initState();
     _load();
-    _service.subscribeToNew(() {
+    _service.subscribeToNew((_) {
       if (mounted) setState(() => _future = _service.fetchNotifications());
     });
   }

@@ -16,6 +16,8 @@ export default function AttendanceOtpPage() {
       router.replace("/student/attendance/scan");
       return;
     }
+    // Restore per-tab attendance state after navigation; sessionStorage is client-only.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRequiresOtp(flow.requiresOtp === true);
     setTitle(flow.eventTitle ?? "Event");
   }, [router]);

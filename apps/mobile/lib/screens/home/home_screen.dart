@@ -30,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _future = _load();
-    _notifications.subscribeToNew(() {
+    _notifications.subscribeToNew((_) {
       if (mounted) setState(() => _future = _load());
     });
   }
@@ -77,16 +77,19 @@ class _HomeScreenState extends State<HomeScreen> {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
             children: [
-              Text('Good morning,', style: Theme.of(context).textTheme.bodySmall),
+              Text(
+                'Good morning,',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
               const SizedBox(height: 3),
               Text(
                 '$firstName.',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: const Color(0xFF0C2238),
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.4,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.4,
+                ),
               ),
               const SizedBox(height: 20),
               _CampusPass(
@@ -152,7 +155,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 22),
               const StudentInfoBanner(
-                message: 'For check-in, scan the event QR first. We will guide you through location, OTP, and selfie verification if required.',
+                message:
+                    'For check-in, scan the event QR first. We will guide you through location, OTP, and selfie verification if required.',
                 icon: Icons.info_outline,
                 background: Color(0xFFEEF1F0),
                 border: StudentUi.border,
@@ -183,7 +187,13 @@ class _CampusPass extends StatelessWidget {
 
   String get _yearLabel {
     if (yearLevel == null) return '';
-    final suffix = yearLevel == 1 ? 'st' : yearLevel == 2 ? 'nd' : yearLevel == 3 ? 'rd' : 'th';
+    final suffix = yearLevel == 1
+        ? 'st'
+        : yearLevel == 2
+        ? 'nd'
+        : yearLevel == 3
+        ? 'rd'
+        : 'th';
     return ' · $yearLevel$suffix Year';
   }
 
@@ -192,14 +202,33 @@ class _CampusPass extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF17324D),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF0C2238)),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1A4851), Color(0xFF12313D)],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x24163A45),
+            blurRadius: 28,
+            offset: Offset(0, 14),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('YOUR CAMPUS PASS', style: TextStyle(color: Color(0xFFD7E2EC), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.4)),
+          const Text(
+            'YOUR CAMPUS PASS',
+            style: TextStyle(
+              color: Color(0xFFD7E2EC),
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.4,
+            ),
+          ),
           const SizedBox(height: 24),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -208,32 +237,64 @@ class _CampusPass extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(name, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w700, letterSpacing: -0.3)),
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
                     const SizedBox(height: 5),
-                    Text('$program$_yearLabel', style: const TextStyle(color: Color(0xFFD7E2EC), fontSize: 13)),
+                    Text(
+                      '$program$_yearLabel',
+                      style: const TextStyle(
+                        color: Color(0xFFD7E2EC),
+                        fontSize: 13,
+                      ),
+                    ),
                     const SizedBox(height: 20),
-                    Text('STUDENT ID · $studentId', style: const TextStyle(color: Color(0xFFD7E2EC), fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 1)),
+                    Text(
+                      'STUDENT ID · $studentId',
+                      style: const TextStyle(
+                        color: Color(0xFFD7E2EC),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1,
+                      ),
+                    ),
                   ],
                 ),
               ),
               const SizedBox(width: 14),
               InkWell(
                 onTap: onScan,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(16),
                 child: Container(
                   width: 92,
                   height: 92,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.1),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.3),
+                    ),
+                    borderRadius: BorderRadius.circular(18),
                   ),
                   child: const Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.qr_code_2, color: Colors.white, size: 38),
                       SizedBox(height: 5),
-                      Text('SCAN TO CHECK IN', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700)),
+                      Text(
+                        'SCAN TO CHECK IN',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -250,28 +311,50 @@ class _StatTile extends StatelessWidget {
   final String label;
   final String value;
   final IconData icon;
-  final Color accent;
+  final Color? accent;
 
   const _StatTile({
     required this.label,
     required this.value,
     required this.icon,
-    this.accent = const Color(0xFF17324D),
+    this.accent,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 13),
-      decoration: BoxDecoration(color: Colors.white, border: Border.all(color: StudentUi.border)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border.all(color: Theme.of(context).colorScheme.outline),
+        borderRadius: BorderRadius.circular(18),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: accent),
+          Icon(
+            icon,
+            size: 18,
+            color: accent ?? Theme.of(context).colorScheme.primary,
+          ),
           const SizedBox(height: 15),
-          Text(value, style: TextStyle(color: const Color(0xFF0C2238), fontSize: 21, fontWeight: FontWeight.w700)),
+          Text(
+            value,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 21,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           const SizedBox(height: 2),
-          Text(label, style: const TextStyle(color: Color(0xFF697178), fontSize: 10, fontWeight: FontWeight.w600)),
+          Text(
+            label,
+            style: TextStyle(
+              color: Theme.of(context).textTheme.bodySmall?.color,
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
@@ -283,7 +366,15 @@ class _SectionLabel extends StatelessWidget {
   const _SectionLabel({required this.label});
 
   @override
-  Widget build(BuildContext context) => Text(label, style: const TextStyle(color: Color(0xFF697178), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.3));
+  Widget build(BuildContext context) => Text(
+    label,
+    style: TextStyle(
+      color: Theme.of(context).textTheme.bodySmall?.color,
+      fontSize: 11,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 1.3,
+    ),
+  );
 }
 
 class _ActionRow extends StatelessWidget {
@@ -291,20 +382,22 @@ class _ActionRow extends StatelessWidget {
   final String title;
   final String description;
   final VoidCallback? onTap;
-  final Color accent;
-  final Color background;
+  final Color? accent;
+  final Color? background;
 
   const _ActionRow({
     required this.icon,
     required this.title,
     required this.description,
     required this.onTap,
-    this.accent = const Color(0xFF17324D),
-    this.background = Colors.white,
+    this.accent,
+    this.background,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final rowAccent = accent ?? colorScheme.primary;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -312,13 +405,44 @@ class _ActionRow extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         child: Ink(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: background, border: Border.all(color: StudentUi.border), borderRadius: BorderRadius.circular(8)),
+          decoration: BoxDecoration(
+            color: background ?? colorScheme.surface,
+            border: Border.all(color: colorScheme.outline),
+            borderRadius: BorderRadius.circular(8),
+          ),
           child: Row(
             children: [
-              Container(width: 42, height: 42, color: accent.withValues(alpha: 0.1), child: Icon(icon, color: accent, size: 21)),
+              Container(
+                width: 42,
+                height: 42,
+                color: rowAccent.withValues(alpha: 0.1),
+                child: Icon(icon, color: rowAccent, size: 21),
+              ),
               const SizedBox(width: 13),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(color: Color(0xFF0C2238), fontSize: 15, fontWeight: FontWeight.w700)), const SizedBox(height: 3), Text(description, style: const TextStyle(color: Color(0xFF697178), fontSize: 12))])),
-              Icon(Icons.chevron_right, color: accent),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      description,
+                      style: TextStyle(
+                        color: Theme.of(context).textTheme.bodySmall?.color,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: rowAccent),
             ],
           ),
         ),
@@ -339,9 +463,14 @@ class _BulletinBoard extends StatelessWidget {
       return StudentCard(
         child: Row(
           children: [
-            Icon(Icons.campaign_outlined, color: Theme.of(context).colorScheme.primary),
+            Icon(
+              Icons.campaign_outlined,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             const SizedBox(width: 12),
-            const Expanded(child: Text('No announcements right now. Check back soon.')),
+            const Expanded(
+              child: Text('No announcements right now. Check back soon.'),
+            ),
           ],
         ),
       );
@@ -354,15 +483,32 @@ class _BulletinBoard extends StatelessWidget {
         children: [
           for (var index = 0; index < announcements.length; index++) ...[
             ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 5,
+              ),
               leading: CircleAvatar(
                 backgroundColor: Theme.of(context).colorScheme.primaryContainer,
                 foregroundColor: Theme.of(context).colorScheme.primary,
                 child: const Icon(Icons.campaign_outlined),
               ),
-              title: Text(announcements[index].title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700)),
-              subtitle: Text(announcements[index].body, maxLines: 2, overflow: TextOverflow.ellipsis),
-              trailing: Text(fmt.format(announcements[index].createdAt.toLocal()), style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 11)),
+              title: Text(
+                announcements[index].title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+              subtitle: Text(
+                announcements[index].body,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: Text(
+                fmt.format(announcements[index].createdAt.toLocal()),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(fontSize: 11),
+              ),
               onTap: onViewAll,
             ),
             if (index < announcements.length - 1) const Divider(height: 1),
@@ -370,7 +516,11 @@ class _BulletinBoard extends StatelessWidget {
           if (onViewAll != null)
             Align(
               alignment: Alignment.centerRight,
-              child: TextButton.icon(onPressed: onViewAll, icon: const Icon(Icons.arrow_forward, size: 17), label: const Text('View all updates')),
+              child: TextButton.icon(
+                onPressed: onViewAll,
+                icon: const Icon(Icons.arrow_forward, size: 17),
+                label: const Text('View all updates'),
+              ),
             ),
         ],
       ),
@@ -386,5 +536,12 @@ class _HomeData {
   final Map<String, dynamic> stats;
   final List<AppNotification> announcements;
 
-  _HomeData({required this.firstName, required this.studentId, required this.program, required this.yearLevel, required this.stats, required this.announcements});
+  _HomeData({
+    required this.firstName,
+    required this.studentId,
+    required this.program,
+    required this.yearLevel,
+    required this.stats,
+    required this.announcements,
+  });
 }

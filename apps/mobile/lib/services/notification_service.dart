@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'appearance_service.dart';
 import 'auth_service.dart';
 import 'local_cache_service.dart';
 
@@ -157,7 +158,10 @@ class NotificationService {
         .filter('read_at', 'is', null);
   }
 
-  RealtimeChannel? subscribeToNew(void Function() onInsert) {
+  RealtimeChannel? subscribeToNew(
+    void Function(AppNotification notification) onInsert, {
+    bool playSound = false,
+  }) {
     if (AuthService.instance.isOfflineMode || _client.auth.currentUser == null) {
       return null;
     }
@@ -174,11 +178,12 @@ class NotificationService {
         column: 'user_id',
         value: userId ?? '',
       ),
-      callback: (_) {
-        // A brief native alert makes incoming realtime notifications noticeable
-        // while the app is open, without interrupting the current task.
-        SystemSound.play(SystemSoundType.alert);
-        onInsert();
+      callback: (payload) {
+        final notification = AppNotification.fromJson(payload.newRecord);
+        if (playSound && AppearanceService.instance.notificationSoundEnabled) {
+          SystemSound.play(SystemSoundType.alert);
+        }
+        onInsert(notification);
       },
     );
 

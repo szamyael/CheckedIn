@@ -36,6 +36,14 @@ class _AppearanceSheet extends StatelessWidget {
               ),
             ))).toList()),
             const SizedBox(height: 24),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Notification sound'),
+              subtitle: const Text('Play a sound when a new notification arrives.'),
+              value: appearance.notificationSoundEnabled,
+              onChanged: appearance.setNotificationSoundEnabled,
+            ),
+            const SizedBox(height: 16),
             const _SectionLabel('COLOR THEME'),
             const SizedBox(height: 10),
             ...AppColorTheme.values.map((theme) => Padding(

@@ -1,46 +1,53 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f6f7f5;
-  --foreground: #202428;
-  --muted: #697178;
-  --primary: #17324d;
-  --primary-strong: #0c2238;
-  --primary-soft: #e7eef4;
+  --background: #f3f7f5;
+  --foreground: #172c35;
+  --muted: #64747a;
+  --primary: #0d716a;
+  --primary-strong: #163a45;
+  --primary-soft: #e4f1ec;
   --surface: #ffffff;
-  --surface-muted: #eef1f0;
-  --border: #e2e5e7;
-  --success: #237a57;
-  --warning: #a46618;
-  --error: #b43b45;
-  --accent: #c18a2e;
+  --surface-muted: #edf3f0;
+  --border: #dce7e2;
+  --success: #18745b;
+  --warning: #996412;
+  --error: #ae4146;
+  --accent: #d99b32;
+  --shadow-soft: 0 8px 24px rgb(22 58 69 / 6%);
+  --shadow-card: 0 14px 36px rgb(22 58 69 / 8%);
 }
 
-:root[data-color-theme="forest"] { --primary: #275d46; --primary-strong: #183d2e; --primary-soft: #e7f1eb; --accent: #b68032; }
-:root[data-color-theme="burgundy"] { --primary: #6b2e3d; --primary-strong: #481d28; --primary-soft: #f4e9ec; --accent: #bd8a31; }
-:root[data-color-theme="indigo"] { --primary: #3f4b88; --primary-strong: #28325f; --primary-soft: #e9ebf6; --accent: #b98a36; }
-:root[data-color-theme="slate"] { --primary: #3f515c; --primary-strong: #28363e; --primary-soft: #e9edef; --accent: #b78335; }
+:root[data-color-theme="navy"] { --primary: #0d716a; --primary-strong: #163a45; --primary-soft: #e4f1ec; --accent: #d99b32; }
+:root[data-color-theme="forest"] { --primary: #28734e; --primary-strong: #194a36; --primary-soft: #e8f3eb; --accent: #bc8530; }
+:root[data-color-theme="burgundy"] { --primary: #853f51; --primary-strong: #562d3a; --primary-soft: #f6e9ed; --accent: #c28b37; }
+:root[data-color-theme="indigo"] { --primary: #4b5c9a; --primary-strong: #303d70; --primary-soft: #eceefa; --accent: #bd8a36; }
+:root[data-color-theme="slate"] { --primary: #47616c; --primary-strong: #304650; --primary-soft: #eaf0f2; --accent: #b78335; }
 
 :root[data-mode="dark"] {
-  --background: #11191e;
-  --foreground: #ffffff;
-  --muted: #d5dce0;
-  --surface: #182329;
-  --surface-muted: #223037;
-  --border: #34434b;
+  --background: #101b1e;
+  --foreground: #f2f7f4;
+  --muted: #a8b8b7;
+  --surface: #172528;
+  --surface-muted: #203336;
+  --border: #30464a;
+  --shadow-soft: 0 8px 24px rgb(0 0 0 / 18%);
+  --shadow-card: 0 14px 36px rgb(0 0 0 / 22%);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Aptos", "Segoe UI", sans-serif;
+  --font-sans: "Inter", "Aptos", "Segoe UI", sans-serif;
   --font-mono: "Cascadia Code", Consolas, monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "Aptos", "Segoe UI", sans-serif;
+  font-family: "Inter", "Aptos", "Segoe UI", sans-serif;
+  font-feature-settings: "ss01" on;
+  -webkit-font-smoothing: antialiased;
 }
 
 :root[data-mode="dark"] .bg-white { background-color: var(--surface) !important; }
@@ -112,7 +119,7 @@ select {
 /* Operational dashboard: restrained, dense enough for supervision, and
    consistently legible in every role workspace. */
 .dashboard-workspace {
-  font-family: "Aptos", "Segoe UI", sans-serif;
+  font-family: "Inter", "Aptos", "Segoe UI", sans-serif;
 }
 
 .dashboard-workspace input,
@@ -189,6 +196,139 @@ select {
   overflow-wrap: anywhere;
 }
 
+.student-portal {
+  background:
+    radial-gradient(ellipse at 90% 0%, color-mix(in srgb, var(--primary-soft) 72%, transparent), transparent 34rem),
+    var(--background);
+  color: var(--foreground);
+}
+
+.student-portal > .student-main > header,
+.student-portal .student-bottom-nav {
+  border-color: var(--border);
+  background-color: color-mix(in srgb, var(--surface) 94%, transparent);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(16px);
+}
+
+.student-portal main {
+  scrollbar-gutter: stable;
+}
+
+.student-portal h1,
+.student-portal h2,
+.student-portal h3,
+.dashboard-workspace h1,
+.dashboard-workspace h2,
+.dashboard-workspace h3 {
+  color: var(--primary-strong);
+  letter-spacing: -0.025em;
+}
+
+.student-portal .border.bg-white,
+.dashboard-workspace .border.bg-white,
+.dashboard-workspace section.border {
+  border-color: var(--border);
+  border-radius: 1.125rem;
+  box-shadow: var(--shadow-soft);
+}
+
+.student-portal input,
+.student-portal textarea,
+.student-portal select,
+.dashboard-workspace input,
+.dashboard-workspace textarea,
+.dashboard-workspace select {
+  min-height: 2.875rem;
+  border-radius: 0.875rem;
+  background-color: var(--surface);
+}
+
+.student-portal button,
+.dashboard-workspace button,
+.student-portal a,
+.dashboard-workspace a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.student-portal button:active,
+.dashboard-workspace button:active,
+.student-portal a:active,
+.dashboard-workspace a:active {
+  transform: translateY(1px);
+}
+
+.dashboard-workspace {
+  background:
+    radial-gradient(ellipse at 90% 0%, color-mix(in srgb, var(--primary-soft) 65%, transparent), transparent 34rem),
+    var(--background);
+}
+
+.dashboard-workspace > aside {
+  background: linear-gradient(165deg, #173d49 0%, #132e3b 52%, #102733 100%);
+  border-color: rgb(255 255 255 / 9%);
+}
+
+.dashboard-workspace > aside nav a {
+  min-height: 2.75rem;
+  border-radius: 0.8rem;
+  border-left-width: 0;
+  color: #c4d4d2;
+}
+
+.dashboard-workspace > aside nav a:hover,
+.dashboard-workspace > aside nav a[aria-current="page"] {
+  background: rgb(255 255 255 / 10%);
+  color: #fff;
+}
+
+.dashboard-workspace > main > header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background-color: color-mix(in srgb, var(--surface) 94%, transparent);
+  backdrop-filter: blur(16px);
+}
+
+.dashboard-workspace > main > div:last-child {
+  width: 100%;
+}
+
+.dashboard-workspace table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.dashboard-workspace table thead {
+  background: var(--surface-muted);
+}
+
+.dashboard-workspace table th {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.dashboard-workspace .table-scroll {
+  border-color: var(--border);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-soft);
+}
+
+.student-auth input,
+.student-auth textarea,
+.student-auth select {
+  min-height: 3rem;
+  border-radius: 0.9rem;
+}
+
+.student-auth button[type="submit"],
+.student-auth a[role="button"] {
+  min-height: 3rem;
+  border-radius: 0.9rem;
+}
+
 @media (max-width: 359px) {
   .student-portal header > div:last-child {
     gap: 0;
@@ -200,5 +340,86 @@ select {
 
   .student-portal nav a {
     font-size: 10px;
+  }
+}
+
+.student-auth-shell {
+  background:
+    radial-gradient(ellipse at 18% 8%, color-mix(in srgb, var(--primary-soft) 72%, transparent), transparent 30rem),
+    var(--background);
+}
+
+@media (max-width: 1023px) {
+  .dashboard-workspace {
+    flex-direction: column;
+  }
+
+  .dashboard-workspace > aside {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    width: 100%;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid rgb(255 255 255 / 9%);
+  }
+
+  .dashboard-workspace > aside > div:first-child {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .dashboard-workspace > aside > div:first-child img {
+    max-width: 9rem;
+  }
+
+  .dashboard-workspace > aside > div:first-child > div {
+    margin-top: 0;
+  }
+
+  .dashboard-workspace > aside nav {
+    flex: none;
+    overflow-x: auto;
+    padding: 0 0.5rem 0.5rem;
+  }
+
+  .dashboard-workspace > aside nav > p,
+  .dashboard-workspace > aside > div:last-child {
+    display: none;
+  }
+
+  .dashboard-workspace > aside nav > div {
+    display: flex;
+    width: max-content;
+    gap: 0.25rem;
+  }
+
+  .dashboard-workspace > aside nav a {
+    min-height: 2.5rem;
+    padding-inline: 0.75rem;
+    white-space: nowrap;
+  }
+
+  .dashboard-workspace > main > header {
+    min-height: 3.75rem;
+    padding-inline: 1rem;
+  }
+
+  .dashboard-workspace > main > div:last-child {
+    padding: 1.25rem 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

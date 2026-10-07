@@ -239,11 +239,8 @@ export default async function AdminPage() {
                       <StudentActions
                         student={{
                           id: s.id,
-                          student_id: s.student_id,
                           first_name: s.first_name,
                           last_name: s.last_name,
-                          program: s.program,
-                          year_level: s.year_level,
                           status: userRow?.status ?? "active",
                           account_status_reason: userRow?.account_status_reason ?? null,
                         }}

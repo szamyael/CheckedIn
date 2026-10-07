@@ -31,81 +31,126 @@ export function StudentShell({
   onDismissNotification?: () => void;
 }) {
   const pathname = usePathname();
+  const tabs = [
+    ...LEFT_TABS,
+    { href: "/student/attendance/scan", label: "Scan", icon: QrCode, exact: false },
+    ...RIGHT_TABS,
+    { href: "/student/notifications", label: "Notifications", icon: Bell, exact: false },
+  ];
+  const isActive = (href: string, exact: boolean) =>
+    exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <div className="student-portal mx-auto flex min-h-dvh w-full max-w-md flex-col overflow-x-hidden bg-slate-50 text-slate-900 shadow-xl">
+    <div className="student-portal flex min-h-dvh w-full overflow-x-hidden text-slate-900">
       <NotificationPopup
         item={notificationPopup}
         onDismiss={onDismissNotification}
         href="/student/notifications"
       />
-      <header className="sticky top-0 z-20 flex min-w-0 items-center justify-between border-b border-slate-200 bg-white/95 px-3 py-3 sm:px-4 backdrop-blur">
-        <BrandMark size={36} />
-        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-          <ThemePanelButton />
-          <NotificationSoundToggle />
-          <Link
-            href="/student/notifications"
-            className="relative rounded-full p-2 text-slate-600 hover:bg-slate-100"
-            aria-label="Notifications"
-          >
-            <Bell className="h-[22px] w-[22px]" />
-            {notificationCount > 0 && (
-              <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-teal-500 px-1 text-[10px] font-bold text-white">
-                {notificationCount > 9 ? "9+" : notificationCount}
-              </span>
-            )}
-          </Link>
-          <button
-            type="button"
-            onClick={onSignOut}
-            className="rounded-lg px-1.5 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-100 sm:px-2"
-          >
-            Sign out
-          </button>
+      <aside className="student-sidebar hidden w-64 shrink-0 flex-col border-r border-slate-200 bg-white lg:flex">
+        <div className="border-b border-slate-200 px-6 py-6">
+          <BrandMark size={42} />
+          <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+            Student workspace
+          </p>
         </div>
-      </header>
-
-      <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-3 pb-24 pt-4 sm:px-4">{children}</main>
-
-      <nav className="fixed bottom-0 left-1/2 z-20 w-full max-w-md -translate-x-1/2 border-t border-[#e2e5e7] bg-white/95 backdrop-blur" aria-label="Student navigation">
-        <ul className="grid grid-cols-5">
-          {LEFT_TABS.map(({ href, label, icon: Icon, exact }) => {
-            const active = exact
-              ? pathname === href
-              : pathname === href || pathname.startsWith(`${href}/`);
+        <nav className="flex-1 space-y-1 px-3 py-4" aria-label="Student navigation">
+          {tabs.map(({ href, label, icon: Icon, exact }) => {
+            const active = isActive(href, exact);
             return (
-              <li key={href}>
-                <Link
-                  href={href}
-                  className={`flex flex-col items-center gap-1 py-3 text-xs font-medium ${
-                    active ? "text-[#17324d]" : "text-[#697178]"
-                  }`}
-                >
-                  <Icon className="h-5 w-5" />
-                  {label}
-                </Link>
-              </li>
+              <Link
+                key={href}
+                href={href}
+                aria-current={active ? "page" : undefined}
+                className={`flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold ${
+                  active
+                    ? "bg-[var(--primary-soft)] text-[var(--primary-strong)]"
+                    : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                <Icon className="h-[18px] w-[18px]" />
+                {label}
+                {href === "/student/notifications" && notificationCount > 0 && (
+                  <span className="ml-auto rounded-full bg-[var(--primary)] px-2 py-0.5 text-[10px] font-bold text-white">
+                    {notificationCount > 9 ? "9+" : notificationCount}
+                  </span>
+                )}
+              </Link>
             );
           })}
-          <li>
-            <Link href="/student/attendance/scan" className="flex flex-col items-center gap-1 py-3 text-xs font-medium text-[#697178] hover:text-[var(--primary)]" aria-label="Scan event QR">
-              <QrCode className="h-5 w-5" />
-              Scan
+        </nav>
+        <div className="border-t border-slate-200 p-4 text-xs text-slate-500">
+          Your campus, in sync.
+        </div>
+      </aside>
+
+      <div className="student-main flex min-h-dvh min-w-0 flex-1 flex-col">
+        <header className="student-header sticky top-0 z-20 flex min-w-0 items-center justify-between border-b border-slate-200 bg-white/95 px-3 py-3 backdrop-blur sm:px-6 lg:px-8">
+          <div className="flex items-center gap-3">
+            <span className="lg:hidden"><BrandMark size={36} /></span>
+            <div className="hidden sm:block">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">CheckedIn</p>
+              <p className="mt-0.5 text-sm font-semibold text-[var(--primary-strong)]">Student portal</p>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+            <ThemePanelButton />
+            <NotificationSoundToggle />
+            <Link
+              href="/student/notifications"
+              className="relative rounded-xl p-2 text-slate-600 hover:bg-slate-100"
+              aria-label="Notifications"
+            >
+              <Bell className="h-[22px] w-[22px]" />
+              {notificationCount > 0 && (
+                <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--primary)] px-1 text-[10px] font-bold text-white">
+                  {notificationCount > 9 ? "9+" : notificationCount}
+                </span>
+              )}
             </Link>
-          </li>
-          {RIGHT_TABS.map(({ href, label, icon: Icon, exact }) => {
-            const active = exact
-              ? pathname === href
-              : pathname === href || pathname.startsWith(`${href}/`);
-            return (
-              <li key={href}>
-                <Link href={href} className={`flex flex-col items-center gap-1 py-3 text-xs font-medium ${active ? "text-[#17324d]" : "text-[#697178]"}`}><Icon className="h-5 w-5" />{label}</Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+            <button
+              type="button"
+              onClick={onSignOut}
+              className="rounded-xl px-2 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 sm:px-3"
+            >
+              Sign out
+            </button>
+          </div>
+        </header>
+
+        <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-3 pb-24 pt-5 sm:px-6 sm:pt-7 lg:px-10 lg:pb-10">
+          {children}
+        </main>
+
+        <nav
+          className="student-bottom-nav fixed bottom-0 left-1/2 z-20 w-full max-w-md -translate-x-1/2 border-t border-[#e2e5e7] bg-white/95 backdrop-blur lg:hidden"
+          aria-label="Student navigation"
+        >
+          <ul className="grid grid-cols-5">
+            {tabs
+              .filter(({ href }) => href !== "/student/notifications")
+              .map(({ href, label, icon: Icon, exact }) => {
+                const active = isActive(href, exact);
+                return (
+                  <li key={href}>
+                    <Link
+                      href={href}
+                      aria-current={active ? "page" : undefined}
+                      className={`flex min-h-16 flex-col items-center justify-center gap-1 py-2 text-[11px] font-semibold ${
+                        active ? "text-[var(--primary-strong)]" : "text-[#697178]"
+                      }`}
+                    >
+                      <span className={`grid h-8 w-12 place-items-center rounded-full ${active ? "bg-[var(--primary-soft)]" : ""}`}>
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      {label}
+                    </Link>
+                  </li>
+                );
+              })}
+          </ul>
+        </nav>
+      </div>
     </div>
   );
 }

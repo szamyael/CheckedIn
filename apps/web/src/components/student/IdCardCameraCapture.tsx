@@ -21,7 +21,6 @@ export function IdCardCameraCapture({
 
   useEffect(() => {
     let cancelled = false;
-    setReady(false);
 
     async function startCamera() {
       if (!navigator.mediaDevices?.getUserMedia) {
@@ -118,6 +117,7 @@ export function IdCardCameraCapture({
               permission="camera"
               onRetry={() => {
                 setCameraBlocked(false);
+                setReady(false);
                 setCameraKey((key) => key + 1);
               }}
             />

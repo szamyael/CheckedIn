@@ -66,6 +66,10 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Camera access is required to scan your student ID, event QR codes, take a profile photo, and capture attendance selfies.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

@@ -101,7 +101,7 @@ class _BingoScreenState extends State<BingoScreen> {
                             )
                             .toList(),
                         onChanged: (value) {
-                          if (value != null) void _selectCard(value);
+                          if (value != null) _selectCard(value);
                         },
                       ),
                     ),

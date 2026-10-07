@@ -35,7 +35,7 @@ class _MainShellState extends State<MainShell> {
     super.initState();
     _refreshUnread();
     _loadAccountStatus();
-    _notifications.subscribeToNew(_refreshUnread);
+    _notifications.subscribeToNew(_showIncomingNotification, playSound: true);
     _offlineSync.addListener(_onOfflineChanged);
     _connectivity.addListener(_onOfflineChanged);
     _auth.addListener(_onOfflineChanged);
@@ -43,10 +43,12 @@ class _MainShellState extends State<MainShell> {
 
   Future<void> _loadAccountStatus() async {
     final status = await _auth.fetchAccountStatus();
-    if (mounted) setState(() {
-      _accountStatus = status;
-      _accessBlocked = status != null && status != 'active';
-    });
+    if (mounted) {
+      setState(() {
+        _accountStatus = status;
+        _accessBlocked = status != null && status != 'active';
+      });
+    }
   }
 
   @override
@@ -66,6 +68,22 @@ class _MainShellState extends State<MainShell> {
     if (mounted) setState(() => _unreadCount = count);
   }
 
+  void _showIncomingNotification(AppNotification notification) {
+    _refreshUnread();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('${notification.title}\n${notification.body}'),
+          action: SnackBarAction(
+            label: 'View',
+            onPressed: () => context.push('/notifications'),
+          ),
+        ),
+      );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_accessBlocked) {
@@ -74,15 +92,37 @@ class _MainShellState extends State<MainShell> {
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Icon(underReview ? Icons.hourglass_top : Icons.block, size: 48, color: Theme.of(context).colorScheme.error),
-              const SizedBox(height: 16),
-              Text(underReview ? 'Your account is still under review.' : 'Your account is suspended.', textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 8),
-              const Text("Contact your program's organization to settle your account status.", textAlign: TextAlign.center),
-              const SizedBox(height: 20),
-              FilledButton(onPressed: () async { await _auth.signOut(); if (context.mounted) context.go('/login'); }, child: const Text('Return to sign in')),
-            ]),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  underReview ? Icons.hourglass_top : Icons.block,
+                  size: 48,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  underReview
+                      ? 'Your account is still under review.'
+                      : 'Your account is suspended.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  "Contact your program's organization to settle your account status.",
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                FilledButton(
+                  onPressed: () async {
+                    await _auth.signOut();
+                    if (context.mounted) context.go('/login');
+                  },
+                  child: const Text('Return to sign in'),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -106,7 +146,10 @@ class _MainShellState extends State<MainShell> {
         centerTitle: true,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(height: 1, color: Theme.of(context).colorScheme.outline),
+          child: Container(
+            height: 1,
+            color: Theme.of(context).colorScheme.outline,
+          ),
         ),
         actions: [
           IconButton(
@@ -136,8 +179,7 @@ class _MainShellState extends State<MainShell> {
       ),
       body: Column(
         children: [
-          if (offline ||
-              _offlineSync.pendingCount > 0)
+          if (offline || _offlineSync.pendingCount > 0)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
               child: Column(
@@ -175,29 +217,63 @@ class _MainShellState extends State<MainShell> {
           Expanded(child: pages[_index]),
         ],
       ),
-      bottomNavigationBar: Container(
-        height: 72,
-        decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, border: Border(top: BorderSide(color: Theme.of(context).colorScheme.outline))),
-        child: Row(children: [
-          Expanded(child: _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Home', selected: _index == 0, onTap: () => setState(() => _index = 0))),
-          Expanded(child: _NavItem(icon: Icons.event_outlined, activeIcon: Icons.event, label: 'Events', selected: _index == 1, onTap: () => setState(() => _index = 1))),
-          Expanded(child: _NavItem(icon: Icons.qr_code_scanner, activeIcon: Icons.qr_code_scanner, label: 'Scan', selected: false, onTap: () => context.push('/attendance/scan'))),
-          Expanded(child: _NavItem(icon: Icons.grid_view_outlined, activeIcon: Icons.grid_view_rounded, label: 'Bingo', selected: _index == 2, onTap: () => setState(() => _index = 2))),
-          Expanded(child: _NavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: 'Profile', selected: _index == 3, onTap: () => setState(() => _index = 3))),
-        ]),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(22),
+            child: NavigationBar(
+              selectedIndex: _index < 2 ? _index : _index + 1,
+              onDestinationSelected: (index) {
+                switch (index) {
+                  case 0:
+                    setState(() => _index = 0);
+                    break;
+                  case 1:
+                    setState(() => _index = 1);
+                    break;
+                  case 2:
+                    context.push('/attendance/scan');
+                    break;
+                  case 3:
+                    setState(() => _index = 2);
+                    break;
+                  case 4:
+                    setState(() => _index = 3);
+                    break;
+                }
+              },
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.home_outlined),
+                  selectedIcon: Icon(Icons.home_rounded),
+                  label: 'Home',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.event_outlined),
+                  selectedIcon: Icon(Icons.event_rounded),
+                  label: 'Events',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.qr_code_scanner_rounded),
+                  label: 'Scan',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.grid_view_outlined),
+                  selectedIcon: Icon(Icons.grid_view_rounded),
+                  label: 'Bingo',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.person_outline_rounded),
+                  selectedIcon: Icon(Icons.person_rounded),
+                  label: 'Profile',
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
-}
-
-class _NavItem extends StatelessWidget {
-  final IconData icon;
-  final IconData activeIcon;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  const _NavItem({required this.icon, required this.activeIcon, required this.label, required this.selected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) => InkWell(onTap: onTap, child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(selected ? activeIcon : icon, size: 22, color: selected ? Theme.of(context).colorScheme.primary : StudentUi.muted), const SizedBox(height: 3), Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: selected ? Theme.of(context).colorScheme.primary : StudentUi.muted))]));
 }

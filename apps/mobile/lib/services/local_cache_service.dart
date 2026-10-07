@@ -30,10 +30,7 @@ class LocalCacheService {
     );
   }
 
-  Future<T?> readJson<T>(
-    String key,
-    T? Function(dynamic raw) decode,
-  ) async {
+  Future<T?> readJson<T>(String key, T? Function(dynamic raw) decode) async {
     try {
       final file = await _file(key);
       if (!await file.exists()) return null;
@@ -67,6 +64,7 @@ class CacheKeys {
   static const accountStatus = 'account_status';
   static const studentProfile = 'student_profile';
   static const achievements = 'achievements';
+  static const profileBorders = 'profile_borders';
   static const attendanceHistory = 'attendance_history';
   static const dashboardStats = 'dashboard_stats';
   static const events = 'published_events';

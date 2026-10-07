@@ -4,6 +4,53 @@ import 'auth_service.dart';
 import 'local_cache_service.dart';
 import 'offline_storage_service.dart';
 
+class ProfileBorderReward {
+  final String id;
+  final String name;
+  final String description;
+  final int cost;
+  final int colorValue;
+
+  const ProfileBorderReward({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.cost,
+    required this.colorValue,
+  });
+}
+
+const profileBorderRewards = [
+  ProfileBorderReward(
+    id: 'aurora',
+    name: 'Aurora',
+    description: 'Cool teal and violet shimmer',
+    cost: 100,
+    colorValue: 0xFF6EE7D2,
+  ),
+  ProfileBorderReward(
+    id: 'ember',
+    name: 'Ember',
+    description: 'Warm copper glow',
+    cost: 150,
+    colorValue: 0xFFFB923C,
+  ),
+  ProfileBorderReward(
+    id: 'royal',
+    name: 'Royal',
+    description: 'Deep violet and gold',
+    cost: 250,
+    colorValue: 0xFFA78BFA,
+  ),
+  ProfileBorderReward(
+    id: 'celestial',
+    name: 'Celestial',
+    description: 'A bright golden halo',
+    cost: 500,
+    colorValue: 0xFFFACC15,
+  ),
+];
+
 class AchievementItem {
   final String id;
   final String badgeName;
@@ -30,12 +77,12 @@ class AchievementItem {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'badge_name': badgeName,
-        'badge_type': badgeType,
-        'earned_at': earnedAt.toUtc().toIso8601String(),
-        'event_id': eventId,
-      };
+    'id': id,
+    'badge_name': badgeName,
+    'badge_type': badgeType,
+    'earned_at': earnedAt.toUtc().toIso8601String(),
+    'event_id': eventId,
+  };
 }
 
 class AttendanceHistoryItem {
@@ -54,10 +101,10 @@ class AttendanceHistoryItem {
   });
 
   Map<String, dynamic> toCacheJson() => {
-        'id': id,
-        'checked_in_at': checkedInAt.toUtc().toIso8601String(),
-        'event_title': eventTitle,
-      };
+    'id': id,
+    'checked_in_at': checkedInAt.toUtc().toIso8601String(),
+    'event_title': eventTitle,
+  };
 
   factory AttendanceHistoryItem.fromCacheJson(Map<String, dynamic> json) {
     return AttendanceHistoryItem(
@@ -78,7 +125,8 @@ class ProfileService {
     final userId = _userId;
     if (userId == null) return null;
 
-    if (AuthService.instance.isOfflineMode || _client.auth.currentUser == null) {
+    if (AuthService.instance.isOfflineMode ||
+        _client.auth.currentUser == null) {
       return _cache.readJson(CacheKeys.studentProfile, (raw) {
         if (raw is! Map) return null;
         return Map<String, dynamic>.from(raw);
@@ -89,7 +137,7 @@ class ProfileService {
       final profile = await _client
           .from('students')
           .select(
-            'student_id, first_name, last_name, program, year_level, section, reward_points, profile_photo_url, name_extension, middle_name',
+            'student_id, first_name, last_name, program, year_level, section, reward_points, profile_photo_url, name_extension, middle_name, equipped_profile_border',
           )
           .eq('id', userId)
           .maybeSingle();
@@ -120,13 +168,16 @@ class ProfileService {
       );
     }
 
-    await _client.from('students').update({
-      'first_name': firstName,
-      'last_name': lastName,
-      'program': program,
-      'section': section,
-      'year_level': yearLevel,
-    }).eq('id', userId);
+    await _client
+        .from('students')
+        .update({
+          'first_name': firstName,
+          'last_name': lastName,
+          'program': program,
+          'section': section,
+          'year_level': yearLevel,
+        })
+        .eq('id', userId);
 
     final existing = await _cache.readJson(CacheKeys.studentProfile, (raw) {
       if (raw is! Map) return <String, dynamic>{};
@@ -173,7 +224,8 @@ class ProfileService {
     final userId = _userId;
     if (userId == null) return [];
 
-    if (AuthService.instance.isOfflineMode || _client.auth.currentUser == null) {
+    if (AuthService.instance.isOfflineMode ||
+        _client.auth.currentUser == null) {
       return await _cache.readJson(CacheKeys.achievements, (raw) {
             if (raw is! List) return <AchievementItem>[];
             return raw
@@ -194,12 +246,37 @@ class ProfileService {
           .eq('student_id', userId)
           .order('earned_at', ascending: false);
 
+      final orgBadgeResponse = await _client
+          .from('student_org_badges')
+          .select('id, earned_at, org_badges(name, kind)')
+          .eq('student_id', userId);
+
       final items = (response as List)
           .map(
             (a) =>
                 AchievementItem.fromJson(Map<String, dynamic>.from(a as Map)),
           )
           .toList();
+      items.addAll(
+        (orgBadgeResponse as List).map((raw) {
+          final award = Map<String, dynamic>.from(raw as Map);
+          final rawBadge = award['org_badges'];
+          final badge = rawBadge is List
+              ? (rawBadge.isEmpty
+                    ? <String, dynamic>{}
+                    : Map<String, dynamic>.from(rawBadge.first as Map))
+              : rawBadge is Map
+              ? Map<String, dynamic>.from(rawBadge)
+              : <String, dynamic>{};
+          return AchievementItem(
+            id: award['id'] as String,
+            badgeName: badge['name'] as String? ?? 'Badge',
+            badgeType: badge['kind'] as String? ?? 'custom',
+            earnedAt: DateTime.parse(award['earned_at'] as String),
+          );
+        }),
+      );
+      items.sort((a, b) => b.earnedAt.compareTo(a.earnedAt));
       await _cache.writeJson(
         CacheKeys.achievements,
         items.map((a) => a.toJson()).toList(),
@@ -220,6 +297,82 @@ class ProfileService {
     }
   }
 
+  Future<List<String>> fetchOwnedProfileBorders() async {
+    final userId = _userId;
+    if (userId == null) return [];
+
+    if (AuthService.instance.isOfflineMode || _client.auth.currentUser == null) {
+      return await _cache.readJson(CacheKeys.profileBorders, (raw) {
+            if (raw is! List) return <String>[];
+            return raw.whereType<String>().toList();
+          }) ??
+          [];
+    }
+
+    try {
+      final rows = await _client
+          .from('student_profile_borders')
+          .select('border_id')
+          .eq('student_id', userId);
+      final borders = (rows as List)
+          .map((row) => (row as Map<String, dynamic>)['border_id'] as String)
+          .toList();
+      await _cache.writeJson(CacheKeys.profileBorders, borders);
+      return borders;
+    } catch (_) {
+      return await _cache.readJson(CacheKeys.profileBorders, (raw) {
+            if (raw is! List) return <String>[];
+            return raw.whereType<String>().toList();
+          }) ??
+          [];
+    }
+  }
+
+  Future<int> redeemProfileBorder(String borderId) async {
+    if (AuthService.instance.isOfflineMode ||
+        _client.auth.currentUser == null) {
+      throw Exception('Connect to the internet to redeem a profile border.');
+    }
+
+    final result = await _client.rpc(
+      'redeem_student_profile_border',
+      params: {'p_border_id': borderId},
+    );
+    final points = (result as Map<String, dynamic>)['points_remaining'] as int;
+    final profile = await _cache.readJson(CacheKeys.studentProfile, (raw) {
+      if (raw is! Map) return <String, dynamic>{};
+      return Map<String, dynamic>.from(raw);
+    });
+    await _cache.writeJson(CacheKeys.studentProfile, {
+      ...?profile,
+      'reward_points': points,
+    });
+    final owned = await fetchOwnedProfileBorders();
+    if (!owned.contains(borderId)) {
+      await _cache.writeJson(CacheKeys.profileBorders, [...owned, borderId]);
+    }
+    return points;
+  }
+
+  Future<void> equipProfileBorder(String borderId) async {
+    if (AuthService.instance.isOfflineMode ||
+        _client.auth.currentUser == null) {
+      throw Exception('Connect to the internet to change your profile border.');
+    }
+    await _client.rpc(
+      'equip_student_profile_border',
+      params: {'p_border_id': borderId},
+    );
+    final profile = await _cache.readJson(CacheKeys.studentProfile, (raw) {
+      if (raw is! Map) return <String, dynamic>{};
+      return Map<String, dynamic>.from(raw);
+    });
+    await _cache.writeJson(CacheKeys.studentProfile, {
+      ...?profile,
+      'equipped_profile_border': borderId,
+    });
+  }
+
   Future<List<AttendanceHistoryItem>> fetchAttendanceHistory() async {
     final userId = _userId;
     if (userId == null) return [];
@@ -235,8 +388,10 @@ class ProfileService {
       );
     }).toList();
 
-    if (AuthService.instance.isOfflineMode || _client.auth.currentUser == null) {
-      final cached = await _cache.readJson(CacheKeys.attendanceHistory, (raw) {
+    if (AuthService.instance.isOfflineMode ||
+        _client.auth.currentUser == null) {
+      final cached =
+          await _cache.readJson(CacheKeys.attendanceHistory, (raw) {
             if (raw is! List) return <AttendanceHistoryItem>[];
             return raw
                 .map(
@@ -283,7 +438,8 @@ class ProfileService {
 
       return [...pendingItems, ...synced];
     } catch (_) {
-      final cached = await _cache.readJson(CacheKeys.attendanceHistory, (raw) {
+      final cached =
+          await _cache.readJson(CacheKeys.attendanceHistory, (raw) {
             if (raw is! List) return <AttendanceHistoryItem>[];
             return raw
                 .map(

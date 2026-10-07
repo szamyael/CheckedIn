@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { SystemSettingsForm } from "@/components/SystemSettingsForm";
 import { BroadcastNotificationForm } from "@/components/BroadcastNotificationForm";
 import { AttendanceCorrectionPanel } from "@/components/AttendanceCorrectionPanel";
+import { AdminDataFlushPanel } from "@/components/AdminDataFlushPanel";
 import { DashboardPageHeader, DashboardSection } from "@/components/DashboardUi";
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -67,6 +68,10 @@ export default async function SettingsPage() {
 
       <DashboardSection title="Attendance corrections" description="Review and approve staff correction requests.">
         <AttendanceCorrectionPanel isAdmin />
+      </DashboardSection>
+
+      <DashboardSection title="Data management" description="Permanently clear selected system records.">
+        <AdminDataFlushPanel />
       </DashboardSection>
     </div>  );
 }

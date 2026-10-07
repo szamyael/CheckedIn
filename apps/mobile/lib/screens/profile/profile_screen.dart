@@ -24,6 +24,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? _avatarUrl;
   bool _showAllAchievements = false;
   bool _showAllHistory = false;
+  String? _borderBusy;
+  String? _borderError;
 
   @override
   void initState() {
@@ -66,6 +68,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _profile.fetchAchievements(),
       _profile.fetchAttendanceHistory(),
       _profile.fetchAttendanceCount(),
+      _profile.fetchOwnedProfileBorders(),
     ]);
     final student = results[0] as Map<String, dynamic>?;
     String? avatarUrl;
@@ -87,7 +90,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
       achievements: results[1] as List<AchievementItem>,
       history: results[2] as List<AttendanceHistoryItem>,
       attendanceCount: results[3] as int,
+      ownedBorders: results[4] as List<String>,
     );
+  }
+
+  Future<void> _redeemBorder(ProfileBorderReward border) async {
+    setState(() {
+      _borderBusy = border.id;
+      _borderError = null;
+    });
+    try {
+      await _profile.redeemProfileBorder(border.id);
+      if (!mounted) return;
+      setState(() => _future = _loadData());
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${border.name} border unlocked!')),
+      );
+    } catch (error) {
+      if (mounted) setState(() => _borderError = error.toString());
+    } finally {
+      if (mounted) setState(() => _borderBusy = null);
+    }
+  }
+
+  Future<void> _equipBorder(String borderId) async {
+    setState(() {
+      _borderBusy = borderId;
+      _borderError = null;
+    });
+    try {
+      await _profile.equipProfileBorder(borderId);
+      if (!mounted) return;
+      setState(() => _future = _loadData());
+    } catch (error) {
+      if (mounted) setState(() => _borderError = error.toString());
+    } finally {
+      if (mounted) setState(() => _borderBusy = null);
+    }
   }
 
   @override
@@ -106,6 +145,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             final data = snapshot.data!;
             final student = data.student;
             final fmt = DateFormat('MMM d, yyyy h:mm a');
+            final equippedBorder =
+                student?['equipped_profile_border'] as String? ?? 'classic';
+            final borderColor = profileBorderRewards
+                .where((border) => border.id == equippedBorder)
+                .map((border) => Color(border.colorValue))
+                .firstOrNull ?? Theme.of(context).colorScheme.primary;
 
             return ListView(
               padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
@@ -125,7 +170,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Stack(
                             clipBehavior: Clip.none,
                             children: [
-                              CircleAvatar(radius: 36, backgroundColor: const Color(0xFFE7EEF4), backgroundImage: _avatarUrl != null ? NetworkImage(_avatarUrl!) : null, child: _avatarUrl == null ? Text(_initials(student), style: const TextStyle(color: Color(0xFF17324D), fontWeight: FontWeight.w700, fontSize: 20)) : null),
+                              Container(
+                                padding: const EdgeInsets.all(3),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: borderColor, width: 3),
+                                ),
+                                child: CircleAvatar(radius: 32, backgroundColor: const Color(0xFFE7EEF4), backgroundImage: _avatarUrl != null ? NetworkImage(_avatarUrl!) : null, child: _avatarUrl == null ? Text(_initials(student), style: const TextStyle(color: Color(0xFF17324D), fontWeight: FontWeight.w700, fontSize: 20)) : null),
+                              ),
                               Positioned(right: -4, bottom: -4, child: Material(color: const Color(0xFFF0C46D), shape: const CircleBorder(), child: IconButton(onPressed: _showAvatarSourcePicker, icon: const Icon(Icons.camera_alt_outlined, size: 17), color: const Color(0xFF17324D), tooltip: 'Update profile photo'))),
                             ],
                           ),
@@ -173,6 +225,123 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: const Text('Edit profile'),
                         ),
                       ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                StudentCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Customize your profile',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Unlock permanent avatar borders with reward points.',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      if (_borderError != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          _borderError!,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 12),
+                      for (final border in profileBorderRewards)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 42,
+                                height: 42,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Color(border.colorValue),
+                                    width: 3,
+                                  ),
+                                ),
+                                child: const Center(
+                                  child: Text(
+                                    'CI',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      border.name,
+                                      style: Theme.of(context).textTheme.titleSmall,
+                                    ),
+                                    Text(
+                                      border.description,
+                                      style: Theme.of(context).textTheme.bodySmall,
+                                    ),
+                                    Text(
+                                      data.ownedBorders.contains(border.id)
+                                          ? 'Unlocked'
+                                          : '${border.cost} points',
+                                      style: TextStyle(
+                                        color: Theme.of(context).colorScheme.primary,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (equippedBorder == border.id)
+                                Text(
+                                  'Equipped',
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.primary,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                )
+                              else if (data.ownedBorders.contains(border.id))
+                                TextButton(
+                                  onPressed: _borderBusy == null
+                                      ? () => _equipBorder(border.id)
+                                      : null,
+                                  child: const Text('Equip'),
+                                )
+                              else
+                                FilledButton.tonal(
+                                  onPressed: _borderBusy == null &&
+                                          (student?['reward_points'] as int? ?? 0) >= border.cost
+                                      ? () => _redeemBorder(border)
+                                      : null,
+                                  child: Text(
+                                    _borderBusy == border.id
+                                        ? 'Unlocking…'
+                                        : 'Unlock',
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      if (equippedBorder != 'classic')
+                        TextButton(
+                          onPressed: _borderBusy == null
+                              ? () => _equipBorder('classic')
+                              : null,
+                          child: const Text('Use classic border'),
+                        ),
                     ],
                   ),
                 ),
@@ -273,11 +442,13 @@ class _ProfileData {
   final List<AchievementItem> achievements;
   final List<AttendanceHistoryItem> history;
   final int attendanceCount;
+  final List<String> ownedBorders;
 
   _ProfileData({
     required this.student,
     required this.achievements,
     required this.history,
     required this.attendanceCount,
+    required this.ownedBorders,
   });
 }

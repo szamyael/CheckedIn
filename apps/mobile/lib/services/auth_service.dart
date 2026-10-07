@@ -114,8 +114,7 @@ class AuthService extends ChangeNotifier {
   String? get currentUserEmail =>
       _client.auth.currentUser?.email ?? _offlineEmail;
 
-  String? get currentUserId =>
-      _client.auth.currentUser?.id ?? _offlineUserId;
+  String? get currentUserId => _client.auth.currentUser?.id ?? _offlineUserId;
 
   Future<({bool needsEmailVerification, String email})> registerStudent({
     required RegistrationDraft draft,
@@ -131,15 +130,14 @@ class AuthService extends ChangeNotifier {
       throw Exception('Enter a valid email address.');
     }
 
-    final signUp = await _client.auth.signUp(
-      email: email,
-      password: password,
-    );
+    final signUp = await _client.auth.signUp(email: email, password: password);
 
     if (signUp.user == null) {
-      throw Exception(signUp.session == null
-          ? 'Registration failed. Student ID or email may already be registered.'
-          : 'Registration failed');
+      throw Exception(
+        signUp.session == null
+            ? 'Registration failed. Student ID or email may already be registered.'
+            : 'Registration failed',
+      );
     }
 
     final userId = signUp.user!.id;
@@ -178,7 +176,7 @@ class AuthService extends ChangeNotifier {
         'year_level': draft.yearLevel,
         'section': draft.section?.trim(),
         'image_base64': base64Encode(compressedId),
-        if (avatarBase64 != null) 'avatar_base64': avatarBase64,
+        'avatar_base64': ?avatarBase64,
       },
     );
 
@@ -279,8 +277,9 @@ class AuthService extends ChangeNotifier {
             studentId,
             password,
           )) {
-        final creds =
-            await OfflineCredentialStore.instance.findByStudentId(studentId);
+        final creds = await OfflineCredentialStore.instance.findByStudentId(
+          studentId,
+        );
         if (creds != null) {
           await _enterOfflineSession(creds);
           return;
@@ -314,14 +313,17 @@ class AuthService extends ChangeNotifier {
 
     if (status != 'active') {
       await signOut();
-      throw Exception(status == 'pending'
-          ? "Your account is still under review. Contact your program's organization to settle your account status."
-          : "Your account is suspended. Contact your program's organization to settle your account status.");
+      throw Exception(
+        status == 'pending'
+            ? "Your account is still under review. Contact your program's organization to settle your account status."
+            : "Your account is suspended. Contact your program's organization to settle your account status.",
+      );
     }
 
-    await _client.from('users').update({
-      'last_login_at': DateTime.now().toUtc().toIso8601String(),
-    }).eq('id', userId);
+    await _client
+        .from('users')
+        .update({'last_login_at': DateTime.now().toUtc().toIso8601String()})
+        .eq('id', userId);
 
     await OfflineCredentialStore.instance.saveAfterOnlineLogin(
       studentId: studentId,
@@ -347,16 +349,19 @@ class AuthService extends ChangeNotifier {
       );
     }
 
-    final creds =
-        await OfflineCredentialStore.instance.findByStudentId(studentId);
+    final creds = await OfflineCredentialStore.instance.findByStudentId(
+      studentId,
+    );
     if (creds == null) {
       throw Exception('Offline credentials missing. Sign in online first.');
     }
 
     if (creds.accountStatus != 'active') {
-      throw Exception(creds.accountStatus == 'pending'
-          ? "Your account is still under review. Contact your program's organization to settle your account status."
-          : "Your account is suspended. Contact your program's organization to settle your account status.");
+      throw Exception(
+        creds.accountStatus == 'pending'
+            ? "Your account is still under review. Contact your program's organization to settle your account status."
+            : "Your account is suspended. Contact your program's organization to settle your account status.",
+      );
     }
 
     // Prefer a still-valid persisted Supabase session when present.
@@ -437,15 +442,13 @@ class AuthService extends ChangeNotifier {
     final bytes = await idCardImage.readAsBytes();
     final response = await _client.functions.invoke(
       'student-verify-reset',
-      body: {
-        'student_id': studentId,
-        'image_base64': base64Encode(bytes),
-      },
+      body: {'student_id': studentId, 'image_base64': base64Encode(bytes)},
     );
 
     if (response.status != 200) {
-      final err =
-          response.data is Map ? response.data['error'] : 'Verification failed';
+      final err = response.data is Map
+          ? response.data['error']
+          : 'Verification failed';
       throw Exception(err ?? 'Verification failed');
     }
 
@@ -482,8 +485,7 @@ class AuthService extends ChangeNotifier {
     await signOut();
   }
 
-  bool get isSignedIn =>
-      currentSession != null || _offlineAuthenticated;
+  bool get isSignedIn => currentSession != null || _offlineAuthenticated;
 }
 
 class EmailNotVerifiedException implements Exception {
