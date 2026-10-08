@@ -211,6 +211,7 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
           const SizedBox(height: 16),
           TextField(
             controller: _email,
+            readOnly: widget.draft.isResubmission,
             decoration: const InputDecoration(
               labelText: 'Email address *',
               hintText: 'you@school.edu',

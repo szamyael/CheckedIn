@@ -13,6 +13,10 @@ import { resolveStudentEmail } from "@/lib/student/api";
 import { isStudentOnboardingComplete } from "@/lib/student/onboarding";
 import { isStudentTermsAccepted } from "@/lib/student/terms";
 import { createClient } from "@/lib/supabase/client";
+import {
+  StudentAccountDecisionDialog,
+  type StudentAccountDecision,
+} from "@/components/student/StudentAccountDecisionDialog";
 
 export default function StudentLoginPage() {
   const router = useRouter();
@@ -20,10 +24,17 @@ export default function StudentLoginPage() {
   const [studentId, setStudentId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [accountDecision, setAccountDecision] = useState<StudentAccountDecision | null>(null);
   const [openingRegister, setOpeningRegister] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("resubmitted") === "1") {
+      // The review status is pending again; applicant can sign in after approval.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSuccess("Your updated registration was submitted for review.");
+    }
     if (!isStudentOnboardingComplete()) {
       router.replace("/student/onboarding");
       return;
@@ -74,12 +85,25 @@ export default function StudentLoginPage() {
         return;
       }
       const { data: profile } = await supabase.from("users").select("role, status, account_status_reason").eq("id", user.id).single();
+      if (profile?.role === "student" && profile.status === "needs_reregistration") {
+        setAccountDecision({
+          status: "needs_reregistration",
+          reason: profile.account_status_reason,
+        });
+        return;
+      }
       if (profile?.status !== "active") {
         await supabase.auth.signOut();
+        if (profile?.role === "student" && profile?.status === "suspended") {
+          setAccountDecision({ status: "suspended", reason: profile.account_status_reason });
+          return;
+        }
         const reason = profile?.account_status_reason ? ` Reason: ${profile.account_status_reason}` : "";
         setError(profile?.status === "pending"
           ? "Your account is still under review. Contact your program's organization to settle your account status."
-          : `Your account is suspended. Contact your program's organization to settle your account status.${reason}`);
+          : profile?.status === "suspended"
+            ? `Your account is banned. Contact an administrator to request a ban review.${reason}`
+            : `Your account is suspended. Contact your program's organization to settle your account status.${reason}`);
         return;
       }
       if (profile?.role !== "student") {
@@ -99,6 +123,7 @@ export default function StudentLoginPage() {
 
   return (
     <main className="min-h-dvh bg-[#f6f7f5] text-[#202428] lg:grid lg:grid-cols-[minmax(390px,43%)_1fr]">
+      <StudentAccountDecisionDialog decision={accountDecision} onClose={() => setAccountDecision(null)} />
       <section className="relative hidden overflow-hidden bg-[#17324d] px-10 py-10 text-white lg:flex lg:flex-col xl:px-16">
         <div className="absolute -bottom-24 -right-20 h-80 w-80 rounded-full border border-white/10" />
         <div className="relative flex items-center gap-3"><BrandMark size={42} className="rounded-lg bg-white p-1" /><span className="text-lg font-semibold tracking-tight">CheckedIn</span></div>
@@ -114,6 +139,7 @@ export default function StudentLoginPage() {
       <section className="flex min-h-dvh items-center justify-center px-5 py-9 sm:px-8 lg:px-12">
         <div className="w-full max-w-[410px]">
           <div className="mb-8 text-center lg:hidden"><BrandMark size={76} className="mx-auto rounded-xl bg-[#e7eef4] p-2" /><p className="mt-3 text-sm font-semibold tracking-tight text-[#17324d]">CheckedIn</p></div>
+          {success && <div role="status" className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{success}</div>}
           <div className="mb-8">
             <p className="text-xs font-semibold tracking-[0.14em] text-[#697178]">STUDENT PORTAL</p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[#0c2238]">Welcome back</h2>

@@ -10,6 +10,10 @@ import { PhoneStudentRedirect } from "@/components/student/PhoneStudentRedirect"
 import { formPlaceholders } from "@/lib/form-placeholders";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import { createClient } from "@/lib/supabase/client";
+import {
+  StudentAccountDecisionDialog,
+  type StudentAccountDecision,
+} from "@/components/student/StudentAccountDecisionDialog";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,6 +21,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [accountDecision, setAccountDecision] = useState<StudentAccountDecision | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -39,12 +44,25 @@ export default function LoginPage() {
           await supabase.auth.signOut();
           return setError("Your account profile could not be loaded. Contact an administrator.");
         }
+        if (profile.role === "student" && profile.status === "needs_reregistration") {
+          setAccountDecision({
+            status: "needs_reregistration",
+            reason: profile.account_status_reason,
+          });
+          return;
+        }
         if (profile.status !== "active") {
           await supabase.auth.signOut();
+          if (profile.role === "student" && profile.status === "suspended") {
+            setAccountDecision({ status: "suspended", reason: profile.account_status_reason });
+            return;
+          }
           const reason = profile.account_status_reason ? ` Reason: ${profile.account_status_reason}` : "";
           return setError(profile.status === "pending"
             ? "Your account is still under review. Contact your program's organization to settle your account status."
-            : `Your account is suspended. Contact your program's organization to settle your account status.${reason}`);
+            : profile.status === "suspended"
+              ? `Your account is banned. Contact an administrator to request a ban review.${reason}`
+              : `Your account is suspended. Contact your program's organization to settle your account status.${reason}`);
         }
 
         router.push(profile.role === "student" ? "/student" : "/dashboard");
@@ -57,6 +75,7 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen bg-[#f6f7f5] text-[#202428] lg:grid lg:grid-cols-[minmax(420px,44%)_1fr]">
+      <StudentAccountDecisionDialog decision={accountDecision} onClose={() => setAccountDecision(null)} />
       <PhoneStudentRedirect />
 
       <section className="relative hidden overflow-hidden bg-[#17324d] px-10 py-10 text-white lg:flex lg:flex-col xl:px-16">

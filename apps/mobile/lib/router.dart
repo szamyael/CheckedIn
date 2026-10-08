@@ -48,17 +48,14 @@ GoRouter createRouter(
         return '/terms';
       }
       if (onboarding.isComplete && path == '/onboarding') {
-        return hasSession
-            ? (verified ? '/home' : '/verify-email')
-            : '/login';
+        return hasSession ? (verified ? '/home' : '/verify-email') : '/login';
       }
       if (terms.isAccepted && path == '/terms') {
-        return hasSession
-            ? (verified ? '/home' : '/verify-email')
-            : '/login';
+        return hasSession ? (verified ? '/home' : '/verify-email') : '/login';
       }
 
-      final isAuthRoute = path == '/login' ||
+      final isAuthRoute =
+          path == '/login' ||
           path == '/onboarding' ||
           path == '/terms' ||
           path == '/forgot-password' ||
@@ -72,12 +69,22 @@ GoRouter createRouter(
           path == '/profile/edit' ||
           path == '/notifications';
 
-      if (hasSession && !verified && path != '/verify-email' && !path.startsWith('/register')) {
+      if (hasSession &&
+          !verified &&
+          path != '/verify-email' &&
+          !path.startsWith('/register')) {
         return '/verify-email';
       }
 
       if (!hasSession && isProtected) return '/login';
-      if (hasSession && verified && isAuthRoute) return '/home';
+      if (hasSession &&
+          verified &&
+          isAuthRoute &&
+          !auth.signInInProgress &&
+          !(auth.registrationResubmissionAllowed &&
+              (path == '/login' || path.startsWith('/register')))) {
+        return '/home';
+      }
       if (hasSession && verified && path == '/verify-email') return '/home';
       return null;
     },
@@ -86,16 +93,14 @@ GoRouter createRouter(
         path: '/onboarding',
         builder: (context, state) => const OnboardingScreen(),
       ),
-      GoRoute(
-        path: '/terms',
-        builder: (context, state) => const TermsScreen(),
-      ),
+      GoRoute(path: '/terms', builder: (context, state) => const TermsScreen()),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/verify-email',
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
-          final email = extra?['email'] as String? ??
+          final email =
+              extra?['email'] as String? ??
               AuthService.instance.currentUserEmail ??
               '';
           return VerifyEmailScreen(
@@ -187,7 +192,8 @@ GoRouter createRouter(
         path: '/attendance/selfie',
         builder: (ctx, state) {
           final data = state.extra! as Map<String, dynamic>;
-          final offlineSubmission = data['offline_submission'] as bool? ?? false;
+          final offlineSubmission =
+              data['offline_submission'] as bool? ?? false;
           if (data['location_verified'] != true && !offlineSubmission) {
             return const QrScanScreen();
           }
@@ -204,7 +210,8 @@ GoRouter createRouter(
                 ? DateTime.parse(data['scanned_at'] as String)
                 : null,
             offlineAction: OfflineAttendanceAction.values.byName(
-              data['offline_action'] as String? ?? OfflineAttendanceAction.checkIn.name,
+              data['offline_action'] as String? ??
+                  OfflineAttendanceAction.checkIn.name,
             ),
           );
         },

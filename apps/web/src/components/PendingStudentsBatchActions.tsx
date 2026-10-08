@@ -26,6 +26,6 @@ export function PendingStudentsBatchActions({ pendingIds }: { pendingIds: string
 
   return <div className="mb-3 flex flex-wrap items-center gap-2">
     <button type="button" onClick={() => void approveAll()} className="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-500">Approve all ({pendingIds.length})</button>
-    <p className="text-xs text-slate-600">Deny accounts individually so a review reason is recorded.</p>
+    <p className="text-xs text-slate-600">Re-register or ban applicants individually so a decision reason is recorded.</p>
   </div>;
 }

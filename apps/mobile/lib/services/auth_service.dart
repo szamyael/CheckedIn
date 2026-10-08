@@ -23,6 +23,8 @@ class AuthService extends ChangeNotifier {
   String? _offlineEmail;
   bool _offlineEmailVerified = false;
   String? _offlineAccountStatus;
+  bool _registrationResubmissionAllowed = false;
+  bool _signInInProgress = false;
 
   /// True when unlocked via local credentials without a live Supabase session.
   bool get isOfflineMode => _offlineAuthenticated && currentSession == null;
@@ -110,6 +112,8 @@ class AuthService extends ChangeNotifier {
   }
 
   bool get needsEmailVerification => isSignedIn && !isEmailVerified;
+  bool get registrationResubmissionAllowed => _registrationResubmissionAllowed;
+  bool get signInInProgress => _signInInProgress;
 
   String? get currentUserEmail =>
       _client.auth.currentUser?.email ?? _offlineEmail;
@@ -130,17 +134,28 @@ class AuthService extends ChangeNotifier {
       throw Exception('Enter a valid email address.');
     }
 
-    final signUp = await _client.auth.signUp(email: email, password: password);
-
-    if (signUp.user == null) {
-      throw Exception(
-        signUp.session == null
-            ? 'Registration failed. Student ID or email may already be registered.'
-            : 'Registration failed',
-      );
+    final AuthResponse? signUp;
+    final String userId;
+    if (draft.isResubmission) {
+      final user = _client.auth.currentUser;
+      if (!_registrationResubmissionAllowed ||
+          user == null ||
+          user.email?.toLowerCase() != email) {
+        throw Exception('Sign in to the account that received the re-registration request.');
+      }
+      signUp = null;
+      userId = user.id;
+    } else {
+      signUp = await _client.auth.signUp(email: email, password: password);
+      if (signUp.user == null) {
+        throw Exception(
+          signUp.session == null
+              ? 'Registration failed. Student ID or email may already be registered.'
+              : 'Registration failed',
+        );
+      }
+      userId = signUp.user!.id;
     }
-
-    final userId = signUp.user!.id;
 
     final compressedId = await RegistrationImageCompressor.compressFile(
       idCardImage,
@@ -195,7 +210,12 @@ class AuthService extends ChangeNotifier {
       throw Exception((response.data as Map)['error'].toString());
     }
 
-    final needsVerification = signUp.user!.emailConfirmedAt == null;
+    if (draft.isResubmission) {
+      _registrationResubmissionAllowed = false;
+      return (needsEmailVerification: false, email: email);
+    }
+
+    final needsVerification = signUp!.user!.emailConfirmedAt == null;
     if (needsVerification) {
       try {
         await resendEmailVerificationCode(email);
@@ -266,8 +286,12 @@ class AuthService extends ChangeNotifier {
       return;
     }
 
+    _signInInProgress = true;
+    notifyListeners();
     try {
       await _signInOnline(studentId, password);
+    } on StudentAccountDecisionException {
+      rethrow;
     } on EmailNotVerifiedException {
       rethrow;
     } catch (e) {
@@ -286,6 +310,9 @@ class AuthService extends ChangeNotifier {
         }
       }
       rethrow;
+    } finally {
+      _signInInProgress = false;
+      notifyListeners();
     }
   }
 
@@ -305,14 +332,22 @@ class AuthService extends ChangeNotifier {
     final userId = _client.auth.currentUser!.id;
     final profile = await _client
         .from('users')
-        .select('status')
+        .select('status, account_status_reason')
         .eq('id', userId)
         .maybeSingle();
 
     final status = profile?['status'] as String? ?? 'pending';
 
     if (status != 'active') {
+      final reason = profile?['account_status_reason'] as String?;
+      if (status == 'needs_reregistration') {
+        _registrationResubmissionAllowed = true;
+        throw StudentAccountDecisionException(status, reason);
+      }
       await signOut();
+      if (status == 'suspended') {
+        throw StudentAccountDecisionException(status, reason);
+      }
       throw Exception(
         status == 'pending'
             ? "Your account is still under review. Contact your program's organization to settle your account status."
@@ -422,6 +457,7 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<void> signOut() async {
+    _registrationResubmissionAllowed = false;
     _clearOfflineSession(notify: false);
     try {
       await _client.auth.signOut();
@@ -429,6 +465,44 @@ class AuthService extends ChangeNotifier {
       // Offline sign-out still clears local unlock.
     }
     notifyListeners();
+  }
+
+  Future<RegistrationDraft> loadReregistrationDraft() async {
+    final user = _client.auth.currentUser;
+    if (!_registrationResubmissionAllowed || user == null) {
+      throw Exception('Sign in to the account that received the re-registration request.');
+    }
+
+    final profile = await _client
+        .from('users')
+        .select('email, role, status')
+        .eq('id', user.id)
+        .maybeSingle();
+    if (profile?['role'] != 'student' ||
+        profile?['status'] != 'needs_reregistration') {
+      throw Exception('This account is no longer awaiting re-registration.');
+    }
+
+    final student = await _client
+        .from('students')
+        .select('student_id, first_name, middle_name, last_name, name_extension, program, year_level, section')
+        .eq('id', user.id)
+        .maybeSingle();
+    if (student == null) {
+      throw Exception('Student application could not be loaded.');
+    }
+
+    return RegistrationDraft()
+      ..isResubmission = true
+      ..email = profile?['email'] as String? ?? user.email
+      ..studentId = student['student_id'] as String?
+      ..firstName = student['first_name'] as String?
+      ..middleName = student['middle_name'] as String?
+      ..lastName = student['last_name'] as String?
+      ..nameExtension = student['name_extension'] as String?
+      ..program = student['program'] as String?
+      ..yearLevel = student['year_level'] as int?
+      ..section = student['section'] as String?;
   }
 
   Future<({String email, String maskedEmail})> verifyIdForPasswordReset({
@@ -494,4 +568,11 @@ class EmailNotVerifiedException implements Exception {
 
   @override
   String toString() => 'Email not verified';
+}
+
+class StudentAccountDecisionException implements Exception {
+  final String status;
+  final String? reason;
+
+  StudentAccountDecisionException(this.status, this.reason);
 }

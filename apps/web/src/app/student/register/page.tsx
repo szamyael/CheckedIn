@@ -36,6 +36,8 @@ export default function StudentRegisterPage() {
   const [draft, setDraft] = useState<RegistrationDraft>(emptyRegistrationDraft);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [isResubmission, setIsResubmission] = useState(false);
+  const [decisionReason, setDecisionReason] = useState<string | null>(null);
   const [scanningId, setScanningId] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -55,13 +57,62 @@ export default function StudentRegisterPage() {
 
   useEffect(() => {
     if (!hydrated) return;
-    if (!isStudentOnboardingComplete()) {
+    const resubmissionRequested = new URLSearchParams(window.location.search).get("resubmit") === "1";
+    if (!resubmissionRequested && !isStudentOnboardingComplete()) {
       router.replace("/student/onboarding");
       return;
     }
-    if (!isStudentTermsAccepted()) {
+    if (!resubmissionRequested && !isStudentTermsAccepted()) {
       router.replace("/student/terms");
       return;
+    }
+
+    async function prepareResubmission() {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        router.replace("/student/login");
+        return;
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from("users")
+        .select("email, role, status, account_status_reason")
+        .eq("id", user.id)
+        .single();
+
+      if (profileError || profile?.role !== "student" || profile.status !== "needs_reregistration") {
+        router.replace("/student/login");
+        return;
+      }
+
+      const { data: student, error: studentError } = await supabase
+        .from("students")
+        .select("student_id, first_name, middle_name, last_name, name_extension, program, year_level, section")
+        .eq("id", user.id)
+        .single();
+      if (studentError || !student) {
+        setError("Your student application could not be loaded. Contact an administrator.");
+        return;
+      }
+
+      clearRegistrationDraft();
+      setDraft({
+        ...emptyRegistrationDraft(),
+        studentId: student.student_id,
+        email: profile.email ?? user.email ?? "",
+        firstName: student.first_name,
+        middleName: student.middle_name ?? "",
+        lastName: student.last_name,
+        nameExtension: student.name_extension ?? "",
+        program: student.program,
+        yearLevel: student.year_level ?? 1,
+        section: student.section ?? "",
+      });
+      setIsResubmission(true);
+      setDecisionReason(profile.account_status_reason);
     }
 
     async function clearOrphanAuth() {
@@ -76,13 +127,11 @@ export default function StudentRegisterPage() {
         .select("id")
         .eq("id", user.id)
         .maybeSingle();
-
-      if (!profile) {
-        await supabase.auth.signOut();
-      }
+      if (!profile) await supabase.auth.signOut();
     }
 
-    void clearOrphanAuth();
+    if (resubmissionRequested) void prepareResubmission();
+    else void clearOrphanAuth();
   }, [router, hydrated]);
 
   useEffect(() => {
@@ -138,6 +187,7 @@ export default function StudentRegisterPage() {
 
       const nextDraft: RegistrationDraft = {
         ...emptyRegistrationDraft(),
+        email: isResubmission ? draft.email : "",
         studentId: sid,
         firstName: parsed.first_name ?? "",
         middleName: parsed.middle_name ?? "",
@@ -178,11 +228,11 @@ export default function StudentRegisterPage() {
     if (submitting) return;
 
     setError(null);
-    if (password.length < 8) {
+    if (!isResubmission && password.length < 8) {
       setError("Password must be at least 8 characters.");
       return;
     }
-    if (password !== confirm) {
+    if (!isResubmission && password !== confirm) {
       setError("Passwords do not match.");
       return;
     }
@@ -192,33 +242,37 @@ export default function StudentRegisterPage() {
     }
 
     setSubmitting(true);
-    showLoader("Creating account…");
+    showLoader(isResubmission ? "Submitting registration…" : "Creating account…");
     const email = draft.email.trim().toLowerCase();
 
     try {
       const supabase = createClient();
-      const { data: signUpData, error: signUpError } =
-        await supabase.auth.signUp({
-          email,
-          password,
-        });
-      if (signUpError) throw signUpError;
+      let userId: string;
+      if (isResubmission) {
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user || user.email?.toLowerCase() !== email) {
+          throw new Error("Sign in with the same account that received the re-registration request.");
+        }
+        userId = user.id;
+      } else {
+        const { data: signUpData, error: signUpError } =
+          await supabase.auth.signUp({ email, password });
+        if (signUpError) throw signUpError;
 
-      const user = signUpData.user;
-      if (!user?.id) {
-        throw new Error("Registration failed. Please try again.");
+        const user = signUpData.user;
+        if (!user?.id) {
+          throw new Error("Registration failed. Please try again.");
+        }
+        if (!user.identities?.length) {
+          throw new Error(
+            "This email is already registered. Sign in or use forgot password.",
+          );
+        }
+        userId = user.id;
+
+        // New applications are submitted without keeping an authenticated session.
+        await supabase.auth.signOut();
       }
-      if (!user.identities?.length) {
-        throw new Error(
-          "This email is already registered. Sign in or use forgot password.",
-        );
-      }
-
-      const userId = user.id;
-
-      // Clear the session immediately so middleware cannot redirect away from
-      // this page while the registration edge function runs (matches mobile).
-      await supabase.auth.signOut();
 
       const { data, error: fnError } = await supabase.functions.invoke(
         "complete-student-registration",
@@ -245,19 +299,25 @@ export default function StudentRegisterPage() {
       const payload = data as { error?: string; success?: boolean };
       if (payload?.error) throw new Error(payload.error);
 
-      try {
-        await supabase.auth.resend({
-          type: "signup",
-          email,
-        });
-      } catch {
-        // Account is already created; verification email may already be sent.
-      }
+      if (isResubmission) {
+        await supabase.auth.signOut();
+        clearRegistrationDraft();
+        router.replace("/student/login?resubmitted=1");
+      } else {
+        try {
+          await supabase.auth.resend({
+            type: "signup",
+            email,
+          });
+        } catch {
+          // Account is already created; verification email may already be sent.
+        }
 
-      clearRegistrationDraft();
-      router.replace(
-        `/student/verify-email?email=${encodeURIComponent(email)}`,
-      );
+        clearRegistrationDraft();
+        router.replace(
+          `/student/verify-email?email=${encodeURIComponent(email)}`,
+        );
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
@@ -279,8 +339,16 @@ export default function StudentRegisterPage() {
       <div className="mb-6 flex justify-center">
         <BrandMark size={72} />
       </div>
-      <h1 className="text-xl font-bold">Create student account</h1>
+      <h1 className="text-xl font-bold">
+        {isResubmission ? "Re-submit student registration" : "Create student account"}
+      </h1>
       <p className="mt-1 text-sm text-slate-500">Step {step} of 3</p>
+      {isResubmission && (
+        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          <p>Update and submit your application again.</p>
+          {decisionReason && <p className="mt-1">Admin remarks: {decisionReason}</p>}
+        </div>
+      )}
 
       {step === 1 && (
         <div className="mt-6 space-y-4">
@@ -399,6 +467,7 @@ export default function StudentRegisterPage() {
             onChange={(v) => setDraft((d) => ({ ...d, email: v }))}
             type="email"
             required
+            readOnly={isResubmission}
             placeholder={formPlaceholders.email}
           />
           <Field
@@ -478,26 +547,30 @@ export default function StudentRegisterPage() {
       {step === 3 && (
         <form className="mt-6 space-y-3" onSubmit={(e) => void completeRegistration(e)}>
           <p className="text-sm text-slate-600">
-            Set a password for Student ID {draft.studentId}.
+            {isResubmission
+              ? `Review and re-submit your application for Student ID ${draft.studentId}.`
+              : `Set a password for Student ID ${draft.studentId}.`}
           </p>
-          <Field
-            label="Password"
-            value={password}
-            onChange={setPassword}
-            type="password"
-            required
-            autoComplete="new-password"
-            placeholder={formPlaceholders.password}
-          />
-          <Field
-            label="Confirm password"
-            value={confirm}
-            onChange={setConfirm}
-            type="password"
-            required
-            autoComplete="new-password"
-            placeholder={formPlaceholders.confirmPassword}
-          />
+          {!isResubmission && <>
+            <Field
+              label="Password"
+              value={password}
+              onChange={setPassword}
+              type="password"
+              required
+              autoComplete="new-password"
+              placeholder={formPlaceholders.password}
+            />
+            <Field
+              label="Confirm password"
+              value={confirm}
+              onChange={setConfirm}
+              type="password"
+              required
+              autoComplete="new-password"
+              placeholder={formPlaceholders.confirmPassword}
+            />
+          </>}
           <button
             type="button"
             onClick={() => {
@@ -514,7 +587,9 @@ export default function StudentRegisterPage() {
             disabled={submitting}
             className="w-full rounded-xl bg-teal-600 py-3 text-sm font-semibold text-white disabled:opacity-60"
           >
-            {submitting ? "Creating account…" : "Create account"}
+            {submitting
+              ? isResubmission ? "Submitting…" : "Creating account…"
+              : isResubmission ? "Re-submit application" : "Create account"}
           </button>
         </form>
       )}

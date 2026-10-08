@@ -27,7 +27,14 @@ export async function PATCH(
   }
 
   const body = await request.json();
-  const { status, account_status_reason, first_name, last_name, department, organization_id } = body;
+  const {
+    status,
+    account_status_reason,
+    first_name,
+    last_name,
+    department,
+    organization_id,
+  } = body;
 
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!serviceKey) {
@@ -40,21 +47,46 @@ export async function PATCH(
   );
 
   if (status) {
-    if (!["active", "disabled", "suspended"].includes(status)) {
+    if (!["active", "disabled", "suspended", "needs_reregistration"].includes(status)) {
       return NextResponse.json({ error: "Invalid account status" }, { status: 400 });
     }
-    const { data: target } = await admin.from("users").select("role").eq("id", id).single();
-    if (status === "suspended" && target?.role === "student" && !String(account_status_reason ?? "").trim()) {
-      return NextResponse.json({ error: "A reason is required when denying a student account" }, { status: 400 });
+    const { data: target, error: targetError } = await admin
+      .from("users")
+      .select("role, status")
+      .eq("id", id)
+      .single();
+    if (targetError || !target) {
+      return NextResponse.json({ error: "Account not found" }, { status: 404 });
+    }
+    if (status === "needs_reregistration" && target.role !== "student") {
+      return NextResponse.json({ error: "Re-registration decisions are only valid for student accounts" }, { status: 400 });
+    }
+    const reason = String(account_status_reason ?? "").trim();
+    if (
+      target.role === "student" &&
+      ["suspended", "needs_reregistration"].includes(status) &&
+      !reason
+    ) {
+      return NextResponse.json({ error: "A reason is required for this student-account decision" }, { status: 400 });
+    }
+    if (
+      target.role === "student" &&
+      status === "needs_reregistration" &&
+      target.status !== "pending"
+    ) {
+      return NextResponse.json({ error: "Only applicants awaiting review can be asked to register again" }, { status: 400 });
     }
     const updates: Record<string, unknown> = { status };
-    if (status === "disabled" || status === "suspended") {
+    if (status === "disabled" || status === "suspended" || status === "needs_reregistration") {
       updates.disabled_at = new Date().toISOString();
-    } else if (status === "active") {
-      updates.disabled_at = null;
-      updates.account_status_reason = null;
     }
-    if (status === "suspended") updates.account_status_reason = String(account_status_reason).trim();
+    if (status === "active") {
+      updates.disabled_at = null;
+      if (target.role === "student") updates.account_status_reason = null;
+    }
+    if (status === "suspended" || status === "needs_reregistration") {
+      updates.account_status_reason = reason;
+    }
 
     const { error } = await admin.from("users").update(updates).eq("id", id);
     if (error) {

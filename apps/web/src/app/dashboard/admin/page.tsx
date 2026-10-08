@@ -204,6 +204,7 @@ export default async function AdminPage() {
                 <th className="px-4 py-3 font-medium">Program</th>
                 <th className="px-4 py-3 font-medium">Year</th>
                 <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Remarks</th>
                 <th className="px-4 py-3 font-medium">Actions</th>
               </tr>
             </thead>
@@ -228,10 +229,18 @@ export default async function AdminPage() {
                         className={
                           userRow?.status === "pending"
                             ? "font-medium text-amber-600"
-                            : undefined
+                            : userRow?.status === "suspended"
+                              ? "font-medium text-red-600"
+                              : userRow?.status === "needs_reregistration"
+                                ? "font-medium text-orange-600"
+                                : undefined
                         }
                       >
-                        {userRow?.status ?? "—"}
+                        {userRow?.status === "suspended"
+                          ? "Banned"
+                          : userRow?.status === "needs_reregistration"
+                            ? "Needs re-registration"
+                            : userRow?.status ?? "—"}
                       </span>
                     </td>
                     <td className="max-w-xs px-4 py-3 text-slate-700">{userRow?.account_status_reason ?? "—"}</td>

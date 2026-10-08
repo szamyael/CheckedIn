@@ -58,19 +58,106 @@ class _LoginScreenState extends State<LoginScreen> {
       final normalized = AppConstants.normalizeStudentId(rawId) ?? rawId;
       await _auth.signIn(normalized, _passwordController.text);
       if (mounted) context.go('/home');
+    } on StudentAccountDecisionException catch (e) {
+      UniversalLoaderController.instance.hide();
+      if (mounted) await _showAccountDecision(e);
     } on EmailNotVerifiedException catch (e) {
       if (!mounted) return;
-      context.push('/verify-email', extra: {
-        'email': e.email,
-        'password': _passwordController.text,
-        'masked_email': AuthService.maskEmail(e.email),
-      });
+      context.push(
+        '/verify-email',
+        extra: {
+          'email': e.email,
+          'password': _passwordController.text,
+          'masked_email': AuthService.maskEmail(e.email),
+        },
+      );
     } catch (e) {
       setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
     } finally {
       UniversalLoaderController.instance.hide();
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _showAccountDecision(
+    StudentAccountDecisionException decision,
+  ) async {
+    final requiresReregistration = decision.status == 'needs_reregistration';
+    final router = GoRouter.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        icon: Icon(
+          requiresReregistration
+              ? Icons.assignment_late_outlined
+              : Icons.block_outlined,
+          color: requiresReregistration
+              ? Colors.orange.shade800
+              : Colors.red.shade700,
+        ),
+        title: Text(
+          requiresReregistration
+              ? 'Registration needs changes'
+              : 'Account banned',
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              requiresReregistration
+                  ? 'An administrator has asked you to register again.'
+                  : 'An administrator has banned this account. Contact the administration if you believe this decision was made in error.',
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Admin reason',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              decision.reason?.trim().isNotEmpty == true
+                  ? decision.reason!
+                  : 'No reason was provided.',
+            ),
+          ],
+        ),
+        actions: [
+          if (requiresReregistration)
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Close'),
+            ),
+          FilledButton(
+            onPressed: () async {
+              if (!requiresReregistration) {
+                Navigator.of(dialogContext).pop();
+                return;
+              }
+              try {
+                final draft = await _auth.loadReregistrationDraft();
+                if (!mounted || !dialogContext.mounted) return;
+                Navigator.of(dialogContext).pop();
+                router.go('/register/id-scan', extra: draft);
+              } catch (error) {
+                if (!mounted || !dialogContext.mounted) return;
+                Navigator.of(dialogContext).pop();
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      error.toString().replaceFirst('Exception: ', ''),
+                    ),
+                  ),
+                );
+              }
+            },
+            child: Text(requiresReregistration ? 'Register again' : 'Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -106,19 +193,56 @@ class _LoginScreenState extends State<LoginScreen> {
                             const Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('CheckedIn', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
+                                Text(
+                                  'CheckedIn',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                                 SizedBox(height: 2),
-                                Text('Campus attendance platform', style: TextStyle(color: Color(0xFFD7E2EC), fontSize: 12)),
+                                Text(
+                                  'Campus attendance platform',
+                                  style: TextStyle(
+                                    color: Color(0xFFD7E2EC),
+                                    fontSize: 12,
+                                  ),
+                                ),
                               ],
                             ),
                           ],
                         ),
                         const SizedBox(height: 34),
-                        const Text('STUDENT PORTAL', style: TextStyle(color: Color(0xFFD7E2EC), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.5)),
+                        const Text(
+                          'STUDENT PORTAL',
+                          style: TextStyle(
+                            color: Color(0xFFD7E2EC),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
                         const SizedBox(height: 10),
-                        const Text('Your campus life,\nchecked in.', style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w700, height: 1.08, letterSpacing: -0.6)),
+                        const Text(
+                          'Your campus life,\nchecked in.',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 30,
+                            fontWeight: FontWeight.w700,
+                            height: 1.08,
+                            letterSpacing: -0.6,
+                          ),
+                        ),
                         const SizedBox(height: 12),
-                        const Text('Events, attendance, and rewards—all in one place.', style: TextStyle(color: Color(0xFFD7E2EC), fontSize: 14, height: 1.5)),
+                        const Text(
+                          'Events, attendance, and rewards—all in one place.',
+                          style: TextStyle(
+                            color: Color(0xFFD7E2EC),
+                            fontSize: 14,
+                            height: 1.5,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -133,18 +257,40 @@ class _LoginScreenState extends State<LoginScreen> {
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: StudentUi.border),
-                          boxShadow: const [BoxShadow(color: Color(0x120C2238), blurRadius: 20, offset: Offset(0, 8))],
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x120C2238),
+                              blurRadius: 20,
+                              offset: Offset(0, 8),
+                            ),
+                          ],
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Text('Welcome back', style: theme.textTheme.titleLarge?.copyWith(fontSize: 24, color: const Color(0xFF0C2238))),
+                            Text(
+                              'Welcome back',
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontSize: 24,
+                                color: const Color(0xFF0C2238),
+                              ),
+                            ),
                             const SizedBox(height: 6),
-                            const Text('Sign in with your Student ID to continue.', style: TextStyle(color: Color(0xFF697178), fontSize: 14)),
+                            const Text(
+                              'Sign in with your Student ID to continue.',
+                              style: TextStyle(
+                                color: Color(0xFF697178),
+                                fontSize: 14,
+                              ),
+                            ),
                             const SizedBox(height: 24),
                             TextField(
                               controller: _studentIdController,
-                              decoration: const InputDecoration(labelText: 'Student ID', hintText: '0123-4567', prefixIcon: Icon(Icons.badge_outlined)),
+                              decoration: const InputDecoration(
+                                labelText: 'Student ID',
+                                hintText: '0123-4567',
+                                prefixIcon: Icon(Icons.badge_outlined),
+                              ),
                               keyboardType: TextInputType.number,
                               textInputAction: TextInputAction.next,
                               inputFormatters: [StudentIdInputFormatter()],
@@ -156,9 +302,17 @@ class _LoginScreenState extends State<LoginScreen> {
                                 labelText: 'Password',
                                 prefixIcon: const Icon(Icons.key_outlined),
                                 suffixIcon: IconButton(
-                                  tooltip: _obscurePassword ? 'Show password' : 'Hide password',
-                                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                                  icon: Icon(_obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                                  tooltip: _obscurePassword
+                                      ? 'Show password'
+                                      : 'Hide password',
+                                  onPressed: () => setState(
+                                    () => _obscurePassword = !_obscurePassword,
+                                  ),
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
+                                  ),
                                 ),
                               ),
                               obscureText: _obscurePassword,
@@ -177,7 +331,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: Text(_loading ? 'Signing in…' : 'Sign in'),
                             ),
                             const SizedBox(height: 4),
-                            TextButton(onPressed: () => context.push('/forgot-password'), child: const Text('Forgot password?')),
+                            TextButton(
+                              onPressed: () => context.push('/forgot-password'),
+                              child: const Text('Forgot password?'),
+                            ),
                           ],
                         ),
                       ),
@@ -188,21 +345,31 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       children: [
                         StudentInfoBanner(
-                          message: 'Sign in once online to unlock offline access, cached events, and background sync on this device.',
+                          message:
+                              'Sign in once online to unlock offline access, cached events, and background sync on this device.',
                           icon: Icons.offline_bolt_outlined,
                           background: const Color(0xFFEEF1F0),
                           border: StudentUi.border,
                           foreground: StudentUi.muted,
                         ),
                         const SizedBox(height: 18),
-                        const Text('New to CheckedIn?', style: TextStyle(color: Color(0xFF697178), fontSize: 14)),
+                        const Text(
+                          'New to CheckedIn?',
+                          style: TextStyle(
+                            color: Color(0xFF697178),
+                            fontSize: 14,
+                          ),
+                        ),
                         const SizedBox(height: 8),
                         StudentSecondaryButton(
                           label: 'Create student account',
                           onPressed: () async {
                             await _auth.signOut();
                             if (!context.mounted) return;
-                            context.push('/register/id-scan', extra: RegistrationDraft());
+                            context.push(
+                              '/register/id-scan',
+                              extra: RegistrationDraft(),
+                            );
                           },
                         ),
                       ],

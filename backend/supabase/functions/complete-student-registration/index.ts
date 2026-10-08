@@ -138,13 +138,25 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { data: existingUser } = await supabase
+    const { data: existingUser, error: existingUserError } = await supabase
       .from("users")
-      .select("id")
+      .select("id, role, status")
       .eq("id", user_id)
       .maybeSingle();
 
-    if (existingUser) {
+    if (existingUserError) {
+      return new Response(
+        JSON.stringify({ error: existingUserError.message }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
+
+    const isResubmission = existingUser?.role === "student"
+      && existingUser.status === "needs_reregistration";
+    if (existingUser && !isResubmission) {
       return new Response(
         JSON.stringify({ error: "Student profile already exists" }),
         {
@@ -154,15 +166,56 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { data: existingStudent } = await supabase
+    if (isResubmission) {
+      const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
+      if (!token) {
+        return new Response(
+          JSON.stringify({ error: "Sign in to re-submit this application" }),
+          {
+            status: 401,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
+        );
+      }
+      const { data: { user: caller }, error: callerError } = await supabase.auth.getUser(token);
+      if (callerError || caller?.id !== user_id) {
+        return new Response(
+          JSON.stringify({ error: "You can only re-submit your own application" }),
+          {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
+        );
+      }
+    }
+
+    const { data: existingStudent, error: existingStudentError } = await supabase
       .from("students")
-      .select("id")
+      .select("id, profile_photo_url")
       .eq("student_id", normalizedId)
       .maybeSingle();
 
-    if (existingStudent) {
+    if (existingStudentError) {
+      return new Response(
+        JSON.stringify({ error: existingStudentError.message }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
+    if (existingStudent && (!isResubmission || existingStudent.id !== user_id)) {
       return new Response(
         JSON.stringify({ error: "Student ID is already registered" }),
+        {
+          status: 409,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
+    if (isResubmission && !existingStudent) {
+      return new Response(
+        JSON.stringify({ error: "Student application could not be found" }),
         {
           status: 409,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -204,6 +257,56 @@ Deno.serve(async (req) => {
         // Non-fatal: keep registration going without avatar
         avatarPath = null;
       }
+    }
+
+    if (isResubmission) {
+      const { error: studentUpdateError } = await supabase
+        .from("students")
+        .update({
+          first_name: first_name.trim(),
+          middle_name: middle_name?.trim() || null,
+          last_name: last_name.trim(),
+          name_extension: name_extension?.trim() || null,
+          program: program.trim(),
+          year_level: year,
+          section: section?.trim() || null,
+          id_card_image_url: path,
+          profile_photo_url: avatarPath ?? existingStudent?.profile_photo_url ?? null,
+        })
+        .eq("id", user_id);
+
+      if (studentUpdateError) {
+        return new Response(
+          JSON.stringify({ error: studentUpdateError.message }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      const { data: updatedAccount, error: accountUpdateError } = await supabase
+        .from("users")
+        .update({ status: "pending", disabled_at: null })
+        .eq("id", user_id)
+        .eq("status", "needs_reregistration")
+        .select("id")
+        .maybeSingle();
+
+      if (accountUpdateError || !updatedAccount) {
+        return new Response(
+          JSON.stringify({ error: accountUpdateError?.message ?? "This application is no longer awaiting re-registration" }),
+          {
+            status: accountUpdateError ? 500 : 409,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ success: true }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     const { error: userInsertError } = await supabase.from("users").insert({

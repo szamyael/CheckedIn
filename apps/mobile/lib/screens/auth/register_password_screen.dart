@@ -31,14 +31,15 @@ class _RegisterPasswordScreenState extends State<RegisterPasswordScreen> {
   }
 
   Future<void> _register() async {
-    if (_passwordController.text.length < 8) {
+    if (!widget.draft.isResubmission && _passwordController.text.length < 8) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Password must be at least 8 characters.')),
       );
       return;
     }
 
-    if (_passwordController.text != _confirmController.text) {
+    if (!widget.draft.isResubmission &&
+        _passwordController.text != _confirmController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Passwords do not match.')),
       );
@@ -56,7 +57,9 @@ class _RegisterPasswordScreenState extends State<RegisterPasswordScreen> {
     }
 
     setState(() => _loading = true);
-    UniversalLoaderController.instance.show('Creating account…');
+    UniversalLoaderController.instance.show(
+      widget.draft.isResubmission ? 'Submitting registration…' : 'Creating account…',
+    );
 
     try {
       final idFile = File(idPath);
@@ -76,6 +79,10 @@ class _RegisterPasswordScreenState extends State<RegisterPasswordScreen> {
       await _auth.signOut();
 
       if (!mounted) return;
+      if (widget.draft.isResubmission) {
+        context.go('/login');
+        return;
+      }
       context.go('/verify-email', extra: {
         'email': email,
         'password': _passwordController.text,
@@ -104,26 +111,39 @@ class _RegisterPasswordScreenState extends State<RegisterPasswordScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             StudentPageTitle(
-              title: 'Create password',
-              subtitle:
-                  'Set a password for Student ID ${widget.draft.studentId}. You will use this to sign in.',
+              title: widget.draft.isResubmission
+                  ? 'Submit registration again'
+                  : 'Create password',
+              subtitle: widget.draft.isResubmission
+                  ? 'Your existing account and password will be kept. Re-submit the corrected details for Student ID ${widget.draft.studentId}.'
+                  : 'Set a password for Student ID ${widget.draft.studentId}. You will use this to sign in.',
             ),
             const SizedBox(height: 24),
-            TextField(
-              controller: _passwordController,
-              decoration: const InputDecoration(labelText: 'Password'),
-              obscureText: true,
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _confirmController,
-              decoration: const InputDecoration(labelText: 'Confirm Password'),
-              obscureText: true,
-            ),
+            if (!widget.draft.isResubmission) ...[
+              TextField(
+                controller: _passwordController,
+                decoration: const InputDecoration(labelText: 'Password'),
+                obscureText: true,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _confirmController,
+                decoration: const InputDecoration(labelText: 'Confirm Password'),
+                obscureText: true,
+              ),
+            ],
             const Spacer(),
             FilledButton(
               onPressed: _loading ? null : _register,
-              child: Text(_loading ? 'Creating account…' : 'Create account'),
+              child: Text(
+                _loading
+                    ? widget.draft.isResubmission
+                        ? 'Submitting…'
+                        : 'Creating account…'
+                    : widget.draft.isResubmission
+                        ? 'Submit registration again'
+                        : 'Create account',
+              ),
             ),
           ],
         ),

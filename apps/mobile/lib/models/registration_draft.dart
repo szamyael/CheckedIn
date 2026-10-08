@@ -40,6 +40,7 @@ class RegistrationDraft {
   String? idCardImagePath;
   String? avatarImagePath;
   bool avatarFromId = false;
+  bool isResubmission = false;
   ParsedStudentId? ocrSnapshot;
 
   bool get hasRequiredFields =>

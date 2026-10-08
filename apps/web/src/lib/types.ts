@@ -1,6 +1,6 @@
 export type UserRole = "admin" | "faculty" | "org_member" | "student";
 
-export type AccountStatus = "pending" | "active" | "disabled" | "suspended";
+export type AccountStatus = "pending" | "active" | "disabled" | "suspended" | "needs_reregistration";
 
 export type EventStatus = "draft" | "pending_approval" | "published" | "cancelled" | "completed";
 
