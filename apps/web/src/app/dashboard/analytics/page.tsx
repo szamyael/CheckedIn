@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AnalyticsCharts } from "@/components/AnalyticsCharts";
 import { DashboardPageHeader, DashboardSection, DashboardStat } from "@/components/DashboardUi";
+import { addWeeks, format, startOfWeek, subWeeks } from "date-fns";
 
 export default async function AnalyticsPage() {
   const supabase = await createClient();
@@ -81,6 +82,22 @@ export default async function AnalyticsPage() {
     }))
     .sort((a, b) => b.count - a.count);
 
+  const firstWeek = startOfWeek(subWeeks(new Date(), 11), { weekStartsOn: 1 });
+  const attendanceTrend = await Promise.all(
+    Array.from({ length: 12 }, async (_, index) => {
+      const weekStart = addWeeks(firstWeek, index);
+      const weekEnd = addWeeks(weekStart, 1);
+      const { count, error } = await supabase
+        .from("attendance_records")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "checked_in")
+        .gte("checked_in_at", weekStart.toISOString())
+        .lt("checked_in_at", weekEnd.toISOString());
+      if (error) throw error;
+      return { label: format(weekStart, "MMM d"), value: count ?? 0 };
+    }),
+  );
+
   return (
     <div className="space-y-8">
       <DashboardPageHeader eyebrow="ATTENDANCE INTELLIGENCE" title="Analytics" description="Institution-wide attendance, participation, and organization performance." />
@@ -95,6 +112,7 @@ export default async function AnalyticsPage() {
         eventRankings={eventRankings}
         programRankings={programRankings}
         yearLevelRankings={yearLevelRankings}
+        attendanceTrend={attendanceTrend}
       />
 
       <DashboardSection title="Organization activity" description="Event creation by organization.">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { ArrowUpRight, Award, CalendarDays, Plus, Sparkles, Trophy } from "lucide-react";
 import { useLoader } from "@/components/LoaderProvider";
 import { OrgBadgesPanel } from "@/components/bingo/OrgBadgesPanel";
 import {
@@ -446,245 +447,217 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
   const cellByPos = (pos: number) => cells.find((c) => c.position === pos);
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Bingo &amp; Badges</h1>
-          <p className="mt-1 text-sm text-slate-700">
-            Create multiple 3×3 bingo cards. Publish as many as you need; students
-            pick which published card to play. Keep drafts while building and archive
-            past seasons.
-          </p>
+    <div className="space-y-7">
+      <header className="relative isolate overflow-hidden rounded-3xl bg-[var(--primary-strong)] p-6 text-white shadow-[var(--shadow-card)] sm:p-8">
+        <div className="absolute -right-12 -top-20 -z-10 h-64 w-64 rounded-full bg-white/5" />
+        <div className="absolute -bottom-32 right-1/4 -z-10 h-64 w-64 rounded-full bg-[var(--accent)]/10" />
+        <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
+          <div className="max-w-2xl">
+            <p className="text-[11px] font-bold tracking-[0.18em] text-white/65">PARTICIPATION &amp; RECOGNITION</p>
+            <h1 className="mt-3 text-3xl font-semibold tracking-tight !text-white sm:text-4xl">Bingo &amp; Badges</h1>
+            <p className="mt-3 text-sm leading-6 text-white/75">
+              Build event challenges, publish cards for students, and celebrate every milestone.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void createNewCard()}
+            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-4 text-sm font-semibold text-[var(--primary-strong)] shadow-sm transition hover:bg-[var(--primary-soft)]"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            New bingo card
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => void createNewCard()}
-          className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
-        >
-          + New card
-        </button>
+      </header>
+
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        {[
+          { label: "Bingo cards", value: cards.length, detail: "Across all seasons", icon: Sparkles },
+          { label: "Published", value: cards.filter((card) => card.status === "active").length, detail: "Available to students", icon: CalendarDays },
+          { label: "Badge designs", value: badges.length, detail: "Recognition options", icon: Award },
+          { label: "Recent awards", value: awards.length, detail: selectedCard ? "For selected card" : "Latest activity", icon: Trophy },
+        ].map(({ label, value, detail, icon: Icon }) => (
+          <section key={label} className="min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-soft)] sm:p-5">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold text-[var(--muted)]">{label}</p>
+                <p className="mt-2 text-3xl font-semibold tracking-tight text-[var(--primary-strong)]">{value}</p>
+                <p className="mt-1 text-xs text-[var(--muted)]">{detail}</p>
+              </div>
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--primary-soft)] text-[var(--primary)]">
+                <Icon className="h-5 w-5" aria-hidden="true" />
+              </span>
+            </div>
+          </section>
+        ))}
       </div>
 
       {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+        <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
       )}
 
-      <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-6">
-        <h2 className="text-lg font-semibold">Your bingo cards</h2>
-        {cards.length === 0 ? (
-          <p className="text-sm text-slate-500">
-            No bingo cards yet. Click &quot;New card&quot; to create your first draft.
-          </p>
-        ) : (
-          <ul className="divide-y divide-slate-100 rounded-lg border border-slate-200">
-            {cards.map((c) => (
-              <li
-                key={c.id}
-                className={`flex flex-wrap items-center justify-between gap-3 px-4 py-3 ${
-                  selectedCardId === c.id ? "bg-teal-50/60" : "bg-white"
-                }`}
-              >
-                <button
-                  type="button"
-                  onClick={() => setSelectedCardId(c.id)}
-                  className="min-w-0 flex-1 text-left"
-                >
-                  <span className="font-medium text-slate-900">{c.title}</span>
-                  <span className="ml-2 text-xs text-slate-500">{c.season_label}</span>
-                  <span
-                    className={`ml-2 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${statusBadgeClass(c.status)}`}
-                  >
-                    {statusLabel(c.status)}
-                  </span>
-                </button>
-                <p className="text-xs text-slate-400">
-                  Updated {new Date(c.updated_at).toLocaleDateString()}
-                </p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <div className="grid items-start gap-5 2xl:grid-cols-[minmax(260px,0.78fr)_minmax(0,1.65fr)]">
+        <section className="min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-soft)] sm:p-6">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-bold tracking-[0.14em] text-[var(--primary)]">LIBRARY</p>
+              <h2 className="mt-1 text-lg font-semibold text-[var(--primary-strong)]">Bingo cards</h2>
+            </div>
+            <span className="rounded-full bg-[var(--surface-muted)] px-2.5 py-1 text-xs font-semibold text-[var(--muted)]">{cards.length}</span>
+          </div>
+          {cards.length === 0 ? (
+            <div className="mt-5 rounded-xl border border-dashed border-[var(--border)] bg-[var(--background)] p-5 text-sm leading-6 text-[var(--muted)]">
+              Your card library is empty. Create a card to start building a student challenge.
+            </div>
+          ) : (
+            <ul className="mt-5 space-y-2">
+              {cards.map((card) => {
+                const selected = selectedCardId === card.id;
+                return (
+                  <li key={card.id}>
+                    <button
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => setSelectedCardId(card.id)}
+                      className={`w-full rounded-xl border p-3.5 text-left transition ${
+                        selected
+                          ? "border-[var(--primary)] bg-[var(--primary-soft)] shadow-sm"
+                          : "border-[var(--border)] bg-[var(--surface)] hover:border-[var(--primary)]/50 hover:bg-[var(--surface-muted)]"
+                      }`}
+                    >
+                      <span className="flex items-start justify-between gap-2">
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-semibold text-[var(--primary-strong)]">{card.title}</span>
+                          <span className="mt-1 block text-xs text-[var(--muted)]">{card.season_label}</span>
+                        </span>
+                        <ArrowUpRight className={`mt-0.5 h-4 w-4 shrink-0 ${selected ? "text-[var(--primary)]" : "text-[var(--muted)]"}`} aria-hidden="true" />
+                      </span>
+                      <span className="mt-3 flex items-center justify-between gap-2">
+                        <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${statusBadgeClass(card.status)}`}>
+                          {statusLabel(card.status)}
+                        </span>
+                        <span className="text-[10px] text-[var(--muted)]">Updated {new Date(card.updated_at).toLocaleDateString()}</span>
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          <div className="mt-5 rounded-xl bg-[var(--surface-muted)] p-4">
+            <p className="text-xs font-semibold text-[var(--primary-strong)]">A simple flow</p>
+            <p className="mt-1 text-xs leading-5 text-[var(--muted)]">Assign events to a card, save your settings, then publish it for students.</p>
+          </div>
+        </section>
 
-      {selectedCard && (
-        <>
-          <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-6">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-lg font-semibold">Card settings</h2>
-              <span
-                className={`rounded-full px-3 py-1 text-xs font-medium ${statusBadgeClass(selectedCard.status)}`}
-              >
+        {selectedCard ? (
+          <section className="min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-soft)] sm:p-6">
+            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--border)] pb-5">
+              <div>
+                <p className="text-[10px] font-bold tracking-[0.14em] text-[var(--primary)]">CARD SETTINGS</p>
+                <h2 className="mt-1 text-xl font-semibold text-[var(--primary-strong)]">{selectedCard.title}</h2>
+              </div>
+              <span className={`rounded-full px-3 py-1.5 text-xs font-semibold ${statusBadgeClass(selectedCard.status)}`}>
                 {statusLabel(selectedCard.status)}
               </span>
             </div>
 
             {isReadOnly && (
-              <p className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
-                This card is archived. Restore to draft to edit, or delete it.
+              <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                This card is archived. Restore it to draft before making changes.
               </p>
             )}
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="text-sm">
-                Title
-                <input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  disabled={isReadOnly}
-                  className="mt-1 w-full rounded-lg border px-3 py-2 disabled:bg-slate-50"
-                />
+            <div className="mt-5 grid gap-x-4 gap-y-4 sm:grid-cols-2">
+              <label className="text-xs font-semibold text-[var(--muted)]">
+                Card title
+                <input value={title} onChange={(e) => setTitle(e.target.value)} disabled={isReadOnly} className="mt-1.5 w-full rounded-xl border px-3 py-2.5 text-sm font-normal disabled:opacity-60" />
               </label>
-              <label className="text-sm">
+              <label className="text-xs font-semibold text-[var(--muted)]">
                 Season label
-                <input
-                  value={season}
-                  onChange={(e) => setSeason(e.target.value)}
-                  disabled={isReadOnly}
-                  className="mt-1 w-full rounded-lg border px-3 py-2 disabled:bg-slate-50"
-                />
+                <input value={season} onChange={(e) => setSeason(e.target.value)} disabled={isReadOnly} className="mt-1.5 w-full rounded-xl border px-3 py-2.5 text-sm font-normal disabled:opacity-60" />
               </label>
-              <label className="text-sm">
-                Streak threshold
-                <input
-                  type="number"
-                  min={2}
-                  value={streakThreshold}
-                  onChange={(e) => setStreakThreshold(Number(e.target.value))}
-                  disabled={isReadOnly}
-                  className="mt-1 w-full rounded-lg border px-3 py-2 disabled:bg-slate-50"
-                />
+              <label className="text-xs font-semibold text-[var(--muted)]">
+                Events for a streak
+                <input type="number" min={2} value={streakThreshold} onChange={(e) => setStreakThreshold(Number(e.target.value))} disabled={isReadOnly} className="mt-1.5 w-full rounded-xl border px-3 py-2.5 text-sm font-normal disabled:opacity-60" />
               </label>
-              <label className="text-sm">
-                Line badge name
-                <input
-                  value={lineBadgeName}
-                  onChange={(e) => setLineBadgeName(e.target.value)}
-                  disabled={isReadOnly}
-                  className="mt-1 w-full rounded-lg border px-3 py-2 disabled:bg-slate-50"
-                />
+              <div className="hidden sm:block" />
+              <label className="text-xs font-semibold text-[var(--muted)]">
+                Line reward
+                <input value={lineBadgeName} onChange={(e) => setLineBadgeName(e.target.value)} disabled={isReadOnly} className="mt-1.5 w-full rounded-xl border px-3 py-2.5 text-sm font-normal disabled:opacity-60" />
               </label>
-              <label className="text-sm">
-                Line badge points
-                <input
-                  type="number"
-                  min={0}
-                  value={linePoints}
-                  onChange={(e) => setLinePoints(Number(e.target.value))}
-                  disabled={isReadOnly}
-                  className="mt-1 w-full rounded-lg border px-3 py-2 disabled:bg-slate-50"
-                />
+              <label className="text-xs font-semibold text-[var(--muted)]">
+                Line reward points
+                <input type="number" min={0} value={linePoints} onChange={(e) => setLinePoints(Number(e.target.value))} disabled={isReadOnly} className="mt-1.5 w-full rounded-xl border px-3 py-2.5 text-sm font-normal disabled:opacity-60" />
               </label>
-              <label className="text-sm">
-                Streak badge name
-                <input
-                  value={streakBadgeName}
-                  onChange={(e) => setStreakBadgeName(e.target.value)}
-                  disabled={isReadOnly}
-                  className="mt-1 w-full rounded-lg border px-3 py-2 disabled:bg-slate-50"
-                />
+              <label className="text-xs font-semibold text-[var(--muted)]">
+                Streak reward
+                <input value={streakBadgeName} onChange={(e) => setStreakBadgeName(e.target.value)} disabled={isReadOnly} className="mt-1.5 w-full rounded-xl border px-3 py-2.5 text-sm font-normal disabled:opacity-60" />
               </label>
-              <label className="text-sm">
-                Streak badge points
-                <input
-                  type="number"
-                  min={0}
-                  value={streakPoints}
-                  onChange={(e) => setStreakPoints(Number(e.target.value))}
-                  disabled={isReadOnly}
-                  className="mt-1 w-full rounded-lg border px-3 py-2 disabled:bg-slate-50"
-                />
+              <label className="text-xs font-semibold text-[var(--muted)]">
+                Streak reward points
+                <input type="number" min={0} value={streakPoints} onChange={(e) => setStreakPoints(Number(e.target.value))} disabled={isReadOnly} className="mt-1.5 w-full rounded-xl border px-3 py-2.5 text-sm font-normal disabled:opacity-60" />
               </label>
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="mt-6 flex flex-wrap gap-2 border-t border-[var(--border)] pt-5">
               {!isReadOnly && (
-                <button
-                  type="button"
-                  onClick={() => void saveCard()}
-                  className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
-                >
-                  Update
-                </button>
+                <button type="button" onClick={() => void saveCard()} className="inline-flex min-h-10 items-center justify-center rounded-xl bg-[var(--primary)] px-4 text-sm font-semibold text-white hover:bg-[var(--primary-strong)]">Save changes</button>
               )}
               {selectedCard.status !== "draft" && !isReadOnly && (
-                <button
-                  type="button"
-                  onClick={() => void changeCardStatus("draft")}
-                  className="rounded-lg border border-amber-300 px-4 py-2 text-sm text-amber-800 hover:bg-amber-50"
-                >
-                  Save as draft
-                </button>
+                <button type="button" onClick={() => void changeCardStatus("draft")} className="min-h-10 rounded-xl border border-amber-300 px-3 text-sm font-medium text-amber-800 hover:bg-amber-50">Save as draft</button>
               )}
               {selectedCard.status !== "active" && !isReadOnly && (
-                <button
-                  type="button"
-                  onClick={() => void changeCardStatus("active")}
-                  className="rounded-lg border border-teal-300 px-4 py-2 text-sm text-teal-800 hover:bg-teal-50"
-                >
-                  Publish for students
-                </button>
+                <button type="button" onClick={() => void changeCardStatus("active")} className="min-h-10 rounded-xl border border-[var(--primary)]/40 px-3 text-sm font-medium text-[var(--primary)] hover:bg-[var(--primary-soft)]">Publish for students</button>
               )}
               {selectedCard.status !== "archived" && (
-                <button
-                  type="button"
-                  onClick={() => void changeCardStatus("archived")}
-                  className="rounded-lg border px-4 py-2 text-sm hover:bg-slate-50"
-                >
-                  Archive
-                </button>
+                <button type="button" onClick={() => void changeCardStatus("archived")} className="min-h-10 rounded-xl border border-[var(--border)] px-3 text-sm font-medium text-[var(--muted)] hover:bg-[var(--surface-muted)]">Archive</button>
               )}
               {selectedCard.status === "archived" && (
-                <button
-                  type="button"
-                  onClick={() => void changeCardStatus("draft")}
-                  className="rounded-lg border px-4 py-2 text-sm hover:bg-slate-50"
-                >
-                  Restore to draft
-                </button>
+                <button type="button" onClick={() => void changeCardStatus("draft")} className="min-h-10 rounded-xl border border-[var(--border)] px-3 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--surface-muted)]">Restore to draft</button>
               )}
-              <button
-                type="button"
-                onClick={() => void deleteCard()}
-                className="rounded-lg border border-red-300 px-4 py-2 text-sm text-red-700 hover:bg-red-50"
-              >
-                Delete
-              </button>
+              <button type="button" onClick={() => void deleteCard()} className="min-h-10 rounded-xl border border-red-200 px-3 text-sm font-medium text-red-700 hover:bg-red-50">Delete card</button>
             </div>
           </section>
+        ) : (
+          <section className="grid min-h-64 place-items-center rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-8 text-center">
+            <div className="max-w-sm">
+              <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]"><Sparkles className="h-6 w-6" aria-hidden="true" /></span>
+              <h2 className="mt-4 text-lg font-semibold text-[var(--primary-strong)]">Start a new challenge</h2>
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Create a bingo card, add events to its squares, and set the rewards students can earn.</p>
+            </div>
+          </section>
+        )}
+      </div>
 
-          <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-6">
-            <h2 className="text-lg font-semibold">3×3 event grid</h2>
-            <p className="text-sm text-slate-600">
-              Assign any campus event to each cell.
-              {events.length === 0 && (
-                <span className="mt-1 block text-amber-700">
-                  No events found yet. Create events on the Events page.
-                </span>
-              )}
-            </p>
-            <div className="grid grid-cols-3 gap-3">
+      {selectedCard && (
+        <>
+          <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-soft)] sm:p-6">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-bold tracking-[0.14em] text-[var(--primary)]">CHALLENGE BUILDER</p>
+                <h2 className="mt-1 text-xl font-semibold text-[var(--primary-strong)]">3×3 event grid</h2>
+                <p className="mt-1 text-sm text-[var(--muted)]">Choose one campus event for each square.</p>
+              </div>
+              <span className="rounded-full bg-[var(--surface-muted)] px-3 py-1.5 text-xs font-medium text-[var(--muted)]">{cells.filter((cell) => cell.event_id).length} of 9 assigned</span>
+            </div>
+            {events.length === 0 && (
+              <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">No events found yet. Create events on the Events page.</p>
+            )}
+            <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
               {Array.from({ length: 9 }, (_, position) => {
                 const cell = cellByPos(position);
                 return (
-                  <div
-                    key={position}
-                    className="rounded-xl border border-slate-200 bg-slate-50 p-3"
-                  >
-                    <p className="mb-2 text-xs font-medium text-slate-500">
-                      Cell {position + 1}
-                    </p>
-                    <select
-                      value={cell?.event_id ?? ""}
-                      disabled={isReadOnly}
-                      onChange={(e) => void assignEvent(position, e.target.value)}
-                      className="w-full rounded-lg border bg-white px-2 py-2 text-xs disabled:bg-slate-100"
-                    >
+                  <div key={position} className="min-w-0 rounded-xl border border-[var(--border)] bg-[var(--background)] p-3.5">
+                    <div className="mb-3 flex items-center gap-2">
+                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[var(--primary-soft)] text-xs font-bold text-[var(--primary)]">{position + 1}</span>
+                      <span className="truncate text-xs font-semibold text-[var(--primary-strong)]">{cell?.label ?? "Choose an event"}</span>
+                    </div>
+                    <label className="sr-only" htmlFor={`bingo-cell-${position}`}>Event for square {position + 1}</label>
+                    <select id={`bingo-cell-${position}`} value={cell?.event_id ?? ""} disabled={isReadOnly} onChange={(e) => void assignEvent(position, e.target.value)} className="w-full rounded-xl border bg-[var(--surface)] px-3 py-2.5 text-xs disabled:opacity-60">
                       <option value="">Unassigned</option>
-                      {events.map((ev) => (
-                        <option key={ev.id} value={ev.id}>
-                          {ev.title}
-                          {ev.status !== "published" ? ` (${ev.status})` : ""}
-                        </option>
+                      {events.map((event) => (
+                        <option key={event.id} value={event.id}>{event.title}{event.status !== "published" ? ` (${event.status})` : ""}</option>
                       ))}
                     </select>
                   </div>
@@ -693,21 +666,26 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
             </div>
           </section>
 
-          <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-6">
-            <h2 className="text-lg font-semibold">Recent badge awards</h2>
+          <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-soft)] sm:p-6">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-bold tracking-[0.14em] text-[var(--primary)]">STUDENT MILESTONES</p>
+                <h2 className="mt-1 text-lg font-semibold text-[var(--primary-strong)]">Recent badge awards</h2>
+              </div>
+              <Trophy className="h-5 w-5 text-[var(--accent)]" aria-hidden="true" />
+            </div>
             {awards.length === 0 ? (
-              <p className="text-sm text-slate-500">No awards for this card yet.</p>
+              <p className="mt-4 rounded-xl bg-[var(--background)] px-4 py-5 text-sm text-[var(--muted)]">No awards for this card yet. Published cards and their rewards will show progress here.</p>
             ) : (
-              <ul className="space-y-2 text-sm">
-                {awards.map((a) => (
-                  <li key={a.id} className="rounded-lg border px-3 py-2">
-                    <span className="font-medium">
-                      {a.students
-                        ? `${a.students.first_name} ${a.students.last_name}`
-                        : "Student"}
-                    </span>{" "}
-                    earned <span className="text-teal-700">{a.org_badges?.name}</span>{" "}
-                    (+{a.points_awarded})
+              <ul className="mt-4 divide-y divide-[var(--border)]">
+                {awards.map((award) => (
+                  <li key={award.id} className="flex flex-wrap items-center justify-between gap-2 py-3 first:pt-0 last:pb-0">
+                    <p className="min-w-0 text-sm text-[var(--foreground)]">
+                      <span className="font-semibold">{award.students ? `${award.students.first_name} ${award.students.last_name}` : "Student"}</span>
+                      {" earned "}
+                      <span className="font-medium text-[var(--primary)]">{award.org_badges?.name}</span>
+                    </p>
+                    <span className="rounded-full bg-[var(--primary-soft)] px-2.5 py-1 text-xs font-semibold text-[var(--primary)]">+{award.points_awarded} pts</span>
                   </li>
                 ))}
               </ul>

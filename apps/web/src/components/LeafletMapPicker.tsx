@@ -11,6 +11,7 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { DashboardSearchInput } from "@/components/DashboardSearchInput";
 
 const markerIcon = L.icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -233,10 +234,10 @@ export function LeafletMapPicker({
     <div className="space-y-3">
       <div ref={wrapRef} className="relative">
         <div className="flex flex-wrap gap-2">
-          <input
-            type="text"
+          <DashboardSearchInput
+            label="Search place, campus, or address"
             value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
+            onChange={onSearchChange}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
@@ -247,8 +248,7 @@ export function LeafletMapPicker({
               if (results.length) setShowResults(true);
             }}
             placeholder="Search place, campus, or address…"
-            autoComplete="off"
-            className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            className="min-w-0 flex-1"
           />
           <button
             type="button"

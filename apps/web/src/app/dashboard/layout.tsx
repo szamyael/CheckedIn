@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import {
-  LayoutDashboard,
   LogOut,
 } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -82,27 +81,29 @@ export default async function DashboardLayout({
   ] satisfies DashboardNavItem[];
 
   return (
-    <div className="dashboard-workspace flex min-h-screen bg-[var(--background)] text-[var(--foreground)]">
-      <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col border-r border-[#28445d] bg-[#0c2238]">
-        <div className="border-b border-[#28445d] px-5 py-6">
-          <BrandLogo variant="transparent" className="max-h-12 w-full max-w-[156px] brightness-0 invert" />
-          <div className="mt-5 flex items-center gap-2 text-xs text-slate-300">
-            <span className="grid h-6 w-6 place-items-center border border-[#527086] bg-[#17324d]"><LayoutDashboard className="h-3.5 w-3.5" /></span>
+    <div className="dashboard-workspace min-h-dvh bg-[var(--background)] text-[var(--foreground)] lg:flex">
+      <aside className="dashboard-sidebar sticky top-0 z-40 flex w-full flex-col border-b border-white/10 bg-[var(--primary-strong)] text-white lg:h-dvh lg:w-72 lg:shrink-0 lg:border-b-0 lg:border-r">
+        <div className="flex items-center justify-between gap-4 border-b border-white/10 px-4 py-3 sm:px-6 lg:block lg:px-5 lg:py-6">
+          <BrandLogo variant="transparent" className="max-h-10 w-full max-w-36 brightness-0 invert lg:max-h-12 lg:max-w-[156px]" />
+          <div className="flex items-center gap-2 text-xs text-white/75 lg:mt-5">
+            <span className="hidden h-7 w-7 place-items-center rounded-lg border border-white/15 bg-white/10 lg:grid">
+              <span className="h-2 w-2 rounded-full bg-[var(--accent)]" />
+            </span>
             <span className="capitalize">{role.replace("_", " ")} workspace</span>
           </div>
         </div>
 
         <DashboardNav items={nav} />
 
-        <div className="border-t border-[#28445d] p-4">
-          <p className="mb-2 px-2 text-[10px] font-semibold tracking-[0.12em] text-slate-500">SIGNED IN AS</p>
+        <div className="hidden border-t border-white/10 p-4 lg:block">
+          <p className="mb-2 px-2 text-[10px] font-semibold tracking-[0.12em] text-white/50">SIGNED IN AS</p>
           <p className="truncate px-2 text-xs text-slate-300">
             {profile?.email ?? user.email}
           </p>
           <form action={signOut}>
             <button
               type="submit"
-              className="mt-3 flex min-h-10 w-full items-center gap-3 border-l-2 border-transparent px-2 text-sm text-slate-300 hover:border-[#c18a2e] hover:bg-[#17324d] hover:text-white"
+              className="mt-3 flex min-h-10 w-full items-center gap-3 rounded-xl px-3 text-sm text-white/75 hover:bg-white/10 hover:text-white"
             >
               <LogOut className="h-4 w-4" />
               Sign out
@@ -111,21 +112,33 @@ export default async function DashboardLayout({
         </div>
       </aside>
 
-      <main className="flex min-w-0 flex-1 flex-col overflow-auto">
+      <div className="flex min-w-0 flex-1 flex-col">
         <DashboardRealtimeSync />
         <SessionTimeoutGuard />
-        <header className="flex min-h-[73px] items-center justify-between border-b border-[var(--border)] bg-[var(--surface)] px-6 lg:px-10">
+        <header className="dashboard-topbar flex min-h-[68px] items-center justify-between border-b border-[var(--border)] bg-[var(--surface)] px-4 sm:px-6 lg:sticky lg:top-0 lg:z-30 lg:min-h-[73px] lg:px-10">
           <div>
             <p className="text-[10px] font-semibold tracking-[0.16em] text-[var(--muted)]">CHECKEDIN</p>
-            <p className="mt-0.5 text-sm font-semibold text-[var(--primary-strong)]">Campus operations</p>
+            <p className="mt-0.5 text-sm font-semibold capitalize text-[var(--primary-strong)]">
+              {role.replace("_", " ")} · Campus operations
+            </p>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <form action={signOut} className="lg:hidden">
+              <button
+                type="submit"
+                aria-label="Sign out"
+                className="inline-flex min-h-10 items-center gap-2 rounded-xl px-2 text-sm font-medium text-[var(--muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)] sm:px-3"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Sign out</span>
+              </button>
+            </form>
             <ThemePanelButton />
             <NotificationBell />
           </div>
         </header>
-        <div className="mx-auto w-full max-w-[1440px] flex-1 p-6 lg:p-10">{children}</div>
-      </main>
+        <main className="mx-auto w-full max-w-[1600px] flex-1 p-4 sm:p-6 xl:p-10">{children}</main>
+      </div>
     </div>
   );
 }

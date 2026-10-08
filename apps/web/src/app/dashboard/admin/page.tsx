@@ -124,7 +124,7 @@ export default async function AdminPage() {
     <div className="space-y-8">
       <DashboardPageHeader eyebrow="SYSTEM CONTROL" title="Administration" description="Manage institutional accounts, approval queues, event governance, and organization access." />
 
-      <div className="grid gap-px border border-[var(--border)] bg-[var(--border)] sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-px border border-[var(--border)] bg-[var(--border)] xl:grid-cols-4">
         <DashboardStat label="Students" value={students.length} detail="Registered student accounts" />
         <DashboardStat label="Pending review" value={pendingCount} detail="Accounts awaiting approval" />
         <DashboardStat label="Staff" value={staff.length} detail="Faculty and organization members" />

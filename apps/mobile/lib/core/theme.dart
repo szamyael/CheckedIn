@@ -12,7 +12,7 @@ extension AppColorThemeDetails on AppColorTheme {
   };
 
   String get description => switch (this) {
-    AppColorTheme.navy => 'Campus teal',
+    AppColorTheme.navy => 'Campus navy',
     AppColorTheme.forest => 'Grounded',
     AppColorTheme.burgundy => 'Classic',
     AppColorTheme.indigo => 'Focused',
@@ -20,75 +20,116 @@ extension AppColorThemeDetails on AppColorTheme {
   };
 
   Color get primary => switch (this) {
-    AppColorTheme.navy => const Color(0xFF0D716A),
-    AppColorTheme.forest => const Color(0xFF28734E),
-    AppColorTheme.burgundy => const Color(0xFF853F51),
-    AppColorTheme.indigo => const Color(0xFF4B5C9A),
-    AppColorTheme.slate => const Color(0xFF47616C),
+    AppColorTheme.navy => const Color(0xFF345B9A),
+    AppColorTheme.forest => const Color(0xFF347753),
+    AppColorTheme.burgundy => const Color(0xFF91465C),
+    AppColorTheme.indigo => const Color(0xFF5865AD),
+    AppColorTheme.slate => const Color(0xFF536B7A),
   };
 
   Color get primaryStrong => switch (this) {
-    AppColorTheme.navy => const Color(0xFF163A45),
-    AppColorTheme.forest => const Color(0xFF194A36),
-    AppColorTheme.burgundy => const Color(0xFF562D3A),
-    AppColorTheme.indigo => const Color(0xFF303D70),
-    AppColorTheme.slate => const Color(0xFF304650),
+    AppColorTheme.navy => const Color(0xFF1D3459),
+    AppColorTheme.forest => const Color(0xFF1D4934),
+    AppColorTheme.burgundy => const Color(0xFF562C3B),
+    AppColorTheme.indigo => const Color(0xFF303B74),
+    AppColorTheme.slate => const Color(0xFF344954),
   };
 
   Color get primarySoft => switch (this) {
-    AppColorTheme.navy => const Color(0xFFE4F1EC),
-    AppColorTheme.forest => const Color(0xFFE8F3EB),
-    AppColorTheme.burgundy => const Color(0xFFF6E9ED),
-    AppColorTheme.indigo => const Color(0xFFECEEFA),
-    AppColorTheme.slate => const Color(0xFFEAF0F2),
+    AppColorTheme.navy => const Color(0xFFE5EDF9),
+    AppColorTheme.forest => const Color(0xFFE5F2E9),
+    AppColorTheme.burgundy => const Color(0xFFF5E8ED),
+    AppColorTheme.indigo => const Color(0xFFEAECFA),
+    AppColorTheme.slate => const Color(0xFFE9EFF2),
   };
 
   Color get accent => switch (this) {
     AppColorTheme.navy => const Color(0xFFD99B32),
-    AppColorTheme.forest => const Color(0xFFBC8530),
-    AppColorTheme.burgundy => const Color(0xFFC28B37),
-    AppColorTheme.indigo => const Color(0xFFBD8A36),
-    AppColorTheme.slate => const Color(0xFFB78335),
+    AppColorTheme.forest => const Color(0xFFD19A45),
+    AppColorTheme.burgundy => const Color(0xFFD4A25A),
+    AppColorTheme.indigo => const Color(0xFFD5A34E),
+    AppColorTheme.slate => const Color(0xFFC08D45),
+  };
+
+  Color get background => switch (this) {
+    AppColorTheme.navy => const Color(0xFFF2F5FA),
+    AppColorTheme.forest => const Color(0xFFF1F6F2),
+    AppColorTheme.burgundy => const Color(0xFFF8F2F4),
+    AppColorTheme.indigo => const Color(0xFFF3F4FA),
+    AppColorTheme.slate => const Color(0xFFF2F5F6),
+  };
+
+  Color get backgroundDark => switch (this) {
+    AppColorTheme.navy => const Color(0xFF111A28),
+    AppColorTheme.forest => const Color(0xFF111E19),
+    AppColorTheme.burgundy => const Color(0xFF21171D),
+    AppColorTheme.indigo => const Color(0xFF171827),
+    AppColorTheme.slate => const Color(0xFF171E22),
+  };
+
+  Color get surfaceDark => switch (this) {
+    AppColorTheme.navy => const Color(0xFF19263A),
+    AppColorTheme.forest => const Color(0xFF1A2B23),
+    AppColorTheme.burgundy => const Color(0xFF302129),
+    AppColorTheme.indigo => const Color(0xFF22243A),
+    AppColorTheme.slate => const Color(0xFF222C32),
+  };
+
+  Color get surfaceMutedDark => switch (this) {
+    AppColorTheme.navy => const Color(0xFF22324A),
+    AppColorTheme.forest => const Color(0xFF24382E),
+    AppColorTheme.burgundy => const Color(0xFF3C2B34),
+    AppColorTheme.indigo => const Color(0xFF2C2F49),
+    AppColorTheme.slate => const Color(0xFF2C383F),
+  };
+
+  Color get borderDark => switch (this) {
+    AppColorTheme.navy => const Color(0xFF34445E),
+    AppColorTheme.forest => const Color(0xFF385143),
+    AppColorTheme.burgundy => const Color(0xFF553C49),
+    AppColorTheme.indigo => const Color(0xFF414562),
+    AppColorTheme.slate => const Color(0xFF414F56),
+  };
+
+  Color get primarySoftDark => switch (this) {
+    AppColorTheme.navy => const Color(0xFF263C5C),
+    AppColorTheme.forest => const Color(0xFF294735),
+    AppColorTheme.burgundy => const Color(0xFF49303C),
+    AppColorTheme.indigo => const Color(0xFF353858),
+    AppColorTheme.slate => const Color(0xFF34444C),
   };
 }
 
 class AppTheme {
   static ThemeData build(AppColorTheme selected, Brightness brightness) {
     final dark = brightness == Brightness.dark;
-    final background = dark
-        ? const Color(0xFF101B1E)
-        : const Color(0xFFF3F7F5);
-    final surface = dark ? const Color(0xFF172528) : Colors.white;
-    final border = dark
-        ? const Color(0xFF30464A)
-        : const Color(0xFFDCE7E2);
-    final text = dark ? const Color(0xFFF2F7F4) : const Color(0xFF172C35);
-    final secondary = dark
-        ? const Color(0xFFC6D2D0)
-        : const Color(0xFF42565C);
-    final muted = dark
-        ? const Color(0xFFA8B8B7)
-        : const Color(0xFF64747A);
-    final scheme = ColorScheme.fromSeed(
-      seedColor: selected.primary,
-      brightness: brightness,
-    ).copyWith(
-      primary: selected.primary,
-      onPrimary: Colors.white,
-      primaryContainer: dark
-          ? selected.primaryStrong.withValues(alpha: 0.72)
-          : selected.primarySoft,
-      onPrimaryContainer: dark ? Colors.white : selected.primaryStrong,
-      secondary: selected.accent,
-      onSecondary: const Color(0xFF31230D),
-      surface: surface,
-      onSurface: text,
-      surfaceContainerHighest: dark
-          ? const Color(0xFF203336)
-          : selected.primarySoft,
-      outline: border,
-      error: const Color(0xFFAE4146),
-    );
+    final background = dark ? selected.backgroundDark : selected.background;
+    final surface = dark ? selected.surfaceDark : Colors.white;
+    final border = dark ? selected.borderDark : const Color(0xFFD9E1EC);
+    final text = dark ? const Color(0xFFEEF2F8) : const Color(0xFF182638);
+    final secondary = dark ? const Color(0xFFC6D2E0) : const Color(0xFF42546A);
+    final muted = dark ? const Color(0xFFA5B2C4) : const Color(0xFF64748B);
+    final scheme =
+        ColorScheme.fromSeed(
+          seedColor: selected.primary,
+          brightness: brightness,
+        ).copyWith(
+          primary: selected.primary,
+          onPrimary: Colors.white,
+          primaryContainer: dark
+              ? selected.primarySoftDark
+              : selected.primarySoft,
+          onPrimaryContainer: dark ? Colors.white : selected.primaryStrong,
+          secondary: selected.accent,
+          onSecondary: const Color(0xFF31230D),
+          surface: surface,
+          onSurface: text,
+          surfaceContainerHighest: dark
+              ? selected.surfaceMutedDark
+              : selected.primarySoft,
+          outline: border,
+          error: const Color(0xFFAE4146),
+        );
 
     return ThemeData(
       useMaterial3: true,
@@ -222,10 +263,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          textStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-          ),
+          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(

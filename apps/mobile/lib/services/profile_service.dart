@@ -57,6 +57,7 @@ class AchievementItem {
   final String badgeType;
   final DateTime earnedAt;
   final String? eventId;
+  final String? imageUrl;
 
   AchievementItem({
     required this.id,
@@ -64,6 +65,7 @@ class AchievementItem {
     required this.badgeType,
     required this.earnedAt,
     this.eventId,
+    this.imageUrl,
   });
 
   factory AchievementItem.fromJson(Map<String, dynamic> json) {
@@ -73,6 +75,7 @@ class AchievementItem {
       badgeType: json['badge_type'] as String,
       earnedAt: DateTime.parse(json['earned_at'] as String),
       eventId: json['event_id'] as String?,
+      imageUrl: json['image_url'] as String?,
     );
   }
 
@@ -82,6 +85,7 @@ class AchievementItem {
     'badge_type': badgeType,
     'earned_at': earnedAt.toUtc().toIso8601String(),
     'event_id': eventId,
+    'image_url': imageUrl,
   };
 }
 
@@ -248,7 +252,7 @@ class ProfileService {
 
       final orgBadgeResponse = await _client
           .from('student_org_badges')
-          .select('id, earned_at, org_badges(name, kind)')
+          .select('id, earned_at, org_badges(name, kind, image_url)')
           .eq('student_id', userId);
 
       final items = (response as List)
@@ -273,6 +277,7 @@ class ProfileService {
             badgeName: badge['name'] as String? ?? 'Badge',
             badgeType: badge['kind'] as String? ?? 'custom',
             earnedAt: DateTime.parse(award['earned_at'] as String),
+            imageUrl: badge['image_url'] as String?,
           );
         }),
       );

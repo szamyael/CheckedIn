@@ -75,10 +75,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
           return ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
             children: [
               Text(
-                'Good morning,',
+                'YOUR CAMPUS, IN SYNC',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 3),
@@ -86,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 '$firstName.',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 28,
+                  fontSize: 30,
                   fontWeight: FontWeight.w700,
                   letterSpacing: -0.4,
                 ),
@@ -199,19 +199,20 @@ class _CampusPass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF1A4851), Color(0xFF12313D)],
+          colors: [primary, Color.lerp(primary, Colors.black, 0.24)!],
         ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-        boxShadow: const [
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x24163A45),
+            color: primary.withValues(alpha: 0.16),
             blurRadius: 28,
             offset: Offset(0, 14),
           ),
@@ -402,20 +403,23 @@ class _ActionRow extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(20),
         child: Ink(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: background ?? colorScheme.surface,
             border: Border.all(color: colorScheme.outline),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(20),
           ),
           child: Row(
             children: [
               Container(
                 width: 42,
                 height: 42,
-                color: rowAccent.withValues(alpha: 0.1),
+                decoration: BoxDecoration(
+                  color: rowAccent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
                 child: Icon(icon, color: rowAccent, size: 21),
               ),
               const SizedBox(width: 13),

@@ -97,6 +97,8 @@ Deno.serve(async (req) => {
       JSON.stringify({
         code: otp.code,
         expires_at: otp.expires_at,
+        created_at: otp.created_at,
+        server_time: new Date().toISOString(),
         expires_in_seconds: Math.max(1, Math.round((new Date(otp.expires_at).getTime() - Date.now()) / 1000)),
         generated: otp.generated,
         event_title: event.title,

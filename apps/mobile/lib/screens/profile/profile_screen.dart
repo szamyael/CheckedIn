@@ -39,27 +39,79 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _pickAvatar(ImageSource source) async {
     if (AuthService.instance.isOfflineMode) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Connect to the internet to update your profile photo.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Connect to the internet to update your profile photo.',
+          ),
+        ),
+      );
       return;
     }
-    final file = await ImagePicker().pickImage(source: source, imageQuality: 85, maxWidth: 1000);
+    final file = await ImagePicker().pickImage(
+      source: source,
+      imageQuality: 85,
+      maxWidth: 1000,
+    );
     if (file == null) return;
     final userId = AuthService.instance.currentUserId;
     if (userId == null) return;
     try {
       final extension = file.mimeType == 'image/png' ? 'png' : 'jpg';
-      final path = '$userId/avatar-${DateTime.now().millisecondsSinceEpoch}.$extension';
-      await Supabase.instance.client.storage.from('student-ids').upload(path, File(file.path), fileOptions: FileOptions(contentType: file.mimeType ?? 'image/jpeg'));
-      await Supabase.instance.client.from('students').update({'profile_photo_url': path}).eq('id', userId);
+      final path =
+          '$userId/avatar-${DateTime.now().millisecondsSinceEpoch}.$extension';
+      await Supabase.instance.client.storage
+          .from('student-ids')
+          .upload(
+            path,
+            File(file.path),
+            fileOptions: FileOptions(
+              contentType: file.mimeType ?? 'image/jpeg',
+            ),
+          );
+      await Supabase.instance.client
+          .from('students')
+          .update({'profile_photo_url': path})
+          .eq('id', userId);
       if (!mounted) return;
       setState(() => _future = _loadData());
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not upload profile photo. Try again.')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not upload profile photo. Try again.'),
+          ),
+        );
+      }
     }
   }
 
   void _showAvatarSourcePicker() {
-    showModalBottomSheet<void>(context: context, builder: (sheetContext) => SafeArea(child: Wrap(children: [ListTile(leading: const Icon(Icons.camera_alt_outlined), title: const Text('Take photo'), onTap: () { Navigator.pop(sheetContext); _pickAvatar(ImageSource.camera); }), ListTile(leading: const Icon(Icons.photo_library_outlined), title: const Text('Choose from gallery'), onTap: () { Navigator.pop(sheetContext); _pickAvatar(ImageSource.gallery); })])));
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined),
+              title: const Text('Take photo'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _pickAvatar(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Choose from gallery'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _pickAvatar(ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<_ProfileData> _loadData() async {
@@ -129,301 +181,473 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _editProfile() async {
+    await context.push<void>('/profile/edit');
+    if (mounted) setState(() => _future = _loadData());
+  }
+
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
-        onRefresh: () async {
-          setState(() => _future = _loadData());
-          await _future;
-        },
-        child: FutureBuilder<_ProfileData>(
-          future: _future,
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            final data = snapshot.data!;
-            final student = data.student;
-            final fmt = DateFormat('MMM d, yyyy h:mm a');
-            final equippedBorder =
-                student?['equipped_profile_border'] as String? ?? 'classic';
-            final borderColor = profileBorderRewards
-                .where((border) => border.id == equippedBorder)
-                .map((border) => Color(border.colorValue))
-                .firstOrNull ?? Theme.of(context).colorScheme.primary;
+      onRefresh: () async {
+        setState(() => _future = _loadData());
+        await _future;
+      },
+      child: FutureBuilder<_ProfileData>(
+        future: _future,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final data = snapshot.data!;
+          final student = data.student;
+          final fmt = DateFormat('MMM d, yyyy h:mm a');
+          final equippedBorder =
+              student?['equipped_profile_border'] as String? ?? 'classic';
+          final borderColor =
+              profileBorderRewards
+                  .where((border) => border.id == equippedBorder)
+                  .map((border) => Color(border.colorValue))
+                  .firstOrNull ??
+              Theme.of(context).colorScheme.primary;
 
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
-              children: [
-                const Text('STUDENT RECORD', style: TextStyle(color: StudentUi.muted, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.4)),
-                const SizedBox(height: 8),
-                const Text('Profile', style: TextStyle(color: Color(0xFF0C2238), fontSize: 27, fontWeight: FontWeight.w700)),
-                const SizedBox(height: 18),
-                Container(
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(color: const Color(0xFF17324D), border: Border.all(color: const Color(0xFF0C2238))),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(3),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: borderColor, width: 3),
-                                ),
-                                child: CircleAvatar(radius: 32, backgroundColor: const Color(0xFFE7EEF4), backgroundImage: _avatarUrl != null ? NetworkImage(_avatarUrl!) : null, child: _avatarUrl == null ? Text(_initials(student), style: const TextStyle(color: Color(0xFF17324D), fontWeight: FontWeight.w700, fontSize: 20)) : null),
-                              ),
-                              Positioned(right: -4, bottom: -4, child: Material(color: const Color(0xFFF0C46D), shape: const CircleBorder(), child: IconButton(onPressed: _showAvatarSourcePicker, icon: const Icon(Icons.camera_alt_outlined, size: 17), color: const Color(0xFF17324D), tooltip: 'Update profile photo'))),
-                            ],
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Text(
-                              student != null
-                                  ? formatStudentDisplayName(
-                                      firstName:
-                                          student['first_name'] as String?,
-                                      middleName:
-                                          student['middle_name'] as String?,
-                                      lastName: student['last_name'] as String?,
-                                      nameExtension:
-                                          student['name_extension'] as String?,
-                                    )
-                                  : 'Student',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white),
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (student != null) ...[
-                        const SizedBox(height: 12),
-                        Text('ID: ${student['student_id']}', style: const TextStyle(color: Color(0xFFD7E2EC))),
-                        Text('Program: ${student['program']}', style: const TextStyle(color: Color(0xFFD7E2EC))),
-                        if (student['year_level'] != null)
-                          Text('Year Level: ${student['year_level']}', style: const TextStyle(color: Color(0xFFD7E2EC))),
-                        if (student['section'] != null)
-                          Text('Section: ${student['section']}', style: const TextStyle(color: Color(0xFFD7E2EC))),
-                        if (student['reward_points'] != null)
-                          Text(
-                            '${student['reward_points']} reward points',
-                            style: const TextStyle(
-                              color: Color(0xFFF0C46D),
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        const SizedBox(height: 8),
-                        Text('${data.attendanceCount} events attended', style: const TextStyle(color: Color(0xFFD7E2EC))),
-                        const SizedBox(height: 8),
-                        OutlinedButton(
-                          onPressed: () => context.push('/profile/edit'),
-                          style: OutlinedButton.styleFrom(foregroundColor: Colors.white, side: const BorderSide(color: Color(0xFFB7C9D7))),
-                          child: const Text('Edit profile'),
-                        ),
-                      ],
-                    ],
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
+            children: [
+              const Text(
+                'STUDENT RECORD',
+                style: TextStyle(
+                  color: StudentUi.muted,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.4,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Profile',
+                style: TextStyle(
+                  color: Color(0xFF0C2238),
+                  fontSize: 27,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 18),
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary,
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
-                const SizedBox(height: 16),
-                StudentCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Customize your profile',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Unlock permanent avatar borders with reward points.',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      if (_borderError != null) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          _borderError!,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                            fontSize: 12,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(3),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: borderColor,
+                                  width: 3,
+                                ),
+                              ),
+                              child: CircleAvatar(
+                                radius: 32,
+                                backgroundColor: const Color(0xFFE7EEF4),
+                                backgroundImage: _avatarUrl != null
+                                    ? NetworkImage(_avatarUrl!)
+                                    : null,
+                                child: _avatarUrl == null
+                                    ? Text(
+                                        _initials(student),
+                                        style: const TextStyle(
+                                          color: Color(0xFF17324D),
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 20,
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                            ),
+                            Positioned(
+                              right: -4,
+                              bottom: -4,
+                              child: Material(
+                                color: const Color(0xFFF0C46D),
+                                shape: const CircleBorder(),
+                                child: IconButton(
+                                  onPressed: _showAvatarSourcePicker,
+                                  icon: const Icon(
+                                    Icons.camera_alt_outlined,
+                                    size: 17,
+                                  ),
+                                  color: const Color(0xFF17324D),
+                                  tooltip: 'Update profile photo',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            student != null
+                                ? formatStudentDisplayName(
+                                    firstName: student['first_name'] as String?,
+                                    middleName:
+                                        student['middle_name'] as String?,
+                                    lastName: student['last_name'] as String?,
+                                    nameExtension:
+                                        student['name_extension'] as String?,
+                                  )
+                                : 'Student',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(color: Colors.white),
                           ),
                         ),
                       ],
+                    ),
+                    if (student != null) ...[
                       const SizedBox(height: 12),
-                      for (final border in profileBorderRewards)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 42,
-                                height: 42,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Color(border.colorValue),
-                                    width: 3,
-                                  ),
-                                ),
-                                child: const Center(
-                                  child: Text(
-                                    'CI',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
+                      Text(
+                        'ID: ${student['student_id']}',
+                        style: const TextStyle(color: Color(0xFFD7E2EC)),
+                      ),
+                      Text(
+                        'Program: ${student['program']}',
+                        style: const TextStyle(color: Color(0xFFD7E2EC)),
+                      ),
+                      if (student['year_level'] != null)
+                        Text(
+                          'Year Level: ${student['year_level']}',
+                          style: const TextStyle(color: Color(0xFFD7E2EC)),
+                        ),
+                      if (student['section'] != null)
+                        Text(
+                          'Section: ${student['section']}',
+                          style: const TextStyle(color: Color(0xFFD7E2EC)),
+                        ),
+                      if (student['reward_points'] != null)
+                        Text(
+                          '${student['reward_points']} reward points',
+                          style: const TextStyle(
+                            color: Color(0xFFF0C46D),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${data.attendanceCount} events attended',
+                        style: const TextStyle(color: Color(0xFFD7E2EC)),
+                      ),
+                      const SizedBox(height: 8),
+                      OutlinedButton(
+                        onPressed: _editProfile,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: const BorderSide(color: Color(0xFFB7C9D7)),
+                        ),
+                        child: const Text('Edit profile'),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              StudentCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Customize your profile',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Unlock permanent avatar borders with reward points.',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    if (_borderError != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        _borderError!,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    for (final border in profileBorderRewards)
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          border: Border.all(color: StudentUi.border),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  width: 42,
+                                  height: 42,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Color(border.colorValue),
+                                      width: 3,
                                     ),
                                   ),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      border.name,
-                                      style: Theme.of(context).textTheme.titleSmall,
-                                    ),
-                                    Text(
-                                      border.description,
-                                      style: Theme.of(context).textTheme.bodySmall,
-                                    ),
-                                    Text(
-                                      data.ownedBorders.contains(border.id)
-                                          ? 'Unlocked'
-                                          : '${border.cost} points',
+                                  child: const Center(
+                                    child: Text(
+                                      'CI',
                                       style: TextStyle(
-                                        color: Theme.of(context).colorScheme.primary,
                                         fontSize: 11,
-                                        fontWeight: FontWeight.w600,
+                                        fontWeight: FontWeight.w700,
                                       ),
                                     ),
-                                  ],
+                                  ),
                                 ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        border.name,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.titleSmall,
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        border.description,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodySmall,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              data.ownedBorders.contains(border.id)
+                                  ? 'Unlocked'
+                                  : '${border.cost} points',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
                               ),
-                              if (equippedBorder == border.id)
-                                Text(
-                                  'Equipped',
-                                  style: TextStyle(
-                                    color: Theme.of(context).colorScheme.primary,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
+                            ),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: equippedBorder == border.id
+                                  ? Text(
+                                      'Equipped',
+                                      style: TextStyle(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    )
+                                  : data.ownedBorders.contains(border.id)
+                                  ? TextButton(
+                                      onPressed: _borderBusy == null
+                                          ? () => _equipBorder(border.id)
+                                          : null,
+                                      child: const Text('Equip'),
+                                    )
+                                  : FilledButton.tonal(
+                                      onPressed:
+                                          _borderBusy == null &&
+                                              (student?['reward_points']
+                                                          as int? ??
+                                                      0) >=
+                                                  border.cost
+                                          ? () => _redeemBorder(border)
+                                          : null,
+                                      child: Text(
+                                        _borderBusy == border.id
+                                            ? 'Unlocking…'
+                                            : 'Unlock',
+                                      ),
+                                    ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    if (equippedBorder != 'classic')
+                      TextButton(
+                        onPressed: _borderBusy == null
+                            ? () => _equipBorder('classic')
+                            : null,
+                        child: const Text('Use classic border'),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Row(
+                children: [
+                  Icon(
+                    Icons.workspace_premium_outlined,
+                    color: Color(0xFFA46618),
+                    size: 19,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'Rewards & recognition',
+                    style: TextStyle(
+                      color: Color(0xFF0C2238),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (data.achievements.isEmpty)
+                const StudentEmptyState(
+                  icon: Icons.emoji_events_outlined,
+                  message: 'No badges yet. Check in to events to earn them!',
+                )
+              else
+                ...data.achievements
+                    .take(_showAllAchievements ? data.achievements.length : 1)
+                    .map(
+                      (a) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: StudentCard(
+                          padding: EdgeInsets.zero,
+                          child: ListTile(
+                            leading: a.imageUrl == null
+                                ? Icon(
+                                    a.badgeType == 'milestone'
+                                        ? Icons.emoji_events
+                                        : Icons.verified,
+                                    color: Colors.amber.shade700,
+                                  )
+                                : ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.network(
+                                      a.imageUrl!,
+                                      width: 40,
+                                      height: 40,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, _, _) => Icon(
+                                        Icons.verified,
+                                        color: Colors.amber.shade700,
+                                      ),
+                                    ),
                                   ),
-                                )
-                              else if (data.ownedBorders.contains(border.id))
-                                TextButton(
-                                  onPressed: _borderBusy == null
-                                      ? () => _equipBorder(border.id)
-                                      : null,
-                                  child: const Text('Equip'),
-                                )
-                              else
-                                FilledButton.tonal(
-                                  onPressed: _borderBusy == null &&
-                                          (student?['reward_points'] as int? ?? 0) >= border.cost
-                                      ? () => _redeemBorder(border)
-                                      : null,
-                                  child: Text(
-                                    _borderBusy == border.id
-                                        ? 'Unlocking…'
-                                        : 'Unlock',
-                                  ),
-                                ),
-                            ],
+                            title: Text(a.badgeName),
+                            subtitle: Text(fmt.format(a.earnedAt.toLocal())),
                           ),
                         ),
-                      if (equippedBorder != 'classic')
-                        TextButton(
-                          onPressed: _borderBusy == null
-                              ? () => _equipBorder('classic')
-                              : null,
-                          child: const Text('Use classic border'),
-                        ),
-                    ],
+                      ),
+                    ),
+              if (data.achievements.length > 1)
+                TextButton(
+                  onPressed: () => setState(
+                    () => _showAllAchievements = !_showAllAchievements,
+                  ),
+                  child: Text(
+                    _showAllAchievements
+                        ? 'Show recent only'
+                        : 'View all ${data.achievements.length} awards',
                   ),
                 ),
-                const SizedBox(height: 16),
-                const Row(children: [Icon(Icons.workspace_premium_outlined, color: Color(0xFFA46618), size: 19), SizedBox(width: 8), Text('Rewards & recognition', style: TextStyle(color: Color(0xFF0C2238), fontSize: 16, fontWeight: FontWeight.w700))]),
-                const SizedBox(height: 8),
-                if (data.achievements.isEmpty)
-                  const StudentEmptyState(
-                    icon: Icons.emoji_events_outlined,
-                    message: 'No badges yet. Check in to events to earn them!',
-                  )
-                else
-                  ...data.achievements.take(_showAllAchievements ? data.achievements.length : 1).map(
-                    (a) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: StudentCard(
-                        padding: EdgeInsets.zero,
-                        child: ListTile(
-                          leading: Icon(
-                            a.badgeType == 'milestone'
-                                ? Icons.emoji_events
-                                : Icons.verified,
-                            color: Colors.amber.shade700,
+              const SizedBox(height: 16),
+              const Row(
+                children: [
+                  Icon(
+                    Icons.event_note_outlined,
+                    color: Color(0xFF17324D),
+                    size: 19,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'Attendance history',
+                    style: TextStyle(
+                      color: Color(0xFF0C2238),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (data.history.isEmpty)
+                const StudentEmptyState(
+                  icon: Icons.history,
+                  message: 'No attendance records yet.',
+                )
+              else
+                ...data.history
+                    .take(_showAllHistory ? data.history.length : 1)
+                    .map(
+                      (h) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: StudentCard(
+                          padding: EdgeInsets.zero,
+                          child: ListTile(
+                            leading: Icon(
+                              h.isPending
+                                  ? Icons.cloud_upload
+                                  : Icons.check_circle,
+                              color: h.isPending
+                                  ? Colors.amber.shade800
+                                  : StudentUi.teal,
+                            ),
+                            title: Text(h.eventTitle),
+                            subtitle: Text(
+                              h.isPending
+                                  ? 'Pending sync • ${fmt.format(h.checkedInAt.toLocal())}'
+                                  : fmt.format(h.checkedInAt.toLocal()),
+                            ),
+                            trailing: h.syncError != null
+                                ? const Icon(
+                                    Icons.error_outline,
+                                    color: Colors.red,
+                                    size: 20,
+                                  )
+                                : null,
                           ),
-                          title: Text(a.badgeName),
-                          subtitle: Text(fmt.format(a.earnedAt.toLocal())),
                         ),
                       ),
                     ),
+              if (data.history.length > 1)
+                TextButton(
+                  onPressed: () =>
+                      setState(() => _showAllHistory = !_showAllHistory),
+                  child: Text(
+                    _showAllHistory
+                        ? 'Show recent only'
+                        : 'View all ${data.history.length} attendance records',
                   ),
-                if (data.achievements.length > 1)
-                  TextButton(
-                    onPressed: () => setState(() => _showAllAchievements = !_showAllAchievements),
-                    child: Text(_showAllAchievements ? 'Show recent only' : 'View all ${data.achievements.length} awards'),
-                  ),
-                const SizedBox(height: 16),
-                const Row(children: [Icon(Icons.event_note_outlined, color: Color(0xFF17324D), size: 19), SizedBox(width: 8), Text('Attendance history', style: TextStyle(color: Color(0xFF0C2238), fontSize: 16, fontWeight: FontWeight.w700))]),
-                const SizedBox(height: 8),
-                if (data.history.isEmpty)
-                  const StudentEmptyState(
-                    icon: Icons.history,
-                    message: 'No attendance records yet.',
-                  )
-                else
-                  ...data.history.take(_showAllHistory ? data.history.length : 1).map(
-                    (h) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: StudentCard(
-                        padding: EdgeInsets.zero,
-                        child: ListTile(
-                          leading: Icon(
-                            h.isPending ? Icons.cloud_upload : Icons.check_circle,
-                            color: h.isPending
-                                ? Colors.amber.shade800
-                                : StudentUi.teal,
-                          ),
-                          title: Text(h.eventTitle),
-                          subtitle: Text(
-                            h.isPending
-                                ? 'Pending sync • ${fmt.format(h.checkedInAt.toLocal())}'
-                                : fmt.format(h.checkedInAt.toLocal()),
-                          ),
-                          trailing: h.syncError != null
-                              ? const Icon(
-                                  Icons.error_outline,
-                                  color: Colors.red,
-                                  size: 20,
-                                )
-                              : null,
-                        ),
-                      ),
-                    ),
-                  ),
-                if (data.history.length > 1)
-                  TextButton(
-                    onPressed: () => setState(() => _showAllHistory = !_showAllHistory),
-                    child: Text(_showAllHistory ? 'Show recent only' : 'View all ${data.history.length} attendance records'),
-                  ),
-              ],
-            );
-          },
-        ),
+                ),
+            ],
+          );
+        },
+      ),
     );
   }
 

@@ -10,12 +10,20 @@ import {
   StudentEmptyState,
 } from "@/components/student/StudentUi";
 
-type Achievement = { id: string; badge_name: string; earned_at: string };
+type Achievement = {
+  id: string;
+  badge_name: string;
+  earned_at: string;
+  image_url?: string | null;
+};
 type ProfileBorderId = "classic" | "aurora" | "ember" | "royal" | "celestial";
 type OrgBadgeAward = {
   id: string;
   earned_at: string;
-  org_badges: { name: string } | { name: string }[] | null;
+  org_badges:
+    | { name: string; image_url: string | null }
+    | { name: string; image_url: string | null }[]
+    | null;
 };
 const PROFILE_BORDERS: {
   id: Exclude<ProfileBorderId, "classic">;
@@ -116,7 +124,7 @@ export default function StudentProfilePage() {
           .eq("student_id", user.id),
         supabase
           .from("student_org_badges")
-          .select("id, earned_at, org_badges(name)")
+          .select("id, earned_at, org_badges(name, image_url)")
           .eq("student_id", user.id),
       ]);
       if (achievementResult.error) throw achievementResult.error;
@@ -126,10 +134,12 @@ export default function StudentProfilePage() {
       const orgBadges = orgBadgeRows.map((award) => {
         const badge = award.org_badges;
         const badgeName = Array.isArray(badge) ? badge[0]?.name : badge?.name;
+        const badgeImage = Array.isArray(badge) ? badge[0]?.image_url : badge?.image_url;
         return {
           id: award.id,
           badge_name: badgeName ?? "Badge",
           earned_at: award.earned_at,
+          image_url: badgeImage,
         };
       });
       setBadges(
@@ -304,7 +314,24 @@ export default function StudentProfilePage() {
                 key={b.id}
                 className="flex items-center justify-between border border-[#e2e5e7] bg-white px-4 py-3 text-sm"
               >
-                <span className="font-medium text-[#0c2238]">{b.badge_name}</span><span className="text-xs text-[#697178]">{format(parseISO(b.earned_at), "MMM d, yyyy")}</span>
+                <span className="flex min-w-0 items-center gap-3">
+                  {b.image_url ? (
+                    <img
+                      src={b.image_url}
+                      alt={`${b.badge_name} icon`}
+                      className="h-10 w-10 shrink-0 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <span
+                      aria-hidden="true"
+                      className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-amber-50 text-lg"
+                    >
+                      🏅
+                    </span>
+                  )}
+                  <span className="truncate font-medium text-[#0c2238]">{b.badge_name}</span>
+                </span>
+                <span className="shrink-0 text-xs text-[#697178]">{format(parseISO(b.earned_at), "MMM d, yyyy")}</span>
               </li>
             ))}
           </ul>

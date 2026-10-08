@@ -50,7 +50,7 @@ export default async function OrgDashboard() {
         actions={<Link href="/dashboard/events" className="inline-flex min-h-10 items-center gap-2 bg-[var(--primary)] px-4 text-sm font-semibold text-white hover:bg-[var(--primary-strong)]"><CalendarPlus className="h-4 w-4" /> Create event</Link>}
       />
 
-      <div className="grid gap-px border border-[var(--border)] bg-[var(--border)] sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-px border border-[var(--border)] bg-[var(--border)] sm:grid-cols-3">
         <DashboardStat label="All events" value={ownEvents.length} detail="Created for this organization" />
         <DashboardStat label="Upcoming" value={upcomingEvents.length} detail="Published attendance windows" />
         <DashboardStat label="Badge definitions" value={badgeCount ?? 0} detail="Recognition rules available" />

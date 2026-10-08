@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
+import { DashboardSearchInput } from "@/components/DashboardSearchInput";
 
 interface EventOption {
   id: string;
@@ -39,7 +39,7 @@ export function ReportMultiEventSelect({ events }: { events: EventOption[] }) {
 
   return (
     <div className="max-h-64 space-y-2 overflow-y-auto rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-      <label className="flex items-center gap-2 border-b border-slate-200 pb-2 text-[var(--muted)]"><Search size={15} /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search events…" className="w-full border-0 bg-transparent p-1 text-sm outline-none" /></label>
+      <DashboardSearchInput label="Search events" value={query} onChange={setQuery} placeholder="Search events…" />
       {events.length === 0 && (
         <p className="text-sm text-slate-700">No events available.</p>
       )}

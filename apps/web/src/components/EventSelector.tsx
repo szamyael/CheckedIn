@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, CalendarDays, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
+import { DashboardSearchInput } from "@/components/DashboardSearchInput";
 
 interface EventOption { id: string; title: string; starts_at: string; }
 
@@ -28,9 +29,7 @@ export function EventSelector({ events, basePath = "/dashboard/reports" }: { eve
 
   return <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
     <div className="flex flex-col gap-3 border-b border-[var(--border)] p-4 sm:flex-row sm:items-center sm:justify-between">
-      <label className="flex min-w-0 flex-1 items-center gap-2 rounded-xl bg-slate-50 px-3 text-slate-500 ring-1 ring-inset ring-slate-200 focus-within:bg-white focus-within:ring-blue-400">
-        <Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search events…" className="w-full border-0 bg-transparent py-2.5 text-sm text-slate-900 outline-none" />
-      </label>
+      <DashboardSearchInput label="Search events" value={query} onChange={setQuery} placeholder="Search events…" className="min-w-0 flex-1" />
       <div className="flex items-center gap-2"><span className="text-xs font-medium text-slate-500">{filtered.length} event{filtered.length === 1 ? "" : "s"}</span><button type="button" onClick={() => moveCarousel(-1)} aria-label="Previous events" className="grid h-9 w-9 place-items-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50"><ChevronLeft size={17} /></button><button type="button" onClick={() => moveCarousel(1)} aria-label="Next events" className="grid h-9 w-9 place-items-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50"><ChevronRight size={17} /></button></div>
     </div>
     {filtered.length === 0 ? <div className="px-5 py-12 text-center"><CalendarDays className="mx-auto text-slate-300" size={26} /><p className="mt-3 text-sm font-medium text-slate-700">No matching events</p><p className="mt-1 text-xs text-slate-500">Try another event title.</p></div> : <div ref={carousel} role="listbox" aria-label="Select event" className="flex snap-x gap-3 overflow-x-auto p-4 [scrollbar-width:thin]">

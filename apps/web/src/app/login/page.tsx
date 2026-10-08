@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Building2, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, Building2, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
 import { BootstrapGate } from "@/components/BootstrapGate";
 import { BrandLogo, BrandMark } from "@/components/BrandLogo";
 import { PhoneStudentRedirect } from "@/components/student/PhoneStudentRedirect";
@@ -96,6 +96,13 @@ export default function LoginPage() {
 
       <section className="flex min-h-screen items-center justify-center px-5 py-10 sm:px-8 lg:px-12">
         <div className="w-full max-w-[420px]">
+          <Link
+            href="/"
+            className="mb-7 inline-flex min-h-11 items-center gap-2 rounded-lg pr-3 text-sm font-semibold text-[#36516d] transition hover:text-[#102a50] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#17324d] focus-visible:ring-offset-2"
+          >
+            <ArrowLeft size={17} aria-hidden="true" />
+            Back to home
+          </Link>
           <div className="mb-10 lg:hidden"><BrandLogo className="h-12 w-auto max-w-[215px]" priority /></div>
           <div className="mb-8">
             <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-lg bg-[#e7eef4] text-[#17324d] lg:hidden"><Building2 size={21} aria-hidden="true" /></div>

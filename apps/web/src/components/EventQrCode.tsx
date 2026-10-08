@@ -24,27 +24,37 @@ export function EventQrCode({
 
   return (
     <div
-      className={`flex flex-col items-center rounded-xl border border-slate-200 bg-white ${
+      className={`flex flex-col items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] ${
         compact ? "p-3" : "p-6"
       }`}
     >
-      <QRCodeSVG value={payload} size={size} level="H" />
-      <p
-        className={`mt-3 text-center font-medium text-slate-900 ${
-          compact ? "text-xs" : "text-sm"
-        }`}
-      >
-        {eventTitle}
-      </p>
+      <div className="rounded-xl bg-white p-2">
+        <QRCodeSVG
+          value={payload}
+          size={size}
+          level="H"
+          role="img"
+          aria-label={`Check-in QR code for ${eventTitle || "this event"}`}
+        />
+      </div>
+      {eventTitle && (
+        <p
+          className={`mt-3 text-center font-medium text-slate-900 ${
+            compact ? "text-xs" : "text-sm"
+          } text-[var(--foreground)]`}
+        >
+          {eventTitle}
+        </p>
+      )}
       {venueName && (
-        <p className="mt-0.5 text-center text-xs text-slate-600">{venueName}</p>
+        <p className="mt-0.5 text-center text-xs text-[var(--muted)]">{venueName}</p>
       )}
       {startsAt && (
-        <p className="mt-0.5 text-center text-xs text-slate-500">
+        <p         className="mt-0.5 text-center text-xs text-[var(--muted)]">
           {format(new Date(startsAt), "MMM d, yyyy h:mm a")}
         </p>
       )}
-      <p className="mt-1 text-center text-xs text-slate-600">
+      <p className="mt-1 text-center text-xs text-[var(--muted)]">
         Students scan in the mobile app
       </p>
     </div>

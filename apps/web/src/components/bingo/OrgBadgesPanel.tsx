@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ImagePlus, Search, UserRound, X } from "lucide-react";
+import { Award, ImagePlus, UserRound, X } from "lucide-react";
 import { useLoader } from "@/components/LoaderProvider";
+import { DashboardSearchInput } from "@/components/DashboardSearchInput";
 import {
   badgeStatusClass,
   badgeStatusLabel,
@@ -270,12 +271,13 @@ export function OrgBadgesPanel({
   }
 
   return (
-    <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-6">
+    <section className="space-y-5 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-soft)] sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold">Org badges</h2>
-          <p className="text-sm text-slate-600">
-            Manage badges used for bingo rewards and custom awards.
+          <p className="text-[10px] font-bold tracking-[0.14em] text-[var(--primary)]">RECOGNITION LIBRARY</p>
+          <h2 className="mt-1 text-xl font-semibold text-[var(--primary-strong)]">Organization badges</h2>
+          <p className="mt-1 text-sm text-[var(--muted)]">
+            Design rewards, define how students earn them, and recognize participation.
           </p>
         </div>
         <button
@@ -285,9 +287,10 @@ export function OrgBadgesPanel({
             setEditingId(null);
             setError(null);
           }}
-          className="rounded-lg bg-teal-600 px-3 py-2 text-sm font-medium text-white hover:bg-teal-700"
+          className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-[var(--primary)] px-4 text-sm font-semibold text-white hover:bg-[var(--primary-strong)]"
         >
-          + New badge
+          <Award className="h-4 w-4" aria-hidden="true" />
+          New badge
         </button>
       </div>
 
@@ -297,10 +300,11 @@ export function OrgBadgesPanel({
             key={key}
             type="button"
             onClick={() => setFilter(key)}
-            className={`rounded-lg px-3 py-1.5 capitalize ${
+            aria-pressed={filter === key}
+            className={`min-h-9 rounded-full px-3.5 py-1.5 text-xs font-semibold capitalize transition ${
               filter === key
-                ? "bg-slate-800 text-white"
-                : "border border-slate-200 text-slate-700 hover:bg-slate-50"
+                ? "bg-[var(--primary-strong)] text-white"
+                : "border border-[var(--border)] text-[var(--muted)] hover:bg-[var(--surface-muted)]"
             }`}
           >
             {key}
@@ -314,12 +318,12 @@ export function OrgBadgesPanel({
       </div>
 
       {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+        <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
       )}
 
       {creating && (
-        <div className="space-y-3 rounded-lg border border-teal-200 bg-teal-50/40 p-4">
-          <p className="text-sm font-medium text-slate-800">New custom badge</p>
+        <div className="space-y-4 rounded-2xl border border-[var(--primary)]/25 bg-[var(--primary-soft)]/45 p-4 sm:p-5">
+          <p className="text-sm font-semibold text-[var(--primary-strong)]">Create a custom badge</p>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="text-sm sm:col-span-2">
               Name
@@ -385,18 +389,18 @@ export function OrgBadgesPanel({
               {badgeImage && <button type="button" onClick={() => { setBadgeImage(null); setBadgeImagePreview(null); }} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-red-600"><X size={13} /> Remove image</button>}
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 border-t border-[var(--border)] pt-4">
             <button
               type="button"
               onClick={() => void createBadge()}
-              className="rounded-lg bg-teal-600 px-3 py-2 text-sm text-white"
+              className="min-h-10 rounded-xl bg-[var(--primary)] px-4 text-sm font-semibold text-white hover:bg-[var(--primary-strong)]"
             >
               Create
             </button>
             <button
               type="button"
               onClick={() => setCreating(false)}
-              className="rounded-lg border px-3 py-2 text-sm"
+              className="min-h-10 rounded-xl border border-[var(--border)] px-4 text-sm font-medium text-[var(--muted)] hover:bg-[var(--surface)]"
             >
               Cancel
             </button>
@@ -405,15 +409,15 @@ export function OrgBadgesPanel({
       )}
 
       {filtered.length === 0 ? (
-        <p className="text-sm text-slate-500">No badges in this view.</p>
+        <p className="rounded-xl bg-[var(--background)] px-4 py-5 text-sm text-[var(--muted)]">No badges in this view. Add one to make recognition available to students.</p>
       ) : (
-        <ul className="space-y-3">
+        <ul className="grid gap-3 xl:grid-cols-2">
           {filtered.map((badge) => {
             const isEditing = editingId === badge.id;
             return (
               <li
                 key={badge.id}
-                className="rounded-lg border border-slate-200 px-4 py-3"
+                className="min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 transition hover:border-[var(--primary)]/40"
               >
                 {isEditing ? (
                   <div className="space-y-3">
@@ -493,7 +497,7 @@ export function OrgBadgesPanel({
                 ) : (
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex min-w-0 gap-3">
-                      {badge.image_url ? <img src={badge.image_url} alt="" className="h-12 w-12 shrink-0 rounded-lg object-cover" /> : <div className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-teal-50 text-lg">🏅</div>}
+                      {badge.image_url ? <img src={badge.image_url} alt="" className="h-12 w-12 shrink-0 rounded-xl object-cover" /> : <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[var(--primary-soft)] text-[var(--primary)]"><Award className="h-6 w-6" aria-hidden="true" /></div>}
                     <div className="min-w-0">
                       <p className="font-medium text-slate-900">{badge.name}</p>
                       {badge.description && (
@@ -554,7 +558,7 @@ export function OrgBadgesPanel({
                     </div>
                     {rewardingBadgeId === badge.id && (
                       <div className="basis-full rounded-lg border border-teal-200 bg-teal-50/40 p-3">
-                        <label className="relative block"><Search size={15} className="absolute left-3 top-3 text-slate-400" /><input value={studentSearch} onChange={(event) => setStudentSearch(event.target.value)} placeholder="Search name, student number, program, year, or section" className="w-full rounded-lg border bg-white py-2 pl-9 pr-3 text-sm" autoFocus /></label>
+                        <DashboardSearchInput label="Search eligible students" value={studentSearch} onChange={setStudentSearch} placeholder="Search name, student number, program, year, or section" autoFocus />
                         <p className="mt-2 text-xs text-slate-500">Showing students in this organization&apos;s mapped programs/courses.</p>
                         <div className="mt-3 grid max-h-72 gap-2 overflow-y-auto sm:grid-cols-2">
                           {matchingStudents.map((student) => {

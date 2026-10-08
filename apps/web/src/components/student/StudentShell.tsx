@@ -47,8 +47,8 @@ export function StudentShell({
         onDismiss={onDismissNotification}
         href="/student/notifications"
       />
-      <aside className="student-sidebar hidden w-64 shrink-0 flex-col border-r border-slate-200 bg-white lg:flex">
-        <div className="border-b border-slate-200 px-6 py-6">
+      <aside className="student-sidebar sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r lg:flex">
+        <div className="border-b px-6 py-6">
           <BrandMark size={42} />
           <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
             Student workspace
@@ -85,7 +85,7 @@ export function StudentShell({
       </aside>
 
       <div className="student-main flex min-h-dvh min-w-0 flex-1 flex-col">
-        <header className="student-header sticky top-0 z-20 flex min-w-0 items-center justify-between border-b border-slate-200 bg-white/95 px-3 py-3 backdrop-blur sm:px-6 lg:px-8">
+        <header         className="student-header sticky top-0 z-20 flex min-w-0 items-center justify-between border-b px-3 py-3 backdrop-blur sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <span className="lg:hidden"><BrandMark size={36} /></span>
             <div className="hidden sm:block">
@@ -98,7 +98,7 @@ export function StudentShell({
             <NotificationSoundToggle />
             <Link
               href="/student/notifications"
-              className="relative rounded-xl p-2 text-slate-600 hover:bg-slate-100"
+              className="relative grid h-11 w-11 place-items-center rounded-xl text-slate-600 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
               aria-label="Notifications"
             >
               <Bell className="h-[22px] w-[22px]" />
@@ -111,19 +111,19 @@ export function StudentShell({
             <button
               type="button"
               onClick={onSignOut}
-              className="rounded-xl px-2 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 sm:px-3"
+              className="min-h-11 rounded-xl px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] sm:px-4"
             >
               Sign out
             </button>
           </div>
         </header>
 
-        <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-3 pb-24 pt-5 sm:px-6 sm:pt-7 lg:px-10 lg:pb-10">
+        <main className="min-w-0 flex-1 overflow-x-hidden px-3 pb-24 pt-5 sm:px-6 sm:pt-7 lg:px-10 lg:pb-10">
           {children}
         </main>
 
         <nav
-          className="student-bottom-nav fixed bottom-0 left-1/2 z-20 w-full max-w-md -translate-x-1/2 border-t border-[#e2e5e7] bg-white/95 backdrop-blur lg:hidden"
+          className="student-bottom-nav fixed inset-x-0 bottom-0 z-20 w-full border-t pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
           aria-label="Student navigation"
         >
           <ul className="grid grid-cols-5">
@@ -136,11 +136,11 @@ export function StudentShell({
                     <Link
                       href={href}
                       aria-current={active ? "page" : undefined}
-                      className={`flex min-h-16 flex-col items-center justify-center gap-1 py-2 text-[11px] font-semibold ${
+                      className={`flex min-h-16 flex-col items-center justify-center gap-1 py-2 text-[11px] font-semibold transition-colors ${
                         active ? "text-[var(--primary-strong)]" : "text-[#697178]"
                       }`}
                     >
-                      <span className={`grid h-8 w-12 place-items-center rounded-full ${active ? "bg-[var(--primary-soft)]" : ""}`}>
+                      <span className={`grid h-9 w-12 place-items-center rounded-2xl transition-colors ${href === "/student/attendance/scan" ? "bg-[var(--primary-strong)] text-white shadow-sm" : active ? "bg-[var(--primary-soft)]" : ""}`}>
                         <Icon className="h-5 w-5" />
                       </span>
                       {label}

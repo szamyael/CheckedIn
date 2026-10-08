@@ -78,8 +78,26 @@ export function OfflineAttendanceReviewPanel({ eventId }: { eventId: string }) {
     // Defer the first read until after the effect commits; the load function
     // updates local state when the Supabase request resolves.
     const timer = window.setTimeout(() => void load(), 0);
-    return () => window.clearTimeout(timer);
-  }, [load]);
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`offline-attendance-${eventId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "offline_attendance_submissions",
+          filter: `event_id=eq.${eventId}`,
+        },
+        () => void load(),
+      )
+      .subscribe();
+
+    return () => {
+      window.clearTimeout(timer);
+      void supabase.removeChannel(channel);
+    };
+  }, [eventId, load]);
 
   async function submitReview() {
     if (!draft) return;
@@ -119,9 +137,18 @@ export function OfflineAttendanceReviewPanel({ eventId }: { eventId: string }) {
             Review the recorded QR scan time and live selfie. Offline submissions never use geofencing.
           </p>
         </div>
-        <span className="rounded-full bg-amber-200 px-2.5 py-1 text-xs font-semibold text-amber-950">
-          {items.length} pending
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-amber-200 px-2.5 py-1 text-xs font-semibold text-amber-950">
+            {items.length} pending
+          </span>
+          <button
+            type="button"
+            onClick={() => void load()}
+            className="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-medium text-amber-950 hover:bg-amber-100"
+          >
+            Refresh
+          </button>
+        </div>
       </div>
 
       {message && <p className="mt-3 text-sm text-slate-700" role="status">{message}</p>}

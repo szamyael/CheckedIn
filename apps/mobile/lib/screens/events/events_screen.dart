@@ -139,7 +139,18 @@ class _EventTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(width: 42, height: 42, color: const Color(0xFFE7EEF4), child: const Icon(Icons.event_outlined, color: Color(0xFF17324D))),
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              Icons.event_outlined,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
           const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(
@@ -147,9 +158,9 @@ class _EventTile extends StatelessWidget {
                 Expanded(
                   child: Text(
                     event.title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF0C2238),
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ),
@@ -180,7 +191,30 @@ class _EventTile extends StatelessWidget {
 class _EventsHeader extends StatelessWidget {
   const _EventsHeader();
   @override
-  Widget build(BuildContext context) => const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('CAMPUS CALENDAR', style: TextStyle(color: StudentUi.muted, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.4)), SizedBox(height: 8), Text('Events', style: TextStyle(color: Color(0xFF0C2238), fontSize: 27, fontWeight: FontWeight.w700)), SizedBox(height: 4), Text('Find an event and scan the organizer QR when attendance opens.', style: TextStyle(color: StudentUi.muted, fontSize: 13))]);
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text(
+        'CAMPUS CALENDAR',
+        style: TextStyle(
+          color: StudentUi.muted,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.4,
+        ),
+      ),
+      const SizedBox(height: 8),
+      Text(
+        'Events',
+        style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 27),
+      ),
+      const SizedBox(height: 4),
+      const Text(
+        'Find an event and scan the organizer QR when attendance opens.',
+        style: TextStyle(color: StudentUi.muted, fontSize: 13),
+      ),
+    ],
+  );
 }
 
 class _MonthCalendar extends StatelessWidget {

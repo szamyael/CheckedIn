@@ -18,8 +18,8 @@ export function ThemePanelButton() {
 
   return (
     <div ref={panelRef} className="relative">
-      <button type="button" onClick={() => setOpen((current) => !current)} className="flex h-10 w-10 items-center justify-center rounded-lg text-[var(--primary)] hover:bg-[var(--primary-soft)]" aria-label="Open appearance settings" aria-expanded={open}>
-        {open ? <X size={20} /> : <Palette size={20} />}
+      <button type="button" onClick={() => setOpen((current) => !current)} className="flex h-10 w-10 items-center justify-center rounded-lg text-[var(--primary)] hover:bg-[var(--primary-soft)]" aria-label={open ? "Close appearance settings" : "Open appearance settings"} aria-expanded={open}>
+        {open ? <X size={20} aria-hidden="true" /> : <Palette size={20} aria-hidden="true" />}
       </button>
       {open && (
         <div className="fixed inset-x-3 top-16 z-50 max-h-[calc(100dvh-5rem)] overflow-y-auto shadow-2xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:max-h-[calc(100dvh-6rem)] sm:w-[22rem]">

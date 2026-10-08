@@ -39,7 +39,7 @@ export default async function FacultyDashboard() {
     <div className="space-y-8">
       <DashboardPageHeader eyebrow="ATTENDANCE INTELLIGENCE" title="Faculty overview" description="Review event activity, monitor attendance in real time, and turn participation data into clear reports." />
 
-      <div className="grid gap-px border border-[var(--border)] bg-[var(--border)] sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-px border border-[var(--border)] bg-[var(--border)] sm:grid-cols-3">
         <DashboardStat label="Published events" value={publishedCount ?? 0} detail="Available for attendance review" />
         <DashboardStat label="Upcoming events" value={activeCount ?? 0} detail="Still open or scheduled" />
         <DashboardStat label="Attendance records" value={attendanceCount ?? 0} detail="Visible across published events" />

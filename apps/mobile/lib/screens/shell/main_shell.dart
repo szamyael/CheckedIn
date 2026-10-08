@@ -142,8 +142,22 @@ class _MainShellState extends State<MainShell> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const AppLogo(size: 36),
-        centerTitle: true,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const AppLogo(size: 34),
+            const SizedBox(width: 9),
+            Text(
+              'CheckedIn',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.4,
+              ),
+            ),
+          ],
+        ),
+        centerTitle: false,
+        titleSpacing: 16,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(
@@ -158,6 +172,7 @@ class _MainShellState extends State<MainShell> {
             icon: const Icon(Icons.palette_outlined),
           ),
           IconButton(
+            tooltip: 'Notifications',
             onPressed: () async {
               await context.push('/notifications');
               _refreshUnread();
@@ -169,6 +184,7 @@ class _MainShellState extends State<MainShell> {
             ),
           ),
           IconButton(
+            tooltip: 'Sign out',
             icon: const Icon(Icons.logout),
             onPressed: () async {
               await AuthService.instance.signOut();
@@ -224,6 +240,7 @@ class _MainShellState extends State<MainShell> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(22),
             child: NavigationBar(
+              labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
               selectedIndex: _index < 2 ? _index : _index + 1,
               onDestinationSelected: (index) {
                 switch (index) {

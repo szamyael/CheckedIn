@@ -18,6 +18,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _lastName = TextEditingController();
   final _program = TextEditingController();
   final _section = TextEditingController();
+  List<String> _ownedBorders = [];
+  String _equippedBorder = 'classic';
+  String _selectedBorder = 'classic';
   int _yearLevel = 1;
   bool _loading = true;
   bool _saving = false;
@@ -30,12 +33,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Future<void> _load() async {
     final student = await _profile.fetchStudentProfile();
+    final ownedBorders = await _profile.fetchOwnedProfileBorders();
     if (student != null && mounted) {
       _firstName.text = student['first_name'] as String? ?? '';
       _lastName.text = student['last_name'] as String? ?? '';
       _program.text = student['program'] as String? ?? '';
       _section.text = student['section'] as String? ?? '';
       _yearLevel = student['year_level'] as int? ?? 1;
+      _equippedBorder =
+          student['equipped_profile_border'] as String? ?? 'classic';
+      _ownedBorders = ownedBorders;
+      _selectedBorder =
+          _equippedBorder == 'classic' ||
+              _ownedBorders.contains(_equippedBorder)
+          ? _equippedBorder
+          : 'classic';
     }
     if (mounted) setState(() => _loading = false);
   }
@@ -60,6 +72,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         section: _section.text.trim().isEmpty ? null : _section.text.trim(),
         yearLevel: _yearLevel,
       );
+      if (_selectedBorder != _equippedBorder) {
+        await _profile.equipProfileBorder(_selectedBorder);
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -133,6 +148,45 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   DropdownMenuItem(value: i + 1, child: Text('Year ${i + 1}')),
             ),
             onChanged: (v) => setState(() => _yearLevel = v ?? 1),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'Profile border',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Choose a border you own. Unlock more in Customize your profile.',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 10),
+          DropdownButtonFormField<String>(
+            initialValue: _selectedBorder,
+            decoration: const InputDecoration(
+              labelText: 'Avatar border',
+              prefixIcon: Icon(Icons.circle_outlined),
+            ),
+            items: [
+              const DropdownMenuItem(
+                value: 'classic',
+                child: Text('Classic (free)'),
+              ),
+              ...profileBorderRewards
+                  .where((border) => _ownedBorders.contains(border.id))
+                  .map(
+                    (border) => DropdownMenuItem(
+                      value: border.id,
+                      child: Text(border.name),
+                    ),
+                  ),
+            ],
+            onChanged: _saving
+                ? null
+                : (value) {
+                    if (value != null) {
+                      setState(() => _selectedBorder = value);
+                    }
+                  },
           ),
           const SizedBox(height: 24),
           FilledButton(
