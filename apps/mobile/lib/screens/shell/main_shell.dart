@@ -87,6 +87,7 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
     if (_accessBlocked) {
       final underReview = _accountStatus == 'pending';
       return Scaffold(
@@ -231,7 +232,29 @@ class _MainShellState extends State<MainShell> {
                 ],
               ),
             ),
-          Expanded(child: pages[_index]),
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: reduceMotion
+                  ? Duration.zero
+                  : const Duration(milliseconds: 260),
+              reverseDuration: reduceMotion
+                  ? Duration.zero
+                  : const Duration(milliseconds: 180),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0.018, 0),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                ),
+              ),
+              child: KeyedSubtree(key: ValueKey(_index), child: pages[_index]),
+            ),
+          ),
         ],
       ),
       bottomNavigationBar: SafeArea(
@@ -239,7 +262,7 @@ class _MainShellState extends State<MainShell> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(8),
             child: NavigationBar(
               labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
               selectedIndex: _index < 2 ? _index : _index + 1,

@@ -148,7 +148,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   const Text(
                     'CHECKEDIN',
                     style: TextStyle(
-                      color: Color(0xFF17324D),
+                      color: StudentUi.tealText,
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1.8,
@@ -182,7 +182,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     value: value,
                     minHeight: 3,
                     backgroundColor: StudentUi.border,
-                    color: const Color(0xFF17324D),
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
               ),
@@ -335,9 +335,9 @@ class _WalkthroughPage extends StatelessWidget {
               width: double.infinity,
               height: 170,
               decoration: BoxDecoration(
-                color: const Color(0xFFEDF4F7),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFD9E2E9)),
+                color: StudentUi.slateBg,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: StudentUi.border),
               ),
               child: Stack(
                 alignment: Alignment.center,
@@ -350,7 +350,7 @@ class _WalkthroughPage extends StatelessWidget {
                       height: 112,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFFD8E8EE), width: 16),
+                        border: Border.all(color: StudentUi.tealBorder, width: 12),
                       ),
                     ),
                   ),
@@ -358,16 +358,15 @@ class _WalkthroughPage extends StatelessWidget {
                     width: 78,
                     height: 78,
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white),
-                      boxShadow: const [BoxShadow(color: Color(0x1A17324D), blurRadius: 18, offset: Offset(0, 7))],
+                      color: Theme.of(context).colorScheme.surface,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: StudentUi.border),
                     ),
-                    child: Icon(data.icon, size: 36, color: const Color(0xFF17324D)),
+                    child: Icon(data.icon, size: 36, color: Theme.of(context).colorScheme.primary),
                   ),
                   const Positioned(
                     bottom: 15,
-                    child: Text('CHECKEDIN STUDENT PORTAL', style: TextStyle(color: Color(0xFF587080), fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.2)),
+                    child: Text('CHECKEDIN STUDENT PORTAL', style: TextStyle(color: StudentUi.muted, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.2)),
                   ),
                 ],
               ),

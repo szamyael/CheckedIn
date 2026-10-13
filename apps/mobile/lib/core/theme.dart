@@ -20,83 +20,91 @@ extension AppColorThemeDetails on AppColorTheme {
   };
 
   Color get primary => switch (this) {
-    AppColorTheme.navy => const Color(0xFF2F7169),
-    AppColorTheme.forest => const Color(0xFF347753),
-    AppColorTheme.burgundy => const Color(0xFF91465C),
-    AppColorTheme.indigo => const Color(0xFF5865AD),
-    AppColorTheme.slate => const Color(0xFF536B7A),
+    AppColorTheme.navy => const Color(0xFF3A6658),
+    AppColorTheme.forest => const Color(0xFF486C4D),
+    AppColorTheme.burgundy => const Color(0xFF80515A),
+    AppColorTheme.indigo => const Color(0xFF59677E),
+    AppColorTheme.slate => const Color(0xFF536A69),
+  };
+
+  Color get primaryDark => switch (this) {
+    AppColorTheme.navy => const Color(0xFFA6BBA6),
+    AppColorTheme.forest => const Color(0xFFAABD9F),
+    AppColorTheme.burgundy => const Color(0xFFD0A7A5),
+    AppColorTheme.indigo => const Color(0xFFAAB7C2),
+    AppColorTheme.slate => const Color(0xFFA5BCB4),
   };
 
   Color get primaryStrong => switch (this) {
-    AppColorTheme.navy => const Color(0xFF183E4B),
-    AppColorTheme.forest => const Color(0xFF1D4934),
-    AppColorTheme.burgundy => const Color(0xFF562C3B),
-    AppColorTheme.indigo => const Color(0xFF303B74),
-    AppColorTheme.slate => const Color(0xFF344954),
+    AppColorTheme.navy => const Color(0xFF213B34),
+    AppColorTheme.forest => const Color(0xFF2D4532),
+    AppColorTheme.burgundy => const Color(0xFF50363B),
+    AppColorTheme.indigo => const Color(0xFF343E50),
+    AppColorTheme.slate => const Color(0xFF354746),
   };
 
   Color get primarySoft => switch (this) {
-    AppColorTheme.navy => const Color(0xFFE4F0ED),
-    AppColorTheme.forest => const Color(0xFFE5F2E9),
-    AppColorTheme.burgundy => const Color(0xFFF5E8ED),
-    AppColorTheme.indigo => const Color(0xFFEAECFA),
-    AppColorTheme.slate => const Color(0xFFE9EFF2),
+    AppColorTheme.navy => const Color(0xFFE4E9DF),
+    AppColorTheme.forest => const Color(0xFFE3E9DC),
+    AppColorTheme.burgundy => const Color(0xFFEEE3DF),
+    AppColorTheme.indigo => const Color(0xFFE3E5E7),
+    AppColorTheme.slate => const Color(0xFFE1E8E3),
   };
 
   Color get accent => switch (this) {
-    AppColorTheme.navy => const Color(0xFFCB9440),
-    AppColorTheme.forest => const Color(0xFFD19A45),
-    AppColorTheme.burgundy => const Color(0xFFD4A25A),
-    AppColorTheme.indigo => const Color(0xFFD5A34E),
-    AppColorTheme.slate => const Color(0xFFC08D45),
+    AppColorTheme.navy => const Color(0xFFBD704A),
+    AppColorTheme.forest => const Color(0xFFB7774E),
+    AppColorTheme.burgundy => const Color(0xFFBD7653),
+    AppColorTheme.indigo => const Color(0xFFB87250),
+    AppColorTheme.slate => const Color(0xFFAC7551),
   };
 
   Color get background => switch (this) {
-    AppColorTheme.navy => const Color(0xFFF4F7F8),
-    AppColorTheme.forest => const Color(0xFFF1F6F2),
-    AppColorTheme.burgundy => const Color(0xFFF8F2F4),
-    AppColorTheme.indigo => const Color(0xFFF3F4FA),
-    AppColorTheme.slate => const Color(0xFFF2F5F6),
+    AppColorTheme.navy => const Color(0xFFF2EFE7),
+    AppColorTheme.forest => const Color(0xFFF1EFE5),
+    AppColorTheme.burgundy => const Color(0xFFF3ECE6),
+    AppColorTheme.indigo => const Color(0xFFEFEEE8),
+    AppColorTheme.slate => const Color(0xFFEEEFEA),
   };
 
   Color get backgroundDark => switch (this) {
-    AppColorTheme.navy => const Color(0xFF111C20),
-    AppColorTheme.forest => const Color(0xFF111E19),
-    AppColorTheme.burgundy => const Color(0xFF21171D),
-    AppColorTheme.indigo => const Color(0xFF171827),
-    AppColorTheme.slate => const Color(0xFF171E22),
+    AppColorTheme.navy => const Color(0xFF1B211D),
+    AppColorTheme.forest => const Color(0xFF1C221C),
+    AppColorTheme.burgundy => const Color(0xFF241E1D),
+    AppColorTheme.indigo => const Color(0xFF1D2023),
+    AppColorTheme.slate => const Color(0xFF1C2221),
   };
 
   Color get surfaceDark => switch (this) {
-    AppColorTheme.navy => const Color(0xFF1B292D),
-    AppColorTheme.forest => const Color(0xFF1A2B23),
-    AppColorTheme.burgundy => const Color(0xFF302129),
-    AppColorTheme.indigo => const Color(0xFF22243A),
-    AppColorTheme.slate => const Color(0xFF222C32),
+    AppColorTheme.navy => const Color(0xFF242B26),
+    AppColorTheme.forest => const Color(0xFF252D25),
+    AppColorTheme.burgundy => const Color(0xFF302725),
+    AppColorTheme.indigo => const Color(0xFF272C31),
+    AppColorTheme.slate => const Color(0xFF252C2B),
   };
 
   Color get surfaceMutedDark => switch (this) {
-    AppColorTheme.navy => const Color(0xFF25373A),
-    AppColorTheme.forest => const Color(0xFF24382E),
-    AppColorTheme.burgundy => const Color(0xFF3C2B34),
-    AppColorTheme.indigo => const Color(0xFF2C2F49),
-    AppColorTheme.slate => const Color(0xFF2C383F),
+    AppColorTheme.navy => const Color(0xFF2F3831),
+    AppColorTheme.forest => const Color(0xFF303A30),
+    AppColorTheme.burgundy => const Color(0xFF3B302E),
+    AppColorTheme.indigo => const Color(0xFF333A40),
+    AppColorTheme.slate => const Color(0xFF303938),
   };
 
   Color get borderDark => switch (this) {
-    AppColorTheme.navy => const Color(0xFF3B5052),
-    AppColorTheme.forest => const Color(0xFF385143),
-    AppColorTheme.burgundy => const Color(0xFF553C49),
-    AppColorTheme.indigo => const Color(0xFF414562),
-    AppColorTheme.slate => const Color(0xFF414F56),
+    AppColorTheme.navy => const Color(0xFF465047),
+    AppColorTheme.forest => const Color(0xFF495449),
+    AppColorTheme.burgundy => const Color(0xFF574542),
+    AppColorTheme.indigo => const Color(0xFF4A535A),
+    AppColorTheme.slate => const Color(0xFF47514E),
   };
 
   Color get primarySoftDark => switch (this) {
-    AppColorTheme.navy => const Color(0xFF294541),
-    AppColorTheme.forest => const Color(0xFF294735),
-    AppColorTheme.burgundy => const Color(0xFF49303C),
-    AppColorTheme.indigo => const Color(0xFF353858),
-    AppColorTheme.slate => const Color(0xFF34444C),
+    AppColorTheme.navy => const Color(0xFF344239),
+    AppColorTheme.forest => const Color(0xFF354335),
+    AppColorTheme.burgundy => const Color(0xFF493432),
+    AppColorTheme.indigo => const Color(0xFF364047),
+    AppColorTheme.slate => const Color(0xFF34423D),
   };
 }
 
@@ -104,18 +112,19 @@ class AppTheme {
   static ThemeData build(AppColorTheme selected, Brightness brightness) {
     final dark = brightness == Brightness.dark;
     final background = dark ? selected.backgroundDark : selected.background;
-    final surface = dark ? selected.surfaceDark : Colors.white;
-    final border = dark ? selected.borderDark : const Color(0xFFDCE6E4);
-    final text = dark ? const Color(0xFFEEF4F2) : const Color(0xFF20323A);
-    final secondary = dark ? const Color(0xFFC6D4D1) : const Color(0xFF485B61);
-    final muted = dark ? const Color(0xFFA6B7B5) : const Color(0xFF64767B);
+    final surface = dark ? selected.surfaceDark : const Color(0xFFFAF8F2);
+    final border = dark ? selected.borderDark : const Color(0xFFD8D4C9);
+    final text = dark ? const Color(0xFFE9E7DD) : const Color(0xFF28332E);
+    final secondary = dark ? const Color(0xFFC6C8BE) : const Color(0xFF48554E);
+    final muted = dark ? const Color(0xFFB6B8AE) : const Color(0xFF657069);
+    final primary = dark ? selected.primaryDark : selected.primary;
     final scheme =
         ColorScheme.fromSeed(
-          seedColor: selected.primary,
+          seedColor: primary,
           brightness: brightness,
         ).copyWith(
-          primary: selected.primary,
-          onPrimary: Colors.white,
+          primary: primary,
+          onPrimary: dark ? background : Colors.white,
           primaryContainer: dark
               ? selected.primarySoftDark
               : selected.primarySoft,
@@ -139,6 +148,7 @@ class AppTheme {
       visualDensity: VisualDensity.standard,
       textTheme: TextTheme(
         displaySmall: TextStyle(
+          fontFamily: 'serif',
           color: text,
           fontSize: 32,
           height: 1.12,
@@ -146,6 +156,7 @@ class AppTheme {
           letterSpacing: -0.8,
         ),
         headlineSmall: TextStyle(
+          fontFamily: 'serif',
           color: text,
           fontSize: 25,
           height: 1.2,
@@ -168,17 +179,17 @@ class AppTheme {
         bodySmall: TextStyle(color: muted, height: 1.4),
         labelLarge: const TextStyle(fontWeight: FontWeight.w700),
       ),
-      iconTheme: IconThemeData(color: selected.primary),
+      iconTheme: IconThemeData(color: primary),
       primaryIconTheme: const IconThemeData(color: Colors.white),
       listTileTheme: ListTileThemeData(
         textColor: text,
-        iconColor: selected.primary,
+        iconColor: primary,
         minVerticalPadding: 10,
       ),
       dividerTheme: DividerThemeData(color: border, thickness: 1),
       dialogTheme: DialogThemeData(
         backgroundColor: surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         titleTextStyle: TextStyle(
           color: text,
           fontSize: 20,
@@ -204,7 +215,7 @@ class AppTheme {
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(8),
           side: BorderSide(color: border),
         ),
       ),
@@ -214,16 +225,16 @@ class AppTheme {
         filled: true,
         fillColor: surface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide(color: selected.primary, width: 1.6),
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: primary, width: 1.6),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -237,7 +248,7 @@ class AppTheme {
       navigationBarTheme: NavigationBarThemeData(
         height: 74,
         backgroundColor: surface,
-        indicatorColor: selected.primarySoft,
+        indicatorColor: dark ? selected.primarySoftDark : selected.primarySoft,
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => TextStyle(
             fontSize: 11,
@@ -257,11 +268,11 @@ class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: selected.primary,
-          foregroundColor: Colors.white,
+          backgroundColor: primary,
+          foregroundColor: dark ? background : Colors.white,
           minimumSize: const Size.fromHeight(52),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(8),
           ),
           textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
         ),
@@ -272,14 +283,14 @@ class AppTheme {
           side: BorderSide(color: border),
           minimumSize: const Size.fromHeight(48),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(8),
           ),
           textStyle: const TextStyle(fontWeight: FontWeight.w600),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: selected.primary,
+          foregroundColor: primary,
           textStyle: const TextStyle(fontWeight: FontWeight.w600),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -295,7 +306,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
-        color: selected.primary,
+        color: primary,
         linearTrackColor: selected.primarySoft,
       ),
     );

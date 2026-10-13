@@ -4,11 +4,11 @@ import { Check, Moon, Monitor, Palette, Sun } from "@/lib/icons";
 import { ThemeMode, ThemeName, useTheme } from "@/components/ThemeProvider";
 
 const themes: { name: ThemeName; label: string; description: string; color: string }[] = [
-  { name: "navy", label: "Campus", description: "Campus-ready", color: "#2F7169" },
-  { name: "forest", label: "Forest", description: "Grounded", color: "#275D46" },
-  { name: "burgundy", label: "Burgundy", description: "Classic", color: "#6B2E3D" },
-  { name: "indigo", label: "Indigo", description: "Focused", color: "#3F4B88" },
-  { name: "slate", label: "Slate", description: "Neutral", color: "#3F515C" },
+  { name: "navy", label: "Campus", description: "Campus-ready", color: "#3A6658" },
+  { name: "forest", label: "Forest", description: "Grounded", color: "#486C4D" },
+  { name: "burgundy", label: "Burgundy", description: "Classic", color: "#80515A" },
+  { name: "indigo", label: "Indigo", description: "Focused", color: "#59677E" },
+  { name: "slate", label: "Slate", description: "Neutral", color: "#536A69" },
 ];
 
 const modes: { name: ThemeMode; label: string; icon: typeof Sun }[] = [

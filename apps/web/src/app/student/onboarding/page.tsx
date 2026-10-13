@@ -43,7 +43,7 @@ export default function StudentOnboardingPage() {
   }
 
   return (
-    <main className="min-h-dvh bg-[#f6f7f5] px-4 py-4 text-[#202428] sm:grid sm:place-items-center sm:p-8" onTouchStart={(event) => { touchStart.current = event.changedTouches[0]?.clientX ?? null; }} onTouchEnd={(event) => handleSwipeEnd(event.changedTouches[0]?.clientX ?? 0)}>
+    <main className="student-onboarding min-h-dvh bg-[var(--background)] px-4 py-4 text-[var(--foreground)] sm:grid sm:place-items-center sm:p-8" onTouchStart={(event) => { touchStart.current = event.changedTouches[0]?.clientX ?? null; }} onTouchEnd={(event) => handleSwipeEnd(event.changedTouches[0]?.clientX ?? 0)}>
       <section className="mx-auto flex min-h-[calc(100dvh-2rem)] w-full max-w-md flex-col overflow-hidden rounded-xl border border-[#e2e5e7] bg-white shadow-[0_18px_48px_rgba(12,34,56,0.08)] sm:min-h-[680px]">
         <header className="flex items-center justify-between border-b border-[#e2e5e7] px-5 py-4"><div className="flex items-center gap-3"><BrandMark size={34} /><span className="text-xs font-semibold uppercase tracking-[0.18em] text-[#17324d]">CheckedIn</span></div><span className="rounded-full border border-[#e2e5e7] px-2.5 py-1 text-xs font-medium text-[#697178]">{String(step + 1).padStart(2, "0")} / {String(totalSteps).padStart(2, "0")}</span></header>
         <div className="h-1 bg-[#edf0f1]" aria-hidden="true"><div className="h-full bg-[#17324d] transition-[width] duration-300 ease-out" style={{ width: `${((step + 1) / totalSteps) * 100}%` }} /></div>

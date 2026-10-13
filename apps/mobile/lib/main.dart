@@ -142,6 +142,8 @@ class _CheckedInAppState extends State<CheckedInApp> {
             theme: AppTheme.build(AppearanceService.instance.colorTheme, Brightness.light),
             darkTheme: AppTheme.build(AppearanceService.instance.colorTheme, Brightness.dark),
             themeMode: AppearanceService.instance.themeMode,
+            themeAnimationDuration: const Duration(milliseconds: 320),
+            themeAnimationCurve: Curves.easeInOutCubic,
             routerConfig: widget.router,
           ),
         ),

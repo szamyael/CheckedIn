@@ -4,16 +4,16 @@ import 'app_logo.dart';
 
 /// Shared visual tokens aligned with the web student portal.
 class StudentUi {
-  static const border = Color(0xFFDCE7E2);
-  static const teal = Color(0xFF0D716A);
-  static const tealSoft = Color(0xFFE4F1EC);
-  static const tealBorder = Color(0xFFB7D8CC);
-  static const tealText = Color(0xFF163A45);
-  static const muted = Color(0xFF64747A);
+  static const border = Color(0xFFD8D4C9);
+  static const teal = Color(0xFF3A6658);
+  static const tealSoft = Color(0xFFE4E9DF);
+  static const tealBorder = Color(0xFFBCC8BA);
+  static const tealText = Color(0xFF213B34);
+  static const muted = Color(0xFF657069);
   static const amberBg = Color(0xFFFFF7E7);
   static const amberBorder = Color(0xFFEFD49C);
   static const amberText = Color(0xFF79530F);
-  static const slateBg = Color(0xFFEDF3F0);
+  static const slateBg = Color(0xFFEBE8DF);
 }
 
 class StudentPageTitle extends StatelessWidget {
@@ -27,7 +27,12 @@ class StudentPageTitle extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          title,
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontFamily: 'serif'),
+        ),
         if (subtitle != null) ...[
           const SizedBox(height: 4),
           Text(subtitle!, style: Theme.of(context).textTheme.bodySmall),
@@ -55,7 +60,7 @@ class StudentCard extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Theme.of(context).colorScheme.outline),
       ),
       child: Padding(padding: padding, child: child),
@@ -66,7 +71,7 @@ class StudentCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(8),
         child: card,
       ),
     );
@@ -114,7 +119,7 @@ class StudentErrorBanner extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: const Color(0xFFFEF2F2),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: const Color(0xFFFECACA)),
       ),
       child: Text(
@@ -150,7 +155,7 @@ class StudentInfoBanner extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: border),
       ),
       child: Row(
@@ -205,11 +210,11 @@ class StudentTealCallout extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(6),
         child: Ink(
           decoration: BoxDecoration(
             color: StudentUi.tealSoft,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(6),
             border: Border.all(color: StudentUi.tealBorder),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -257,7 +262,7 @@ class StudentAuthScaffold extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (showLogo) ...[
-                      const Center(child: AppLogo(size: 120)),
+                      const Center(child: AppLogo(size: 76)),
                       const SizedBox(height: 16),
                     ],
                     if (title != null)

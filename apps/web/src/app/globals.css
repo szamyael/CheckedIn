@@ -1,57 +1,92 @@
 @import "tailwindcss";
 
+@property --background { syntax: "<color>"; inherits: true; initial-value: #f2efe7; }
+@property --foreground { syntax: "<color>"; inherits: true; initial-value: #28332e; }
+@property --surface { syntax: "<color>"; inherits: true; initial-value: #faf8f2; }
+@property --surface-muted { syntax: "<color>"; inherits: true; initial-value: #ebe8df; }
+@property --border { syntax: "<color>"; inherits: true; initial-value: #d8d4c9; }
+@property --primary { syntax: "<color>"; inherits: true; initial-value: #3a6658; }
+@property --primary-strong { syntax: "<color>"; inherits: true; initial-value: #213b34; }
+@property --primary-soft { syntax: "<color>"; inherits: true; initial-value: #e4e9df; }
+@property --accent { syntax: "<color>"; inherits: true; initial-value: #bd704a; }
+
 :root {
-  --background: #f4f7f8;
-  --foreground: #20323a;
-  --muted: #64767b;
-  --text-strong: #183e4b;
-  --primary: #2f7169;
-  --primary-strong: #183e4b;
-  --primary-soft: #e4f0ed;
-  --surface: #ffffff;
-  --surface-muted: #eef3f3;
-  --border: #dce6e4;
-  --success: #18745b;
-  --warning: #996412;
-  --error: #ae4146;
-  --accent: #cb9440;
-  --shadow-soft: 0 8px 24px rgb(24 62 75 / 5%);
-  --shadow-card: 0 16px 40px rgb(24 62 75 / 8%);
+  color-scheme: light;
+  --background: #f2efe7;
+  --foreground: #28332e;
+  --muted: #657069;
+  --text-strong: #213b34;
+  --primary: #3a6658;
+  --primary-strong: #213b34;
+  --primary-soft: #e4e9df;
+  --surface: #faf8f2;
+  --surface-muted: #ebe8df;
+  --border: #d8d4c9;
+  --success: #39715b;
+  --warning: #94632f;
+  --error: #a84e46;
+  --accent: #bd704a;
+  --font-display: "Iowan Old Style", "Baskerville", "Palatino Linotype", Georgia, serif;
+  --shadow-soft: 0 4px 14px rgb(50 48 39 / 5%);
+  --shadow-card: 0 10px 28px rgb(50 48 39 / 9%);
+  --motion-quick: 180ms;
+  --motion-theme: 320ms;
+  transition:
+    --background var(--motion-theme) ease,
+    --foreground var(--motion-theme) ease,
+    --surface var(--motion-theme) ease,
+    --surface-muted var(--motion-theme) ease,
+    --border var(--motion-theme) ease,
+    --primary var(--motion-theme) ease,
+    --primary-strong var(--motion-theme) ease,
+    --primary-soft var(--motion-theme) ease,
+    --accent var(--motion-theme) ease;
 }
 
-:root[data-color-theme="navy"] { --primary: #2f7169; --primary-strong: #183e4b; --primary-soft: #e4f0ed; --accent: #cb9440; --background: #f4f7f8; --surface: #ffffff; --surface-muted: #eef3f3; --border: #dce6e4; }
-:root[data-color-theme="forest"] { --primary: #347753; --primary-strong: #1d4934; --primary-soft: #e5f2e9; --accent: #d19a45; --background: #f1f6f2; --surface: #ffffff; --surface-muted: #eaf1eb; --border: #d7e4d9; }
-:root[data-color-theme="burgundy"] { --primary: #91465c; --primary-strong: #562c3b; --primary-soft: #f5e8ed; --accent: #d4a25a; --background: #f8f2f4; --surface: #ffffff; --surface-muted: #f2e9ec; --border: #e9d9df; }
-:root[data-color-theme="indigo"] { --primary: #5865ad; --primary-strong: #303b74; --primary-soft: #eaecfa; --accent: #d5a34e; --background: #f3f4fa; --surface: #ffffff; --surface-muted: #eceef7; --border: #dcdff0; }
-:root[data-color-theme="slate"] { --primary: #536b7a; --primary-strong: #344954; --primary-soft: #e9eff2; --accent: #c08d45; --background: #f2f5f6; --surface: #ffffff; --surface-muted: #eaf0f2; --border: #d8e1e5; }
+:root[data-color-theme="navy"] { --primary: #3a6658; --primary-strong: #213b34; --primary-soft: #e4e9df; --accent: #bd704a; --background: #f2efe7; --surface: #faf8f2; --surface-muted: #ebe8df; --border: #d8d4c9; }
+:root[data-color-theme="forest"] { --primary: #486c4d; --primary-strong: #2d4532; --primary-soft: #e3e9dc; --accent: #b7774e; --background: #f1efe5; --surface: #faf8f0; --surface-muted: #eae7dc; --border: #d7d4c7; }
+:root[data-color-theme="burgundy"] { --primary: #80515a; --primary-strong: #50363b; --primary-soft: #eee3df; --accent: #bd7653; --background: #f3ece6; --surface: #faf6f0; --surface-muted: #ece4dc; --border: #ded2c8; }
+:root[data-color-theme="indigo"] { --primary: #59677e; --primary-strong: #343e50; --primary-soft: #e3e5e7; --accent: #b87250; --background: #efeee8; --surface: #f8f7f2; --surface-muted: #e7e5de; --border: #d3d1c8; }
+:root[data-color-theme="slate"] { --primary: #536a69; --primary-strong: #354746; --primary-soft: #e1e8e3; --accent: #ac7551; --background: #eeefea; --surface: #f8f8f2; --surface-muted: #e6e8e1; --border: #d1d5cd; }
 
 :root[data-mode="dark"] {
-  --foreground: #eef2f8;
-  --muted: #a5b2c4;
-  --text-strong: #e4ebf6;
-  --shadow-soft: 0 8px 24px rgb(0 0 0 / 18%);
-  --shadow-card: 0 14px 36px rgb(0 0 0 / 22%);
+  color-scheme: dark;
+  --foreground: #e9e7dd;
+  --muted: #a9aaa0;
+  --text-strong: #f0eee4;
+  --shadow-soft: 0 4px 14px rgb(0 0 0 / 18%);
+  --shadow-card: 0 10px 28px rgb(0 0 0 / 24%);
 }
 
-:root[data-mode="dark"][data-color-theme="navy"] { --background: #111c20; --surface: #1b292d; --surface-muted: #25373a; --border: #3b5052; --primary: #66aaa0; --primary-strong: #d8e9e5; --primary-soft: #294541; }
-:root[data-mode="dark"][data-color-theme="forest"] { --background: #111e19; --surface: #1a2b23; --surface-muted: #24382e; --border: #385143; --primary-soft: #294735; }
-:root[data-mode="dark"][data-color-theme="burgundy"] { --background: #21171d; --surface: #302129; --surface-muted: #3c2b34; --border: #553c49; --primary-soft: #49303c; }
-:root[data-mode="dark"][data-color-theme="indigo"] { --background: #171827; --surface: #22243a; --surface-muted: #2c2f49; --border: #414562; --primary-soft: #353858; }
-:root[data-mode="dark"][data-color-theme="slate"] { --background: #171e22; --surface: #222c32; --surface-muted: #2c383f; --border: #414f56; --primary-soft: #34444c; }
+:root[data-mode="dark"][data-color-theme="navy"] { --background: #1b211d; --surface: #242b26; --surface-muted: #2f3831; --border: #465047; --primary: #a6bba6; --primary-strong: #e2e8d9; --primary-soft: #344239; }
+:root[data-mode="dark"][data-color-theme="forest"] { --background: #1c221c; --surface: #252d25; --surface-muted: #303a30; --border: #495449; --primary: #aabd9f; --primary-strong: #e2e9d9; --primary-soft: #354335; }
+:root[data-mode="dark"][data-color-theme="burgundy"] { --background: #241e1d; --surface: #302725; --surface-muted: #3b302e; --border: #574542; --primary: #d0a7a5; --primary-strong: #eee0d9; --primary-soft: #493432; }
+:root[data-mode="dark"][data-color-theme="indigo"] { --background: #1d2023; --surface: #272c31; --surface-muted: #333a40; --border: #4a535a; --primary: #aab7c2; --primary-strong: #e2e6e6; --primary-soft: #364047; }
+:root[data-mode="dark"][data-color-theme="slate"] { --background: #1c2221; --surface: #252c2b; --surface-muted: #303938; --border: #47514e; --primary: #a5bcb4; --primary-strong: #e2e9e2; --primary-soft: #34423d; }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Inter", "Aptos", "Segoe UI", sans-serif;
+  --font-sans: "Aptos", "Segoe UI", sans-serif;
+  --font-serif: "Iowan Old Style", "Baskerville", "Palatino Linotype", Georgia, serif;
   --font-mono: "Cascadia Code", Consolas, monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "Inter", "Aptos", "Segoe UI", sans-serif;
-  font-feature-settings: "ss01" on;
+  font-family: "Aptos", "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 320ms ease, color 320ms ease;
+}
+
+.route-transition {
+  animation: route-enter 280ms cubic-bezier(0.2, 0.7, 0.25, 1) both;
+}
+
+@keyframes route-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 :root[data-mode="dark"] .bg-white { background-color: var(--surface) !important; }
@@ -123,7 +158,7 @@ td {
 
 :root[data-mode="dark"] label,
 :root[data-mode="dark"] th,
-:root[data-mode="dark"] td { color: #ffffff; }
+:root[data-mode="dark"] td { color: var(--foreground); }
 
 button,
 a,
@@ -142,7 +177,7 @@ select {
 /* Operational dashboard: restrained, dense enough for supervision, and
    consistently legible in every role workspace. */
 .dashboard-workspace {
-  font-family: "Inter", "Aptos", "Segoe UI", sans-serif;
+  font-family: "Aptos", "Segoe UI", sans-serif;
   min-width: 0;
 }
 
@@ -247,9 +282,7 @@ select {
 }
 
 .student-portal {
-  background:
-    radial-gradient(ellipse at 90% 0%, color-mix(in srgb, var(--primary-soft) 72%, transparent), transparent 34rem),
-    var(--background);
+  background: var(--background);
   color: var(--foreground);
 }
 
@@ -279,8 +312,8 @@ select {
 .dashboard-workspace .border.bg-white,
 .dashboard-workspace section.border {
   border-color: var(--border);
-  border-radius: 1.125rem;
-  box-shadow: var(--shadow-soft);
+  border-radius: 0.35rem;
+  box-shadow: none;
 }
 
 .student-portal input,
@@ -290,7 +323,7 @@ select {
 .dashboard-workspace textarea,
 .dashboard-workspace select {
   min-height: 2.875rem;
-  border-radius: 0.875rem;
+  border-radius: 0.35rem;
   background-color: var(--surface);
 }
 
@@ -309,36 +342,34 @@ select {
 }
 
 .dashboard-workspace {
-  background:
-    radial-gradient(ellipse at 90% 0%, color-mix(in srgb, var(--primary-soft) 65%, transparent), transparent 34rem),
-    var(--background);
+  background: var(--background);
 }
 
 .dashboard-workspace > aside {
-  background: linear-gradient(165deg, color-mix(in srgb, var(--primary-strong) 92%, white) 0%, var(--primary-strong) 62%, color-mix(in srgb, var(--primary-strong) 88%, black) 100%);
-  border-color: rgb(255 255 255 / 9%);
+  background: var(--surface);
+  border-color: var(--border);
 }
 
 .dashboard-workspace > aside nav a {
-  min-height: 2.75rem;
-  border-radius: 0.9rem;
+  min-height: 3rem;
+  border-radius: 0.3rem;
   border-left-width: 0;
-  color: #c9d8d6;
-  transition: background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+  color: var(--muted);
+  transition: background-color var(--motion-quick) ease, color var(--motion-quick) ease;
 }
 
 .dashboard-workspace > aside nav a:hover,
 .dashboard-workspace > aside nav a[aria-current="page"] {
-  background: rgb(255 255 255 / 11%);
-  color: #fff;
+  background: var(--surface-muted);
+  color: var(--primary-strong);
 }
 
 .dashboard-workspace > aside nav a[aria-current="page"] {
-  box-shadow: inset 3px 0 0 var(--accent);
+  box-shadow: inset 2px 0 0 var(--accent);
 }
 
 .dashboard-workspace > div > header {
-  box-shadow: 0 1px 0 var(--border), 0 8px 28px rgb(24 62 75 / 4%);
+  box-shadow: 0 1px 0 var(--border);
 }
 
 .dashboard-workspace .bg-white { background-color: var(--surface) !important; }
@@ -498,9 +529,70 @@ select {
 }
 
 .student-auth-shell {
-  background:
-    radial-gradient(ellipse at 18% 8%, color-mix(in srgb, var(--primary-soft) 72%, transparent), transparent 30rem),
-    var(--background);
+  background: var(--background);
+}
+
+.student-auth-shell > div {
+  box-shadow: none !important;
+}
+
+.student-onboarding {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.student-auth-shell :is(h1, h2, h3) {
+  font-family: var(--font-display);
+  text-wrap: balance;
+}
+
+.student-onboarding > section {
+  border-color: var(--border);
+  border-radius: 0.35rem;
+  background: var(--surface);
+  box-shadow: none;
+}
+
+.student-onboarding [class~="border-[#e2e5e7]"],
+.student-onboarding [class~="border-[#d9e2e9]"],
+.student-onboarding [class~="border-[#cbd5da]"] {
+  border-color: var(--border);
+}
+
+.student-onboarding [class~="bg-[#edf4f7]"],
+.student-onboarding [class~="bg-[#f1f3f3]"] {
+  background: var(--surface-muted);
+}
+
+.student-onboarding [class~="bg-[#d8e8ee]"],
+.student-onboarding [class~="bg-[#d8eee9]"],
+.student-onboarding [class~="bg-[#e8f4f1]"] {
+  background: var(--primary-soft);
+}
+
+.student-onboarding [class~="bg-[#edf0f1]"],
+.student-onboarding [class~="bg-[#d9dee1]"] {
+  background: var(--border);
+}
+
+.student-onboarding [class~="text-[#0f766e]"],
+.student-onboarding [class~="text-[#587080]"] {
+  color: var(--primary);
+}
+
+.student-onboarding [class~="text-[#202428]"],
+.student-onboarding [class~="text-[#3f484f]"] {
+  color: var(--foreground);
+}
+
+.student-onboarding [class~="text-[#697178]"],
+.student-onboarding [class~="text-[#8a949b]"] {
+  color: var(--muted);
+}
+
+.student-onboarding .rounded-xl,
+.student-onboarding .rounded-lg {
+  border-radius: 0.35rem;
 }
 
 .student-portal {
@@ -520,15 +612,15 @@ select {
 }
 
 .student-sidebar {
-  box-shadow: 8px 0 28px rgb(29 52 89 / 3%);
+  box-shadow: none;
 }
 
 .student-header {
-  box-shadow: 0 6px 24px rgb(29 52 89 / 4%);
+  box-shadow: 0 1px 0 var(--border);
 }
 
 .student-bottom-nav {
-  box-shadow: 0 -8px 30px rgb(29 52 89 / 8%);
+  box-shadow: 0 -1px 0 var(--border);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -540,13 +632,136 @@ select {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+
+}
+
+/* A shared, low-key editorial layer for both student and staff workspaces. */
+body,
+.student-sidebar,
+.student-header,
+.student-bottom-nav,
+.dashboard-sidebar,
+.dashboard-topbar,
+.dashboard-nav-item,
+.student-nav-link,
+.student-portal input,
+.student-portal textarea,
+.student-portal select,
+.dashboard-workspace input,
+.dashboard-workspace textarea,
+.dashboard-workspace select,
+.student-portal .border.bg-white,
+.dashboard-workspace .border.bg-white,
+.dashboard-workspace section.border {
+  transition:
+    background-color var(--motion-theme) ease,
+    border-color var(--motion-theme) ease,
+    color var(--motion-theme) ease,
+    box-shadow var(--motion-theme) ease;
+}
+
+.student-portal,
+.dashboard-workspace {
+  font-family: "Aptos", "Segoe UI", sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+.student-portal :is(h1, h2, h3),
+.dashboard-workspace :is(h1, h2, h3) {
+  font-family: var(--font-display);
+  text-wrap: balance;
+}
+
+.student-portal :is(.rounded-2xl, .rounded-xl, .rounded-lg),
+.dashboard-workspace :is(.rounded-2xl, .rounded-xl, .rounded-lg) {
+  border-radius: 0.35rem;
+}
+
+.student-portal .student-nav-link::before {
+  position: absolute;
+  inset-block: 0.5rem;
+  left: -1rem;
+  width: 2px;
+  background: var(--accent);
+  content: "";
+  opacity: 0;
+  transform: scaleY(0.5);
+  transition: opacity var(--motion-quick) ease, transform var(--motion-quick) ease;
+}
+
+.student-portal .student-nav-link[aria-current="page"]::before {
+  opacity: 1;
+  transform: scaleY(1);
+}
+
+.student-portal main > :first-child,
+.dashboard-workspace main > :first-child,
+.student-portal main > section,
+.dashboard-workspace main > section {
+  animation: section-enter 360ms ease-out both;
+}
+
+.student-portal main > section:nth-of-type(2),
+.dashboard-workspace main > section:nth-of-type(2) { animation-delay: 55ms; }
+
+.student-portal main > section:nth-of-type(3),
+.dashboard-workspace main > section:nth-of-type(3) { animation-delay: 110ms; }
+
+@keyframes section-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.student-portal :is(button, a),
+.dashboard-workspace :is(button, a) {
+  transition:
+    color var(--motion-quick) ease,
+    background-color var(--motion-quick) ease,
+    border-color var(--motion-quick) ease,
+    opacity var(--motion-quick) ease;
+}
+
+.student-portal :is(button, a):active,
+.dashboard-workspace :is(button, a):active {
+  transform: none;
+  opacity: 0.78;
+}
+
+.student-portal .student-header,
+.student-portal .student-bottom-nav,
+.dashboard-workspace .dashboard-topbar {
+  backdrop-filter: blur(10px);
+}
+
+.dashboard-workspace .table-scroll,
+.dashboard-stat-grid > section {
+  border-radius: 0.35rem;
+  box-shadow: none;
+}
+
+.dashboard-workspace :is(.bg-white, [class~="bg-white"]) {
+  border-color: var(--border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-transition,
+  .student-portal main > :first-child,
+  .dashboard-workspace main > :first-child,
+  .student-portal main > section,
+  .dashboard-workspace main > section {
+    animation: none;
+  }
+
+  .student-portal .student-nav-link::before {
+    transition: none;
+  }
 }
 
 :root[data-mode="dark"] .student-sidebar,
 :root[data-mode="dark"] .student-header,
 :root[data-mode="dark"] .student-bottom-nav {
   background-color: color-mix(in srgb, var(--surface) 96%, transparent);
-  box-shadow: 0 8px 28px rgb(0 0 0 / 18%);
+  box-shadow: 0 -1px 0 var(--border);
 }
 
 @media (max-width: 1023px) {
