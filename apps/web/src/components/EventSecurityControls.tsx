@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { KeyRound, LoaderCircle, RotateCw } from "lucide-react";
+import { KeyRound, LoaderCircle, RotateCw } from "@/lib/icons";
 import { createClient } from "@/lib/supabase/client";
 import { EventQrCode } from "@/components/EventQrCode";
 import type { Event } from "@/lib/types";

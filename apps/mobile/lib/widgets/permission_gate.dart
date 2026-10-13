@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 
 import '../services/permission_service.dart';
 import 'student_ui.dart';
@@ -26,8 +27,8 @@ class PermissionBlockedPanel extends StatelessWidget {
             children: [
               Icon(
                 permission == AppPermission.camera
-                    ? Icons.photo_camera_outlined
-                    : Icons.location_on_outlined,
+                    ? TablerIcons.camera
+                    : TablerIcons.mapPin,
                 size: 40,
                 color: StudentUi.teal,
               ),
@@ -50,8 +51,7 @@ class PermissionBlockedPanel extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               OutlinedButton(
-                onPressed: () =>
-                    service.openSettings(type: permission),
+                onPressed: () => service.openSettings(type: permission),
                 child: const Text('Open settings'),
               ),
             ],

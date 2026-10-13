@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 
 import '../../services/notification_service.dart';
 import '../../services/profile_service.dart';
@@ -106,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: _StatTile(
                       label: 'Attended',
                       value: '${stats['attendance_count'] ?? 0}',
-                      icon: Icons.event_available_outlined,
+                      icon: TablerIcons.calendarCheck,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -114,7 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: _StatTile(
                       label: 'Points',
                       value: '${stats['reward_points'] ?? 0}',
-                      icon: Icons.stars_outlined,
+                      icon: TablerIcons.stars,
                       accent: const Color(0xFFA46618),
                     ),
                   ),
@@ -123,7 +124,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: _StatTile(
                       label: 'Badges',
                       value: '${stats['badge_count'] ?? 0}',
-                      icon: Icons.workspace_premium_outlined,
+                      icon: TablerIcons.award,
                     ),
                   ),
                 ],
@@ -132,14 +133,14 @@ class _HomeScreenState extends State<HomeScreen> {
               const _SectionLabel(label: 'NEXT STEPS'),
               const SizedBox(height: 10),
               _ActionRow(
-                icon: Icons.qr_code_scanner,
+                icon: TablerIcons.scan,
                 title: 'Scan event QR',
                 description: 'Check in securely for an event.',
                 onTap: widget.onScan,
               ),
               const SizedBox(height: 10),
               _ActionRow(
-                icon: Icons.grid_view_rounded,
+                icon: TablerIcons.layoutGrid,
                 title: 'Your Bingo progress',
                 description: 'See what participation can unlock next.',
                 accent: const Color(0xFFA46618),
@@ -157,7 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const StudentInfoBanner(
                 message:
                     'For check-in, scan the event QR first. We will guide you through location, OTP, and selfie verification if required.',
-                icon: Icons.info_outline,
+                icon: TablerIcons.infoCircle,
                 background: Color(0xFFEEF1F0),
                 border: StudentUi.border,
                 foreground: StudentUi.muted,
@@ -285,7 +286,7 @@ class _CampusPass extends StatelessWidget {
                   child: const Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.qr_code_2, color: Colors.white, size: 38),
+                      Icon(TablerIcons.qrcode, color: Colors.white, size: 38),
                       SizedBox(height: 5),
                       Text(
                         'SCAN TO CHECK IN',
@@ -446,7 +447,7 @@ class _ActionRow extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: rowAccent),
+              Icon(TablerIcons.chevronRight, color: rowAccent),
             ],
           ),
         ),
@@ -468,7 +469,7 @@ class _BulletinBoard extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              Icons.campaign_outlined,
+              TablerIcons.speakerphone,
               color: Theme.of(context).colorScheme.primary,
             ),
             const SizedBox(width: 12),
@@ -494,7 +495,7 @@ class _BulletinBoard extends StatelessWidget {
               leading: CircleAvatar(
                 backgroundColor: Theme.of(context).colorScheme.primaryContainer,
                 foregroundColor: Theme.of(context).colorScheme.primary,
-                child: const Icon(Icons.campaign_outlined),
+                child: const Icon(TablerIcons.speakerphone),
               ),
               title: Text(
                 announcements[index].title,
@@ -522,7 +523,7 @@ class _BulletinBoard extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: TextButton.icon(
                 onPressed: onViewAll,
-                icon: const Icon(Icons.arrow_forward, size: 17),
+                icon: const Icon(TablerIcons.arrowRight, size: 17),
                 label: const Text('View all updates'),
               ),
             ),

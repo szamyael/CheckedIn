@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/attendance_service.dart';
@@ -126,7 +127,7 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Icon(
-              Icons.location_on,
+              TablerIcons.mapPin,
               size: 72,
               color: Theme.of(context).colorScheme.primary,
             ),

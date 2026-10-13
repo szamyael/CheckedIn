@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Palette, X } from "lucide-react";
+import { Palette, X } from "@/lib/icons";
 import { ThemeSettings } from "@/components/ThemeSettings";
 
 export function ThemePanelButton() {

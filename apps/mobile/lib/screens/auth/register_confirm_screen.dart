@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -148,7 +149,7 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
               backgroundImage:
                   avatarPath != null ? FileImage(File(avatarPath)) : null,
               child: avatarPath == null
-                  ? const Icon(Icons.person, size: 40, color: StudentUi.teal)
+                  ? const Icon(TablerIcons.user, size: 40, color: StudentUi.teal)
                   : null,
             ),
           ),
@@ -172,7 +173,7 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
                   onPressed: _pickingPhoto
                       ? null
                       : () => _pickProfilePhoto(ImageSource.camera),
-                  icon: const Icon(Icons.photo_camera_outlined, size: 18),
+                  icon: const Icon(TablerIcons.camera, size: 18),
                   label: const Text('Take photo'),
                 ),
               ),
@@ -182,7 +183,7 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
                   onPressed: _pickingPhoto
                       ? null
                       : () => _pickProfilePhoto(ImageSource.gallery),
-                  icon: const Icon(Icons.photo_library_outlined, size: 18),
+                  icon: const Icon(TablerIcons.photo, size: 18),
                   label: const Text('Upload'),
                 ),
               ),

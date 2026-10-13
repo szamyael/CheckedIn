@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Award, CalendarDays, ChevronRight, Megaphone, QrCode, Sparkles, TicketCheck } from "lucide-react";
+import { Award, CalendarDays, ChevronRight, Megaphone, QrCode, Sparkles, TicketCheck } from "@/lib/icons";
 import { createClient } from "@/lib/supabase/client";
 
 type StudentSummary = {

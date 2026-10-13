@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { X } from "@/lib/icons";
 import Link from "next/link";
 
 export interface NotificationPopupItem {

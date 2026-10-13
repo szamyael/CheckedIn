@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -57,7 +58,7 @@ class _EventsScreenState extends State<EventsScreen> {
               children: const [
                 StudentPageTitle(title: 'Events'),
                 StudentEmptyState(
-                  icon: Icons.event_busy,
+                  icon: TablerIcons.calendarOff,
                   message: 'No upcoming events',
                 ),
               ],
@@ -72,8 +73,8 @@ class _EventsScreenState extends State<EventsScreen> {
                 const SizedBox(height: 12),
                 SegmentedButton<bool>(
                   segments: const [
-                    ButtonSegment(value: true, label: Text('Calendar'), icon: Icon(Icons.calendar_month)),
-                    ButtonSegment(value: false, label: Text('List'), icon: Icon(Icons.list)),
+                    ButtonSegment(value: true, label: Text('Calendar'), icon: Icon(TablerIcons.calendarMonth)),
+                    ButtonSegment(value: false, label: Text('List'), icon: Icon(TablerIcons.list)),
                   ],
                   selected: {_calendarView},
                   onSelectionChanged: (s) => setState(() => _calendarView = s.first),
@@ -102,8 +103,8 @@ class _EventsScreenState extends State<EventsScreen> {
                     const SizedBox(height: 12),
                     SegmentedButton<bool>(
                       segments: const [
-                        ButtonSegment(value: true, label: Text('Calendar'), icon: Icon(Icons.calendar_month)),
-                        ButtonSegment(value: false, label: Text('List'), icon: Icon(Icons.list)),
+                        ButtonSegment(value: true, label: Text('Calendar'), icon: Icon(TablerIcons.calendarMonth)),
+                        ButtonSegment(value: false, label: Text('List'), icon: Icon(TablerIcons.list)),
                       ],
                       selected: {_calendarView},
                       onSelectionChanged: (s) => setState(() => _calendarView = s.first),
@@ -147,7 +148,7 @@ class _EventTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(
-              Icons.event_outlined,
+              TablerIcons.calendarEvent,
               color: Theme.of(context).colorScheme.primary,
             ),
           ),
@@ -181,7 +182,7 @@ class _EventTile extends StatelessWidget {
             const SizedBox(height: 5), Text(event.venueName, style: const TextStyle(color: StudentUi.muted, fontSize: 13)), const SizedBox(height: 3), Text(fmt.format(event.startsAt.toLocal()), style: const TextStyle(color: StudentUi.muted, fontSize: 12)),
             const SizedBox(height: 8), Text(event.isAttendanceOpen ? 'Attendance is open' : 'Check-in opens ${fmt.format(event.attendanceStartsAt.toLocal())}', style: TextStyle(color: event.isAttendanceOpen ? const Color(0xFF237A57) : StudentUi.muted, fontSize: 12, fontWeight: FontWeight.w600)),
           ])),
-          const Icon(Icons.chevron_right, color: StudentUi.muted),
+          const Icon(TablerIcons.chevronRight, color: StudentUi.muted),
         ],
       ),
     );
@@ -253,9 +254,9 @@ class _MonthCalendar extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            IconButton(onPressed: () => onMonthChanged(DateTime(month.year, month.month - 1)), icon: const Icon(Icons.chevron_left)),
+            IconButton(onPressed: () => onMonthChanged(DateTime(month.year, month.month - 1)), icon: const Icon(TablerIcons.chevronLeft)),
             Text(DateFormat('MMMM yyyy').format(month), style: Theme.of(context).textTheme.titleMedium),
-            IconButton(onPressed: () => onMonthChanged(DateTime(month.year, month.month + 1)), icon: const Icon(Icons.chevron_right)),
+            IconButton(onPressed: () => onMonthChanged(DateTime(month.year, month.month + 1)), icon: const Icon(TablerIcons.chevronRight)),
           ],
         ),
         GridView.builder(

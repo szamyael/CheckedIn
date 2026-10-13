@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/profile_service.dart';
@@ -164,7 +165,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             initialValue: _selectedBorder,
             decoration: const InputDecoration(
               labelText: 'Avatar border',
-              prefixIcon: Icon(Icons.circle_outlined),
+              prefixIcon: Icon(TablerIcons.circle),
             ),
             items: [
               const DropdownMenuItem(

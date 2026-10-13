@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowUpRight, Award, CalendarDays, Plus, Sparkles, Trophy } from "lucide-react";
+import { ArrowUpRight, Award, CalendarDays, Plus, Sparkles, Trophy } from "@/lib/icons";
 import { useLoader } from "@/components/LoaderProvider";
 import { OrgBadgesPanel } from "@/components/bingo/OrgBadgesPanel";
 import {

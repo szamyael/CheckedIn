@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/attendance_service.dart';
@@ -213,7 +214,7 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
           children: [
             if (_error != null) ...[
               Icon(
-                Icons.error_outline,
+                TablerIcons.alertCircle,
                 size: 64,
                 color: Theme.of(context).colorScheme.error,
               ),
@@ -230,7 +231,7 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
               ),
             ] else if (_successTitle != null) ...[
               Icon(
-                _blocked ? Icons.timer_off : Icons.check_circle,
+                _blocked ? TablerIcons.clockOff : TablerIcons.circleCheck,
                 size: 72,
                 color: _blocked
                     ? Theme.of(context).colorScheme.error

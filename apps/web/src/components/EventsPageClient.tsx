@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { format, isBefore, isWithinInterval } from "date-fns";
-import { CalendarDays, CalendarRange, ChevronRight, Clock3, List, MapPin, Radio, ShieldCheck } from "lucide-react";
+import { CalendarDays, CalendarRange, ChevronRight, Clock3, List, MapPin, Radio, ShieldCheck } from "@/lib/icons";
 import { CreateEventForm } from "@/components/CreateEventForm";
 import { EditEventForm } from "@/components/EditEventForm";
 import { EventsCalendar } from "@/components/EventsCalendar";

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 
 import '../../services/bingo_service.dart';
 import '../../widgets/student_ui.dart';
@@ -74,7 +75,7 @@ class _BingoScreenState extends State<BingoScreen> {
               const Text('EVENT BINGO', style: TextStyle(color: StudentUi.muted, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.4)),
               const SizedBox(height: 8),
               if (_cards.isEmpty)
-                const StudentEmptyState(icon: Icons.grid_view_rounded, message: 'No published Bingo cards yet. Check back when an organization publishes one.')
+                const StudentEmptyState(icon: TablerIcons.layoutGrid, message: 'No published Bingo cards yet. Check back when an organization publishes one.')
               else ...[
                 if (_cards.length > 1) ...[
                   const Text('Choose a bingo card', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF0C2238))),
@@ -109,7 +110,7 @@ class _BingoScreenState extends State<BingoScreen> {
                   const SizedBox(height: 16),
                 ],
                 if (_board == null)
-                  const StudentEmptyState(icon: Icons.grid_view_rounded, message: 'This bingo card is no longer available.')
+                  const StudentEmptyState(icon: TablerIcons.layoutGrid, message: 'This bingo card is no longer available.')
                 else ...[
                   Text(_board!.title, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 27, color: const Color(0xFF0C2238))),
                   const SizedBox(height: 5),
@@ -129,14 +130,14 @@ class _BingoScreenState extends State<BingoScreen> {
                           padding: const EdgeInsets.all(8), color: done ? const Color(0xFFFFF6DF) : Colors.white,
                           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                             Text(cell?.eventTitle ?? cell?.label ?? 'Empty', textAlign: TextAlign.center, maxLines: 3, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: done ? const Color(0xFF7C5311) : const Color(0xFF3F484F))),
-                            if (done) const Padding(padding: EdgeInsets.only(top: 5), child: Icon(Icons.check_circle, size: 17, color: Color(0xFFA46618))),
+                            if (done) const Padding(padding: EdgeInsets.only(top: 5), child: Icon(TablerIcons.circleCheck, size: 17, color: Color(0xFFA46618))),
                           ]),
                         );
                       },
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const Row(children: [Icon(Icons.workspace_premium_outlined, size: 19, color: Color(0xFFA46618)), SizedBox(width: 8), Text('Recognition earned', style: TextStyle(color: Color(0xFF0C2238), fontSize: 16, fontWeight: FontWeight.w700))]),
+                  const Row(children: [Icon(TablerIcons.award, size: 19, color: Color(0xFFA46618)), SizedBox(width: 8), Text('Recognition earned', style: TextStyle(color: Color(0xFF0C2238), fontSize: 16, fontWeight: FontWeight.w700))]),
                   const SizedBox(height: 10),
                   if (_board!.awards.isEmpty)
                     const Text('Complete a line or streak on this card to earn badges.', style: TextStyle(color: StudentUi.muted))
@@ -158,5 +159,5 @@ class _Metric extends StatelessWidget {
 class _AwardRow extends StatelessWidget {
   final String name; final int points;
   const _AwardRow({required this.name, required this.points});
-  @override Widget build(BuildContext context) => Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13), decoration: BoxDecoration(color: Colors.white, border: Border.all(color: StudentUi.border)), child: Row(children: [const Icon(Icons.stars_outlined, color: Color(0xFFC18A2E), size: 18), const SizedBox(width: 10), Expanded(child: Text(name, style: const TextStyle(fontWeight: FontWeight.w600))), Text('+$points', style: const TextStyle(color: Color(0xFFA46618), fontWeight: FontWeight.w700))]));
+  @override Widget build(BuildContext context) => Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13), decoration: BoxDecoration(color: Colors.white, border: Border.all(color: StudentUi.border)), child: Row(children: [const Icon(TablerIcons.stars, color: Color(0xFFC18A2E), size: 18), const SizedBox(width: 10), Expanded(child: Text(name, style: const TextStyle(fontWeight: FontWeight.w600))), Text('+$points', style: const TextStyle(color: Color(0xFFA46618), fontWeight: FontWeight.w700))]));
 }

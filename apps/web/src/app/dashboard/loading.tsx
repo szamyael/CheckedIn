@@ -1,4 +1,4 @@
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle } from "@/lib/icons";
 
 export default function DashboardLoading() {
   return (

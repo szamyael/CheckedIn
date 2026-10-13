@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/feedback_service.dart';
@@ -71,7 +72,7 @@ class _EventFeedbackScreenState extends State<EventFeedbackScreen> {
                 return IconButton(
                   onPressed: () => setState(() => _rating = star),
                   icon: Icon(
-                    star <= _rating ? Icons.star : Icons.star_border,
+                    star <= _rating ? TablerIcons.star : TablerIcons.star,
                     color: Colors.amber.shade700,
                   ),
                 );

@@ -4,7 +4,7 @@ enum AppColorTheme { navy, forest, burgundy, indigo, slate }
 
 extension AppColorThemeDetails on AppColorTheme {
   String get label => switch (this) {
-    AppColorTheme.navy => 'Navy',
+    AppColorTheme.navy => 'Campus',
     AppColorTheme.forest => 'Forest',
     AppColorTheme.burgundy => 'Burgundy',
     AppColorTheme.indigo => 'Indigo',
@@ -12,7 +12,7 @@ extension AppColorThemeDetails on AppColorTheme {
   };
 
   String get description => switch (this) {
-    AppColorTheme.navy => 'Campus navy',
+    AppColorTheme.navy => 'Campus-ready',
     AppColorTheme.forest => 'Grounded',
     AppColorTheme.burgundy => 'Classic',
     AppColorTheme.indigo => 'Focused',
@@ -20,7 +20,7 @@ extension AppColorThemeDetails on AppColorTheme {
   };
 
   Color get primary => switch (this) {
-    AppColorTheme.navy => const Color(0xFF345B9A),
+    AppColorTheme.navy => const Color(0xFF2F7169),
     AppColorTheme.forest => const Color(0xFF347753),
     AppColorTheme.burgundy => const Color(0xFF91465C),
     AppColorTheme.indigo => const Color(0xFF5865AD),
@@ -28,7 +28,7 @@ extension AppColorThemeDetails on AppColorTheme {
   };
 
   Color get primaryStrong => switch (this) {
-    AppColorTheme.navy => const Color(0xFF1D3459),
+    AppColorTheme.navy => const Color(0xFF183E4B),
     AppColorTheme.forest => const Color(0xFF1D4934),
     AppColorTheme.burgundy => const Color(0xFF562C3B),
     AppColorTheme.indigo => const Color(0xFF303B74),
@@ -36,7 +36,7 @@ extension AppColorThemeDetails on AppColorTheme {
   };
 
   Color get primarySoft => switch (this) {
-    AppColorTheme.navy => const Color(0xFFE5EDF9),
+    AppColorTheme.navy => const Color(0xFFE4F0ED),
     AppColorTheme.forest => const Color(0xFFE5F2E9),
     AppColorTheme.burgundy => const Color(0xFFF5E8ED),
     AppColorTheme.indigo => const Color(0xFFEAECFA),
@@ -44,7 +44,7 @@ extension AppColorThemeDetails on AppColorTheme {
   };
 
   Color get accent => switch (this) {
-    AppColorTheme.navy => const Color(0xFFD99B32),
+    AppColorTheme.navy => const Color(0xFFCB9440),
     AppColorTheme.forest => const Color(0xFFD19A45),
     AppColorTheme.burgundy => const Color(0xFFD4A25A),
     AppColorTheme.indigo => const Color(0xFFD5A34E),
@@ -52,7 +52,7 @@ extension AppColorThemeDetails on AppColorTheme {
   };
 
   Color get background => switch (this) {
-    AppColorTheme.navy => const Color(0xFFF2F5FA),
+    AppColorTheme.navy => const Color(0xFFF4F7F8),
     AppColorTheme.forest => const Color(0xFFF1F6F2),
     AppColorTheme.burgundy => const Color(0xFFF8F2F4),
     AppColorTheme.indigo => const Color(0xFFF3F4FA),
@@ -60,7 +60,7 @@ extension AppColorThemeDetails on AppColorTheme {
   };
 
   Color get backgroundDark => switch (this) {
-    AppColorTheme.navy => const Color(0xFF111A28),
+    AppColorTheme.navy => const Color(0xFF111C20),
     AppColorTheme.forest => const Color(0xFF111E19),
     AppColorTheme.burgundy => const Color(0xFF21171D),
     AppColorTheme.indigo => const Color(0xFF171827),
@@ -68,7 +68,7 @@ extension AppColorThemeDetails on AppColorTheme {
   };
 
   Color get surfaceDark => switch (this) {
-    AppColorTheme.navy => const Color(0xFF19263A),
+    AppColorTheme.navy => const Color(0xFF1B292D),
     AppColorTheme.forest => const Color(0xFF1A2B23),
     AppColorTheme.burgundy => const Color(0xFF302129),
     AppColorTheme.indigo => const Color(0xFF22243A),
@@ -76,7 +76,7 @@ extension AppColorThemeDetails on AppColorTheme {
   };
 
   Color get surfaceMutedDark => switch (this) {
-    AppColorTheme.navy => const Color(0xFF22324A),
+    AppColorTheme.navy => const Color(0xFF25373A),
     AppColorTheme.forest => const Color(0xFF24382E),
     AppColorTheme.burgundy => const Color(0xFF3C2B34),
     AppColorTheme.indigo => const Color(0xFF2C2F49),
@@ -84,7 +84,7 @@ extension AppColorThemeDetails on AppColorTheme {
   };
 
   Color get borderDark => switch (this) {
-    AppColorTheme.navy => const Color(0xFF34445E),
+    AppColorTheme.navy => const Color(0xFF3B5052),
     AppColorTheme.forest => const Color(0xFF385143),
     AppColorTheme.burgundy => const Color(0xFF553C49),
     AppColorTheme.indigo => const Color(0xFF414562),
@@ -92,7 +92,7 @@ extension AppColorThemeDetails on AppColorTheme {
   };
 
   Color get primarySoftDark => switch (this) {
-    AppColorTheme.navy => const Color(0xFF263C5C),
+    AppColorTheme.navy => const Color(0xFF294541),
     AppColorTheme.forest => const Color(0xFF294735),
     AppColorTheme.burgundy => const Color(0xFF49303C),
     AppColorTheme.indigo => const Color(0xFF353858),
@@ -105,10 +105,10 @@ class AppTheme {
     final dark = brightness == Brightness.dark;
     final background = dark ? selected.backgroundDark : selected.background;
     final surface = dark ? selected.surfaceDark : Colors.white;
-    final border = dark ? selected.borderDark : const Color(0xFFD9E1EC);
-    final text = dark ? const Color(0xFFEEF2F8) : const Color(0xFF182638);
-    final secondary = dark ? const Color(0xFFC6D2E0) : const Color(0xFF42546A);
-    final muted = dark ? const Color(0xFFA5B2C4) : const Color(0xFF64748B);
+    final border = dark ? selected.borderDark : const Color(0xFFDCE6E4);
+    final text = dark ? const Color(0xFFEEF4F2) : const Color(0xFF20323A);
+    final secondary = dark ? const Color(0xFFC6D4D1) : const Color(0xFF485B61);
+    final muted = dark ? const Color(0xFFA6B7B5) : const Color(0xFF64767B);
     final scheme =
         ColorScheme.fromSeed(
           seedColor: selected.primary,
@@ -204,7 +204,7 @@ class AppTheme {
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(22),
           side: BorderSide(color: border),
         ),
       ),
@@ -214,15 +214,15 @@ class AppTheme {
         filled: true,
         fillColor: surface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(15),
           borderSide: BorderSide(color: border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(15),
           borderSide: BorderSide(color: border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(15),
           borderSide: BorderSide(color: selected.primary, width: 1.6),
         ),
         errorBorder: OutlineInputBorder(
@@ -235,7 +235,7 @@ class AppTheme {
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        height: 70,
+        height: 74,
         backgroundColor: surface,
         indicatorColor: selected.primarySoft,
         labelTextStyle: WidgetStateProperty.resolveWith(

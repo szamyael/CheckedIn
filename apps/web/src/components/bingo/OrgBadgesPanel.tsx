@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Award, ImagePlus, UserRound, X } from "lucide-react";
+import { Award, ImagePlus, UserRound, X } from "@/lib/icons";
 import { useLoader } from "@/components/LoaderProvider";
 import { DashboardSearchInput } from "@/components/DashboardSearchInput";
 import {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 
 import '../core/theme.dart';
 import '../services/appearance_service.dart';
@@ -53,7 +54,7 @@ class _AppearanceSheet extends StatelessWidget {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: appearance.colorTheme == theme ? theme.primary : Theme.of(context).colorScheme.outline)),
                 selected: appearance.colorTheme == theme,
                 selectedTileColor: theme.primarySoft,
-                leading: CircleAvatar(backgroundColor: theme.primary, child: appearance.colorTheme == theme ? const Icon(Icons.check, color: Colors.white) : null),
+                leading: CircleAvatar(backgroundColor: theme.primary, child: appearance.colorTheme == theme ? const Icon(TablerIcons.check, color: Colors.white) : null),
                 title: Text(theme.label), subtitle: Text(theme.description),
                 onTap: () => appearance.setColorTheme(theme),
               ),

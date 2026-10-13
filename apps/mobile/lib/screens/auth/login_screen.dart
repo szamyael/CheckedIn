@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants.dart';
@@ -91,8 +92,8 @@ class _LoginScreenState extends State<LoginScreen> {
       builder: (dialogContext) => AlertDialog(
         icon: Icon(
           requiresReregistration
-              ? Icons.assignment_late_outlined
-              : Icons.block_outlined,
+              ? TablerIcons.alertTriangle
+              : TablerIcons.ban,
           color: requiresReregistration
               ? Colors.orange.shade800
               : Colors.red.shade700,
@@ -289,7 +290,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               decoration: const InputDecoration(
                                 labelText: 'Student ID',
                                 hintText: '0123-4567',
-                                prefixIcon: Icon(Icons.badge_outlined),
+                                prefixIcon: Icon(TablerIcons.idBadge),
                               ),
                               keyboardType: TextInputType.number,
                               textInputAction: TextInputAction.next,
@@ -300,7 +301,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               controller: _passwordController,
                               decoration: InputDecoration(
                                 labelText: 'Password',
-                                prefixIcon: const Icon(Icons.key_outlined),
+                                prefixIcon: const Icon(TablerIcons.key),
                                 suffixIcon: IconButton(
                                   tooltip: _obscurePassword
                                       ? 'Show password'
@@ -310,8 +311,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                   icon: Icon(
                                     _obscurePassword
-                                        ? Icons.visibility_outlined
-                                        : Icons.visibility_off_outlined,
+                                        ? TablerIcons.eye
+                                        : TablerIcons.eyeOff,
                                   ),
                                 ),
                               ),
@@ -347,7 +348,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         StudentInfoBanner(
                           message:
                               'Sign in once online to unlock offline access, cached events, and background sync on this device.',
-                          icon: Icons.offline_bolt_outlined,
+                          icon: TablerIcons.bolt,
                           background: const Color(0xFFEEF1F0),
                           border: StudentUi.border,
                           foreground: StudentUi.muted,

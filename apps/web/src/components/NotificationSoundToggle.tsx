@@ -1,6 +1,6 @@
 "use client";
 
-import { Volume2, VolumeX } from "lucide-react";
+import { Volume2, VolumeX } from "@/lib/icons";
 import { useEffect, useState } from "react";
 import {
   isNotificationSoundEnabled,

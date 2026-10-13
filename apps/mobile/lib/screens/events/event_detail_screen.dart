@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -47,7 +48,7 @@ class EventDetailScreen extends StatelessWidget {
             onPressed: event.isAttendanceOpen
                 ? () => context.push('/attendance/scan')
                 : null,
-            icon: const Icon(Icons.qr_code_scanner),
+            icon: const Icon(TablerIcons.scan),
             label: Text(
               event.isAttendanceOpen
                   ? 'Scan QR to check in or out'

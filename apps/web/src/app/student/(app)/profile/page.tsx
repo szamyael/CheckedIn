@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Award, CalendarDays, Camera, ChevronRight, Pencil } from "lucide-react";
+import { Award, CalendarDays, Camera, ChevronRight, Pencil } from "@/lib/icons";
 import { format, parseISO } from "date-fns";
 import { formatStudentDisplayName } from "@/lib/student/display-name";
 import { createClient } from "@/lib/supabase/client";

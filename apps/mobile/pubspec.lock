@@ -1101,6 +1101,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.15.0"
+  tabler_icons_plus:
+    dependency: "direct main"
+    description:
+      name: tabler_icons_plus
+      sha256: "7f692f1873396a019e1bf56a54d0e4cb961b3855ad70dadc2c0910f2edcab181"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.49.0"
   term_glyph:
     dependency: transitive
     description:

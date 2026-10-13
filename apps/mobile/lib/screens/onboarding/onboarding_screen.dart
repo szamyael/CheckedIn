@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/permission_service.dart';
@@ -27,7 +28,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   static const _pages = [
     _OnboardingPageData(
-      icon: Icons.school_outlined,
+      icon: TablerIcons.school,
       title: 'Welcome to CheckedIn',
       body:
           'CheckedIn helps you register once, join campus events, and record attendance '
@@ -39,7 +40,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ],
     ),
     _OnboardingPageData(
-      icon: Icons.badge_outlined,
+      icon: TablerIcons.idBadge,
       title: 'What you need to register',
       body: 'Have these ready before you create your account:',
       bullets: [
@@ -50,7 +51,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ],
     ),
     _OnboardingPageData(
-      icon: Icons.qr_code_scanner,
+      icon: TablerIcons.scan,
       title: 'How check-in works',
       body: 'At an event, attendance follows a short verified flow:',
       bullets: [
@@ -385,7 +386,7 @@ class _WalkthroughPage extends StatelessWidget {
                 children: [
                   const Padding(
                     padding: EdgeInsets.only(top: 2),
-                    child: Icon(Icons.check_circle, size: 18, color: StudentUi.teal),
+                    child: Icon(TablerIcons.circleCheck, size: 18, color: StudentUi.teal),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -436,7 +437,7 @@ class _PermissionsPage extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           _PermissionCard(
-            icon: Icons.photo_camera_outlined,
+            icon: TablerIcons.camera,
             title: 'Camera',
             description:
                 'Scan your student ID, read event QR codes, and take attendance selfies.',
@@ -446,7 +447,7 @@ class _PermissionsPage extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _PermissionCard(
-            icon: Icons.location_on_outlined,
+            icon: TablerIcons.mapPin,
             title: 'Location',
             description:
                 'Confirm you are at the event venue before check-in is accepted.',
@@ -456,7 +457,7 @@ class _PermissionsPage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           const StudentInfoBanner(
-            icon: Icons.info_outline,
+            icon: TablerIcons.infoCircle,
             message:
                 'If you tap "Don\'t allow", we will ask again when you register, scan a QR code, or check in.',
           ),
@@ -500,7 +501,7 @@ class _PermissionCard extends StatelessWidget {
                 ),
               ),
               if (granted)
-                const Icon(Icons.check_circle, color: StudentUi.teal, size: 22),
+                const Icon(TablerIcons.circleCheck, color: StudentUi.teal, size: 22),
             ],
           ),
           const SizedBox(height: 8),

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, ChevronRight, MapPin, Radio } from "lucide-react";
+import { CalendarDays, ChevronRight, MapPin, Radio } from "@/lib/icons";
 import { format, parseISO } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import type { StudentEvent } from "@/lib/student/api";

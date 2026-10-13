@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -93,7 +94,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Wrap(
           children: [
             ListTile(
-              leading: const Icon(Icons.camera_alt_outlined),
+              leading: const Icon(TablerIcons.camera),
               title: const Text('Take photo'),
               onTap: () {
                 Navigator.pop(sheetContext);
@@ -101,7 +102,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
+              leading: const Icon(TablerIcons.photo),
               title: const Text('Choose from gallery'),
               onTap: () {
                 Navigator.pop(sheetContext);
@@ -285,7 +286,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 child: IconButton(
                                   onPressed: _showAvatarSourcePicker,
                                   icon: const Icon(
-                                    Icons.camera_alt_outlined,
+                                    TablerIcons.camera,
                                     size: 17,
                                   ),
                                   color: const Color(0xFF17324D),
@@ -508,7 +509,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const Row(
                 children: [
                   Icon(
-                    Icons.workspace_premium_outlined,
+                    TablerIcons.award,
                     color: Color(0xFFA46618),
                     size: 19,
                   ),
@@ -526,7 +527,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 8),
               if (data.achievements.isEmpty)
                 const StudentEmptyState(
-                  icon: Icons.emoji_events_outlined,
+                  icon: TablerIcons.trophy,
                   message: 'No badges yet. Check in to events to earn them!',
                 )
               else
@@ -541,8 +542,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             leading: a.imageUrl == null
                                 ? Icon(
                                     a.badgeType == 'milestone'
-                                        ? Icons.emoji_events
-                                        : Icons.verified,
+                                        ? TablerIcons.trophy
+                                        : TablerIcons.circleCheck,
                                     color: Colors.amber.shade700,
                                   )
                                 : ClipRRect(
@@ -553,7 +554,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       height: 40,
                                       fit: BoxFit.cover,
                                       errorBuilder: (_, _, _) => Icon(
-                                        Icons.verified,
+                                        TablerIcons.circleCheck,
                                         color: Colors.amber.shade700,
                                       ),
                                     ),
@@ -579,7 +580,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const Row(
                 children: [
                   Icon(
-                    Icons.event_note_outlined,
+                    TablerIcons.calendarEvent,
                     color: Color(0xFF17324D),
                     size: 19,
                   ),
@@ -597,7 +598,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 8),
               if (data.history.isEmpty)
                 const StudentEmptyState(
-                  icon: Icons.history,
+                  icon: TablerIcons.history,
                   message: 'No attendance records yet.',
                 )
               else
@@ -611,8 +612,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: ListTile(
                             leading: Icon(
                               h.isPending
-                                  ? Icons.cloud_upload
-                                  : Icons.check_circle,
+                                  ? TablerIcons.cloudUpload
+                                  : TablerIcons.circleCheck,
                               color: h.isPending
                                   ? Colors.amber.shade800
                                   : StudentUi.teal,
@@ -625,7 +626,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                             trailing: h.syncError != null
                                 ? const Icon(
-                                    Icons.error_outline,
+                                    TablerIcons.alertCircle,
                                     color: Colors.red,
                                     size: 20,
                                   )

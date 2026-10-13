@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A quick start and user guide to the CheckedIn campus events and attendance system.">
+    <title>CheckedIn | Campus User Guide</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --navy: #17365f;
+        --navy-deep: #102745;
+        --teal: #087d79;
+        --mint: #e8f5f1;
+        --gold: #b77b1e;
+        --ink: #192b40;
+        --muted: #536579;
+        --line: #d9e2eb;
+        --paper: #ffffff;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { margin: 0; background: #e9edf1; color: var(--ink); font-family: Arial, Helvetica, sans-serif; }
+      body { padding: 18px; }
+
+      .sheet {
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        width: 297mm;
+        height: 210mm;
+        margin: 0 auto 18px;
+        overflow: hidden;
+        background: var(--paper);
+        box-shadow: 0 10px 36px rgb(15 32 52 / 16%);
+        page-break-after: always;
+        break-after: page;
+      }
+
+      .sheet:last-of-type { page-break-after: auto; break-after: auto; }
+      .panel {
+        position: relative;
+        min-width: 0;
+        padding: 13mm 10mm 12mm;
+        border-right: 1px dashed #cbd5df;
+      }
+
+      .panel:last-child { border-right: 0; }
+      .panel-dark { color: white; background: var(--navy); }
+      .panel-cover {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        color: white;
+        border: 0;
+        background:
+          radial-gradient(ellipse at 100% 5%, rgb(21 184 159 / 30%), transparent 45%),
+          linear-gradient(150deg, var(--navy) 5%, var(--navy-deep) 100%);
+      }
+
+      .brand { display: flex; align-items: center; gap: 9px; }
+      .brand img { width: 38px; height: 38px; object-fit: contain; border-radius: 9px; background: white; }
+      .brand-name { font-size: 15px; font-weight: 800; letter-spacing: -.3px; }
+      .brand-name span { color: #4bd4ba; }
+      .eyebrow {
+        margin: 0 0 8px;
+        color: var(--teal);
+        font-size: 8px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+      }
+
+      .panel-dark .eyebrow, .panel-cover .eyebrow { color: #7ce0cf; }
+      h1, h2, h3, p { margin-top: 0; }
+      h1 { max-width: 260px; margin-bottom: 13px; font-size: 30px; line-height: 1.06; letter-spacing: -1.25px; }
+      h2 { margin-bottom: 10px; font-size: 21px; line-height: 1.12; letter-spacing: -.55px; }
+      h3 { margin: 0 0 4px; font-size: 10px; line-height: 1.3; }
+      p { margin-bottom: 9px; font-size: 9px; line-height: 1.48; }
+      .lead { color: var(--muted); font-size: 10px; line-height: 1.55; }
+      .panel-dark .lead, .panel-cover .lead { color: #d9e5f1; }
+      .tiny { font-size: 7.5px; line-height: 1.45; }
+      .muted { color: var(--muted); }
+
+      .cover-copy { margin: 8mm 0; }
+      .cover-copy h1 { font-size: 32px; }
+      .cover-art {
+        position: relative;
+        min-height: 49mm;
+        margin: 2mm 0 5mm;
+        padding: 8mm 6mm;
+        overflow: hidden;
+        border: 1px solid rgb(255 255 255 / 18%);
+        border-radius: 18px;
+        background: rgb(255 255 255 / 8%);
+      }
+
+      .cover-art::before, .cover-art::after {
+        position: absolute;
+        content: "";
+        border: 1px solid rgb(255 255 255 / 12%);
+        border-radius: 50%;
+      }
+
+      .cover-art::before { width: 60mm; height: 60mm; top: -33mm; right: -22mm; }
+      .cover-art::after { width: 42mm; height: 42mm; bottom: -30mm; left: -17mm; }
+      .flow { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 10px 1fr 10px 1fr; align-items: center; gap: 4px; }
+      .flow-step { text-align: center; }
+      .flow-icon {
+        display: grid;
+        width: 36px;
+        height: 36px;
+        margin: 0 auto 7px;
+        place-items: center;
+        border: 1px solid rgb(255 255 255 / 30%);
+        border-radius: 12px;
+        color: #8ce5d6;
+        background: rgb(255 255 255 / 9%);
+      }
+
+      .flow-icon svg, .icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      .flow-step b { display: block; font-size: 8px; }
+      .flow-arrow { color: #85dccc; font-size: 15px; text-align: center; }
+      .cover-caption { margin: 0; color: #d4e2ee; font-size: 8px; text-align: center; }
+      .cover-foot { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding-top: 4mm; border-top: 1px solid rgb(255 255 255 / 18%); }
+      .pill { display: inline-block; padding: 5px 8px; border: 1px solid rgb(255 255 255 / 28%); border-radius: 999px; color: #eaf4fb; font-size: 7px; font-weight: 700; }
+
+      .section-mark { display: flex; align-items: center; gap: 7px; margin-bottom: 10px; }
+      .section-mark .num { display: grid; width: 23px; height: 23px; place-items: center; border-radius: 8px; color: var(--teal); background: var(--mint); font-size: 9px; font-weight: 800; }
+      .section-mark .eyebrow { margin: 0; }
+      .step-list { display: grid; gap: 8px; margin: 12px 0; }
+      .step { display: grid; grid-template-columns: 23px 1fr; gap: 8px; align-items: start; }
+      .step-num { display: grid; width: 22px; height: 22px; place-items: center; border-radius: 50%; color: white; background: var(--teal); font-size: 8px; font-weight: 800; }
+      .step p { margin: 0; color: var(--muted); }
+      .step strong { color: var(--ink); }
+      .callout { margin: 11px 0; padding: 9px 10px; border: 1px solid #c9e6df; border-radius: 11px; background: #f1faf7; }
+      .callout p:last-child { margin-bottom: 0; }
+      .callout strong { color: var(--teal); }
+      .callout-dark { border-color: rgb(255 255 255 / 19%); background: rgb(255 255 255 / 8%); }
+      .callout-dark strong { color: #8ce5d6; }
+      .mini-card { margin: 10px 0; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: #fbfcfe; }
+      .mini-card h3 { display: flex; align-items: center; gap: 6px; }
+      .icon { display: inline-grid; width: 23px; height: 23px; flex: 0 0 23px; place-items: center; border-radius: 8px; color: var(--teal); background: var(--mint); }
+      .mini-card p { margin: 0; color: var(--muted); }
+      .role-list { display: grid; gap: 7px; margin: 12px 0; }
+      .role { padding: 8px 9px; border-left: 3px solid var(--teal); border-radius: 0 8px 8px 0; background: #f4f8fb; }
+      .role h3 { margin-bottom: 2px; }
+      .role p { margin: 0; color: var(--muted); }
+      .sys-flow { display: grid; gap: 6px; margin: 11px 0; }
+      .sys-box { padding: 7px 8px; border: 1px solid rgb(255 255 255 / 20%); border-radius: 9px; background: rgb(255 255 255 / 7%); }
+      .sys-box strong { display: block; margin-bottom: 2px; font-size: 8px; }
+      .sys-box span { display: block; color: #d8e4f0; font-size: 7px; line-height: 1.35; }
+      .sys-arrow { color: #7ce0cf; font-size: 12px; text-align: center; line-height: 10px; }
+      .footer-note { position: absolute; right: 10mm; bottom: 7mm; left: 10mm; padding-top: 3mm; border-top: 1px solid var(--line); color: var(--muted); font-size: 7px; }
+      .panel-dark .footer-note { border-color: rgb(255 255 255 / 22%); color: #d5e0ea; }
+      .front-label { align-self: flex-start; margin-top: 4mm; padding: 6px 9px; border-radius: 999px; color: #d9fff7; background: rgb(8 125 121 / 28%); font-size: 7px; font-weight: 800; letter-spacing: 1px; }
+      .checklist { display: grid; gap: 6px; padding: 0; margin: 9px 0; list-style: none; }
+      .checklist li { display: grid; grid-template-columns: 14px 1fr; gap: 6px; color: var(--muted); font-size: 8px; line-height: 1.4; }
+      .check { color: var(--teal); font-weight: 900; }
+      .big-quote { margin: 14px 0; padding-left: 10px; border-left: 3px solid #4bd4ba; color: var(--navy); font-size: 13px; font-weight: 700; line-height: 1.25; }
+
+      @media screen and (max-width: 900px) {
+        body { padding: 12px; overflow-x: auto; }
+        .sheet { margin-left: 0; margin-right: 0; }
+      }
+
+      @media print {
+        @page { size: A4 landscape; margin: 0; }
+        html, body { width: 297mm; height: 210mm; padding: 0; background: white; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+        .sheet { width: 297mm; height: 210mm; margin: 0; box-shadow: none; }
+        .panel { border-right: 1px dashed #d5dde5; }
+        .panel-cover, .panel-dark { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      }
+    </style>
+  </head>
+  <body>
+    <main aria-label="CheckedIn tri-fold user guide">
+      <section class="sheet" aria-label="Brochure outside panels, left to right: back cover, fold-in flap, front cover">
+        <article class="panel">
+          <div class="section-mark"><span class="num">01</span><p class="eyebrow">The system</p></div>
+          <h2>One campus.<br>One shared view.</h2>
+          <p class="lead">CheckedIn connects campus events with clear, verifiable attendance—from publishing an event to recognizing the people who joined.</p>
+          <div class="mini-card">
+            <h3><span class="icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H4zM8 20h8M12 16v4"/><path d="m8 10 2.5 2.5L16 7"/></svg></span>For students</h3>
+            <p>Find events, check in, follow attendance, and earn participation rewards in the mobile app or student portal.</p>
+          </div>
+          <div class="mini-card">
+            <h3><span class="icon"><svg viewBox="0 0 24 24"><path d="M4 19V5m0 14h17"/><path d="m7 15 4-4 3 2 5-6"/></svg></span>For campus teams</h3>
+            <p>Publish events, set attendance rules, monitor arrivals, and review participation from the staff workspace.</p>
+          </div>
+          <p class="big-quote">Less friction at the door. Better insight after the event.</p>
+          <p class="tiny muted">Built for students, faculty, organization teams, and campus administrators.</p>
+          <div class="footer-note">CHECKEDIN · CAMPUS EVENTS &amp; ATTENDANCE</div>
+        </article>
+
+        <article class="panel panel-dark">
+          <div class="section-mark"><span class="num">02</span><p class="eyebrow">Privacy &amp; access</p></div>
+          <h2>Designed for<br>accountable access.</h2>
+          <p class="lead">Each person signs in to the right workspace. Role-based permissions help keep student and event records available only to authorized users.</p>
+          <div class="sys-flow" aria-label="Simplified CheckedIn system flow">
+            <div class="sys-box"><strong>Student app &amp; portal</strong><span>Event discovery, attendance, history, and rewards</span></div>
+            <div class="sys-arrow" aria-hidden="true">↓</div>
+            <div class="sys-box"><strong>CheckedIn services</strong><span>Sign-in, permissions, verified check-in, and live updates</span></div>
+            <div class="sys-arrow" aria-hidden="true">↓</div>
+            <div class="sys-box"><strong>Staff workspace</strong><span>Event setup, live monitoring, and reporting</span></div>
+          </div>
+          <div class="callout callout-dark">
+            <p><strong>Location, camera, or photo checks?</strong></p>
+            <p class="tiny">They are used only when the event's attendance settings require them. Follow the in-app prompt and your campus guidance.</p>
+          </div>
+          <p class="tiny">The platform uses secure sign-in, protected records, and campus-defined access. Never share your password or a live event OTP.</p>
+          <div class="footer-note">Questions about an account or event? Contact your campus administrator or event organizer.</div>
+        </article>
+
+        <article class="panel panel-cover">
+          <div class="brand">
+            <img src="../apps/web/public/logos/logo.png" alt="CheckedIn logo">
+            <div class="brand-name">Checked<span>In</span></div>
+          </div>
+          <div class="cover-copy">
+            <p class="eyebrow">Campus events, connected</p>
+            <h1>Show up.<br>Check in.<br>Get recognized.</h1>
+            <p class="lead">A quick-start guide to CheckedIn for students and campus teams.</p>
+            <div class="cover-art">
+              <div class="flow">
+                <div class="flow-step">
+                  <span class="flow-icon"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4m8-4v4M4 10h16"/></svg></span>
+                  <b>Discover</b>
+                </div>
+                <span class="flow-arrow" aria-hidden="true">→</span>
+                <div class="flow-step">
+                  <span class="flow-icon"><svg viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z"/><path d="M14 14h2v2h-2zm4 0h2m-6 4h2m2 0h2v2"/></svg></span>
+                  <b>Check in</b>
+                </div>
+                <span class="flow-arrow" aria-hidden="true">→</span>
+                <div class="flow-step">
+                  <span class="flow-icon"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg></span>
+                  <b>Celebrate</b>
+                </div>
+              </div>
+            </div>
+            <p class="cover-caption">Events, attendance, and student engagement—in one campus-ready system.</p>
+          </div>
+          <div class="cover-foot">
+            <span class="pill">STUDENT MOBILE APP</span>
+            <span class="pill">STUDENT WEB</span>
+            <span class="pill">STAFF WORKSPACE</span>
+          </div>
+          <span class="front-label">QUICK START · USER GUIDE</span>
+        </article>
+      </section>
+
+      <section class="sheet" aria-label="Brochure inside panels, left to right: student start, check-in, staff guide">
+        <article class="panel">
+          <div class="section-mark"><span class="num">03</span><p class="eyebrow">Student quick start</p></div>
+          <h2>Your campus life,<br>in your pocket.</h2>
+          <p class="lead">Use the CheckedIn mobile app or open your campus student portal in a browser.</p>
+          <div class="step-list">
+            <div class="step"><span class="step-num">1</span><p><strong>Sign in or register.</strong> Use your campus account. Complete any requested identity and email verification.</p></div>
+            <div class="step"><span class="step-num">2</span><p><strong>Explore events.</strong> Browse published events and open one to review its time, venue, and check-in window.</p></div>
+            <div class="step"><span class="step-num">3</span><p><strong>Check your progress.</strong> Visit your profile for attendance history, reward points, and earned badges.</p></div>
+          </div>
+          <div class="mini-card">
+            <h3><span class="icon"><svg viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z"/><path d="M14 14h2v2h-2zm4 0h2m-6 4h2m2 0h2v2"/></svg></span>Use the bottom navigation</h3>
+            <p>Home, Events, Scan, Bingo, and Profile are one tap away. Notifications are in the top bar.</p>
+          </div>
+          <div class="callout">
+            <p><strong>Need access?</strong> Ask your campus administrator or organization for the official student app and portal links.</p>
+          </div>
+          <div class="footer-note">STUDENTS · START WITH YOUR CAMPUS ACCOUNT</div>
+        </article>
+
+        <article class="panel">
+          <div class="section-mark"><span class="num">04</span><p class="eyebrow">Event check-in</p></div>
+          <h2>A clear path<br>from QR to done.</h2>
+          <p class="lead">Check-in is tied to the event and its attendance window. Keep the app open and follow each prompt.</p>
+          <div class="step-list">
+            <div class="step"><span class="step-num">1</span><p><strong>Open Scan.</strong> Choose Scan in the app or student portal and allow camera access when asked.</p></div>
+            <div class="step"><span class="step-num">2</span><p><strong>Scan the event QR.</strong> Use the code displayed by the organizer. Check that you selected the right event.</p></div>
+            <div class="step"><span class="step-num">3</span><p><strong>Complete required checks.</strong> Depending on the event, confirm your location, enter the organizer's current OTP, or take a selfie.</p></div>
+            <div class="step"><span class="step-num">4</span><p><strong>Wait for confirmation.</strong> Look for a successful check-in message; review your history later in Profile.</p></div>
+          </div>
+          <div class="callout">
+            <p><strong>Offline on mobile?</strong></p>
+            <p class="tiny">If offline attendance is available, a submission is saved on your device and waits to sync when connectivity returns. It may need staff review before it is confirmed.</p>
+          </div>
+          <p class="tiny muted">If a scan fails, check the event's time window and follow the on-screen instructions. Ask the organizer for help—never reuse an expired OTP.</p>
+          <div class="footer-note">STUDENTS · THE EVENT ORGANIZER PROVIDES THE LIVE QR / OTP</div>
+        </article>
+
+        <article class="panel">
+          <div class="section-mark"><span class="num">05</span><p class="eyebrow">Staff quick start</p></div>
+          <h2>Set up. Monitor.<br>Learn.</h2>
+          <p class="lead">The staff workspace brings event operations and campus participation into one place.</p>
+          <div class="step-list">
+            <div class="step"><span class="step-num">1</span><p><strong>Sign in to Staff.</strong> Use the account and role granted by your administrator.</p></div>
+            <div class="step"><span class="step-num">2</span><p><strong>Publish an event.</strong> Organization teams add its details, venue, schedule, attendance window, and required checks.</p></div>
+            <div class="step"><span class="step-num">3</span><p><strong>Share the check-in.</strong> Display the event QR and, when configured, the current OTP for attendees.</p></div>
+            <div class="step"><span class="step-num">4</span><p><strong>Monitor and review.</strong> Use Live Monitor for arriving check-ins; review reports and engagement after the event.</p></div>
+          </div>
+          <div class="role-list">
+            <div class="role"><h3>Organization teams</h3><p>Create and manage their events and participation activities.</p></div>
+            <div class="role"><h3>Faculty</h3><p>Use the campus tools enabled for their assigned role.</p></div>
+            <div class="role"><h3>Administrators</h3><p>Oversee campus users, access, and platform operations.</p></div>
+          </div>
+          <div class="callout">
+            <p><strong>Before doors open:</strong> confirm the event is published, the attendance window is correct, and the QR display is visible to attendees.</p>
+          </div>
+          <div class="footer-note">STAFF · AVAILABLE TO AUTHORIZED CAMPUS ACCOUNTS</div>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

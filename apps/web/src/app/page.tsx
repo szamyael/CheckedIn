@@ -9,7 +9,7 @@ import {
   QrCode,
   ShieldCheck,
   UsersRound,
-} from "lucide-react";
+} from "@/lib/icons";
 import { BrandMark } from "@/components/BrandLogo";
 import { PhoneStudentRedirect } from "@/components/student/PhoneStudentRedirect";
 

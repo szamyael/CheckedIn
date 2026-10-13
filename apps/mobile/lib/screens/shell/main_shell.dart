@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 
 import '../../services/auth_service.dart';
 import '../../services/connectivity_service.dart';
@@ -96,7 +97,7 @@ class _MainShellState extends State<MainShell> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  underReview ? Icons.hourglass_top : Icons.block,
+                  underReview ? TablerIcons.hourglass : TablerIcons.ban,
                   size: 48,
                   color: Theme.of(context).colorScheme.error,
                 ),
@@ -169,7 +170,7 @@ class _MainShellState extends State<MainShell> {
           IconButton(
             tooltip: 'Appearance',
             onPressed: () => showAppearanceSheet(context),
-            icon: const Icon(Icons.palette_outlined),
+            icon: const Icon(TablerIcons.palette),
           ),
           IconButton(
             tooltip: 'Notifications',
@@ -180,12 +181,12 @@ class _MainShellState extends State<MainShell> {
             icon: Badge(
               isLabelVisible: _unreadCount > 0,
               label: Text(_unreadCount > 9 ? '9+' : '$_unreadCount'),
-              child: const Icon(Icons.notifications_outlined),
+              child: const Icon(TablerIcons.bell),
             ),
           ),
           IconButton(
             tooltip: 'Sign out',
-            icon: const Icon(Icons.logout),
+            icon: const Icon(TablerIcons.logout),
             onPressed: () async {
               await AuthService.instance.signOut();
               if (context.mounted) context.go('/login');
@@ -205,7 +206,7 @@ class _MainShellState extends State<MainShell> {
                       message: _auth.isOfflineMode
                           ? 'Offline mode — browsing cached data. Offline attendance saves on this device and syncs for staff review after you reconnect and sign in online.'
                           : 'No internet — showing cached data. Offline attendance will sync for staff review when you reconnect.',
-                      icon: Icons.wifi_off,
+                      icon: TablerIcons.wifiOff,
                       background: StudentUi.slateBg,
                       border: StudentUi.border,
                       foreground: StudentUi.muted,
@@ -218,8 +219,8 @@ class _MainShellState extends State<MainShell> {
                           ? 'Syncing ${_offlineSync.pendingCount} pending attendance…'
                           : '${_offlineSync.pendingCount} offline attendance submission${_offlineSync.pendingCount == 1 ? '' : 's'} waiting to sync for staff review',
                       icon: _offlineSync.isSyncing
-                          ? Icons.sync
-                          : Icons.cloud_off,
+                          ? TablerIcons.refresh
+                          : TablerIcons.cloudOff,
                       action: (!_offlineSync.isSyncing && !_auth.isOfflineMode)
                           ? TextButton(
                               onPressed: () => _offlineSync.syncPending(),
@@ -263,27 +264,27 @@ class _MainShellState extends State<MainShell> {
               },
               destinations: const [
                 NavigationDestination(
-                  icon: Icon(Icons.home_outlined),
-                  selectedIcon: Icon(Icons.home_rounded),
+                  icon: Icon(TablerIcons.home),
+                  selectedIcon: Icon(TablerIcons.homeFilled),
                   label: 'Home',
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.event_outlined),
-                  selectedIcon: Icon(Icons.event_rounded),
+                  icon: Icon(TablerIcons.calendarEvent),
+                  selectedIcon: Icon(TablerIcons.calendarEventFilled),
                   label: 'Events',
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.qr_code_scanner_rounded),
+                  icon: Icon(TablerIcons.scan),
                   label: 'Scan',
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.grid_view_outlined),
-                  selectedIcon: Icon(Icons.grid_view_rounded),
+                  icon: Icon(TablerIcons.layoutGrid),
+                  selectedIcon: Icon(TablerIcons.layoutGridFilled),
                   label: 'Bingo',
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.person_outline_rounded),
-                  selectedIcon: Icon(Icons.person_rounded),
+                  icon: Icon(TablerIcons.user),
+                  selectedIcon: Icon(TablerIcons.userFilled),
                   label: 'Profile',
                 ),
               ],

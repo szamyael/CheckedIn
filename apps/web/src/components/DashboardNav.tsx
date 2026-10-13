@@ -13,7 +13,7 @@ import {
   Settings,
   Users,
   LayoutGrid,
-} from "lucide-react";
+} from "@/lib/icons";
 
 const icons = {
   calendar: Calendar,
@@ -72,7 +72,7 @@ export function DashboardNav({ items }: { items: DashboardNavItem[] }) {
               active ? "bg-white/15 text-white shadow-sm" : ""
             }`}
           >
-            <Icon className="h-[17px] w-[17px] shrink-0" aria-hidden="true" />
+            <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
             <span className="dashboard-nav-label">{label}</span>
           </Link>
         );

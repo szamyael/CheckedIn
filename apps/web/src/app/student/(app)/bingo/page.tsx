@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Award, Check, Sparkles } from "lucide-react";
+import { Award, Check, Sparkles } from "@/lib/icons";
 import { createClient } from "@/lib/supabase/client";
 import { studentInputClass } from "@/components/student/StudentUi";
 

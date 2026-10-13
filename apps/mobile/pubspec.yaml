@@ -26,6 +26,7 @@ dependencies:
   permission_handler: ^12.0.1
   image_picker: ^1.1.2
   onesignal_flutter: 5.5.2
+  tabler_icons_plus: ^3.49.0
 
 dev_dependencies:
   flutter_test:

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Building2, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, Building2, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck } from "@/lib/icons";
 import { BootstrapGate } from "@/components/BootstrapGate";
 import { BrandLogo, BrandMark } from "@/components/BrandLogo";
 import { PhoneStudentRedirect } from "@/components/student/PhoneStudentRedirect";

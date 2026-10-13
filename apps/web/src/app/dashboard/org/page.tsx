@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { Calendar, CalendarPlus, LayoutGrid, Radio, Trophy } from "lucide-react";
+import { Calendar, CalendarPlus, LayoutGrid, Radio, Trophy } from "@/lib/icons";
 import { DashboardPageHeader, DashboardSection, DashboardStat } from "@/components/DashboardUi";
 import { format } from "date-fns";
 

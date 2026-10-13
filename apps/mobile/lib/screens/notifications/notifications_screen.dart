@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:intl/intl.dart';
 
 import '../../services/notification_service.dart';
@@ -64,7 +65,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               return ListView(
                 children: const [
                   StudentEmptyState(
-                    icon: Icons.notifications_none,
+                    icon: TablerIcons.bell,
                     message: 'No notifications yet.',
                   ),
                 ],
@@ -131,11 +132,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   IconData _iconForType(String type) {
     switch (type) {
       case 'achievement':
-        return Icons.emoji_events;
+        return TablerIcons.trophy;
       case 'event_published':
-        return Icons.event;
+        return TablerIcons.calendarEvent;
       default:
-        return Icons.notifications_outlined;
+        return TablerIcons.bell;
     }
   }
 }

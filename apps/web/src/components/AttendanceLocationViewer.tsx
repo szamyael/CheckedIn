@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useState } from "react";
-import { MapPin, X } from "lucide-react";
+import { MapPin, X } from "@/lib/icons";
 
 const AttendanceLocationMap = dynamic(() => import("@/components/AttendanceLocationMap").then((module) => module.AttendanceLocationMap), { ssr: false, loading: () => <div className="grid h-80 place-items-center bg-slate-50 text-sm text-slate-500">Loading map…</div> });
 

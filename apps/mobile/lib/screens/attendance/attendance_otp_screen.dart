@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../models/pending_check_in.dart';
@@ -112,8 +113,8 @@ class _AttendanceOtpScreenState extends State<AttendanceOtpScreen> {
               const SizedBox(height: 8),
               SegmentedButton<OfflineAttendanceAction>(
                 segments: const [
-                  ButtonSegment(value: OfflineAttendanceAction.checkIn, label: Text('Time in'), icon: Icon(Icons.login)),
-                  ButtonSegment(value: OfflineAttendanceAction.checkOut, label: Text('Time out'), icon: Icon(Icons.logout)),
+                  ButtonSegment(value: OfflineAttendanceAction.checkIn, label: Text('Time in'), icon: Icon(TablerIcons.login)),
+                  ButtonSegment(value: OfflineAttendanceAction.checkOut, label: Text('Time out'), icon: Icon(TablerIcons.logout)),
                 ],
                 selected: {_offlineAction},
                 onSelectionChanged: (value) => setState(() => _offlineAction = value.first),

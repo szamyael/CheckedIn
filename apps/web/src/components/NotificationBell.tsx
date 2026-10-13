@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Bell } from "lucide-react";
+import { Bell } from "@/lib/icons";
 import { createClient } from "@/lib/supabase/client";
 import { NotificationPopup, type NotificationPopupItem } from "@/components/NotificationPopup";
 import { NotificationSoundToggle } from "@/components/NotificationSoundToggle";

@@ -1,6 +1,6 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { Search } from "@/lib/icons";
 import type { ChangeEvent, FocusEvent, KeyboardEvent } from "react";
 
 export function DashboardSearchInput({

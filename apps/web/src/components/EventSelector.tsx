@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays } from "@/lib/icons";
 import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { DashboardSearchInput } from "@/components/DashboardSearchInput";

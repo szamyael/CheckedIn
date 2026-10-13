@@ -1,10 +1,10 @@
 "use client";
 
-import { Check, Moon, Monitor, Palette, Sun } from "lucide-react";
+import { Check, Moon, Monitor, Palette, Sun } from "@/lib/icons";
 import { ThemeMode, ThemeName, useTheme } from "@/components/ThemeProvider";
 
 const themes: { name: ThemeName; label: string; description: string; color: string }[] = [
-  { name: "navy", label: "Navy", description: "Institutional", color: "#17324D" },
+  { name: "navy", label: "Campus", description: "Campus-ready", color: "#2F7169" },
   { name: "forest", label: "Forest", description: "Grounded", color: "#275D46" },
   { name: "burgundy", label: "Burgundy", description: "Classic", color: "#6B2E3D" },
   { name: "indigo", label: "Indigo", description: "Focused", color: "#3F4B88" },

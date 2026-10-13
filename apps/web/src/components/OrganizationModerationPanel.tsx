@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ShieldCheck, ShieldOff } from "lucide-react";
+import { ShieldCheck, ShieldOff } from "@/lib/icons";
 import { useRouter } from "next/navigation";
 import { useLoader } from "@/components/LoaderProvider";
 import { DashboardSearchInput } from "@/components/DashboardSearchInput";

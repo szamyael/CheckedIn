@@ -1,8 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import {
-  LogOut,
-} from "lucide-react";
+import { LogOut } from "@/lib/icons";
 import { NotificationBell } from "@/components/NotificationBell";
 import { DashboardNav, type DashboardNavItem } from "@/components/DashboardNav";
 import { DashboardRealtimeSync } from "@/components/DashboardRealtimeSync";
@@ -82,6 +80,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="dashboard-workspace min-h-dvh bg-[var(--background)] text-[var(--foreground)] lg:flex">
+      <a className="skip-to-content" href="#dashboard-content">Skip to content</a>
       <aside className="dashboard-sidebar sticky top-0 z-40 flex w-full flex-col border-b border-white/10 bg-[var(--primary-strong)] text-white lg:h-dvh lg:w-72 lg:shrink-0 lg:border-b-0 lg:border-r">
         <div className="flex items-center justify-between gap-4 border-b border-white/10 px-4 py-3 sm:px-6 lg:block lg:px-5 lg:py-6">
           <BrandLogo variant="transparent" className="max-h-10 w-full max-w-36 brightness-0 invert lg:max-h-12 lg:max-w-[156px]" />
@@ -137,7 +136,7 @@ export default async function DashboardLayout({
             <NotificationBell />
           </div>
         </header>
-        <main className="mx-auto w-full max-w-[1600px] flex-1 p-4 sm:p-6 xl:p-10">{children}</main>
+        <main id="dashboard-content" tabIndex={-1} className="mx-auto w-full max-w-[1600px] flex-1 p-4 sm:p-6 xl:p-10">{children}</main>
       </div>
     </div>
   );

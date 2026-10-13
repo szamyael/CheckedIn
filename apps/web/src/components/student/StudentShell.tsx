@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, CalendarDays, Home, LayoutGrid, QrCode, UserRound } from "lucide-react";
+import { Bell, CalendarDays, Home, LayoutGrid, QrCode, UserRound } from "@/lib/icons";
 import { BrandMark } from "@/components/BrandLogo";
 import { ThemePanelButton } from "@/components/ThemePanelButton";
 import { NotificationPopup, type NotificationPopupItem } from "@/components/NotificationPopup";
@@ -42,6 +42,7 @@ export function StudentShell({
 
   return (
     <div className="student-portal flex min-h-dvh w-full overflow-x-hidden text-slate-900">
+      <a className="skip-to-content" href="#student-content">Skip to content</a>
       <NotificationPopup
         item={notificationPopup}
         onDismiss={onDismissNotification}
@@ -68,7 +69,7 @@ export function StudentShell({
                     : "text-slate-600 hover:bg-slate-100"
                 }`}
               >
-                <Icon className="h-[18px] w-[18px]" />
+                <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
                 {label}
                 {href === "/student/notifications" && notificationCount > 0 && (
                   <span className="ml-auto rounded-full bg-[var(--primary)] px-2 py-0.5 text-[10px] font-bold text-white">
@@ -118,7 +119,7 @@ export function StudentShell({
           </div>
         </header>
 
-        <main className="min-w-0 flex-1 overflow-x-hidden px-3 pb-24 pt-5 sm:px-6 sm:pt-7 lg:px-10 lg:pb-10">
+        <main id="student-content" tabIndex={-1} className="min-w-0 flex-1 overflow-x-hidden px-3 pb-24 pt-5 sm:px-6 sm:pt-7 lg:px-10 lg:pb-10">
           {children}
         </main>
 
@@ -141,7 +142,7 @@ export function StudentShell({
                       }`}
                     >
                       <span className={`grid h-9 w-12 place-items-center rounded-2xl transition-colors ${href === "/student/attendance/scan" ? "bg-[var(--primary-strong)] text-white shadow-sm" : active ? "bg-[var(--primary-soft)]" : ""}`}>
-                        <Icon className="h-5 w-5" />
+                        <Icon className="h-5 w-5" aria-hidden="true" />
                       </span>
                       {label}
                     </Link>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Radio, X } from "lucide-react";
+import { Radio, X } from "@/lib/icons";
 import type { Event } from "@/lib/types";
 import { EventSecurityControls } from "@/components/EventSecurityControls";
 

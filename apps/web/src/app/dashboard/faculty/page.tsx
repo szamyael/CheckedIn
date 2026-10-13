@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { BarChart3, Calendar, ClipboardCheck, LineChart, Radio } from "lucide-react";
+import { BarChart3, Calendar, ClipboardCheck, LineChart, Radio } from "@/lib/icons";
 import { DashboardPageHeader, DashboardSection, DashboardStat } from "@/components/DashboardUi";
 import { format } from "date-fns";
 
