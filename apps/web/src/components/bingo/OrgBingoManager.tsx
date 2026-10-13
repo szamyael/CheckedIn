@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpRight, Award, CalendarDays, Plus, Sparkles, Trophy } from "@/lib/icons";
 import { useLoader } from "@/components/LoaderProvider";
 import { OrgBadgesPanel } from "@/components/bingo/OrgBadgesPanel";
@@ -36,6 +36,13 @@ type AwardRow = {
   students: { first_name: string; last_name: string; student_id: string } | null;
 };
 
+type BingoManagerSnapshot = {
+  cards: BingoCardRow[] | null;
+  badges: OrgBadgeRow[] | null;
+  events: BingoCardEvent[] | null;
+  error: string | null;
+};
+
 const DEFAULT_FORM = {
   title: "Semester Bingo",
   season: "2026",
@@ -50,6 +57,7 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
   const { showLoader, hideLoader } = useLoader();
   const [cards, setCards] = useState<BingoCardRow[]>([]);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const selectedCardIdRef = useRef<string | null>(null);
   const [cells, setCells] = useState<BingoCell[]>([]);
   const [badges, setBadges] = useState<OrgBadgeRow[]>([]);
   const [events, setEvents] = useState<BingoCardEvent[]>([]);
@@ -65,7 +73,12 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
   const [streakPoints, setStreakPoints] = useState(DEFAULT_FORM.streakPoints);
 
   const selectedCard = useMemo(
-    () => cards.find((c) => c.id === selectedCardId) ?? null,
+    () =>
+      cards.find((c) => c.id === selectedCardId) ??
+      cards.find((c) => c.status === "active") ??
+      cards.find((c) => c.status === "draft") ??
+      cards[0] ??
+      null,
     [cards, selectedCardId],
   );
 
@@ -95,7 +108,6 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
         .select("id, position, event_id, label")
         .eq("card_id", cardId)
         .order("position");
-      setCells((cellRows as BingoCell[]) ?? []);
 
       const { data: awardRows } = await supabase
         .from("student_org_badges")
@@ -105,9 +117,23 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
         .eq("bingo_card_id", cardId)
         .order("earned_at", { ascending: false })
         .limit(30);
-      setAwards((awardRows as unknown as AwardRow[]) ?? []);
+      return {
+        cells: (cellRows as BingoCell[]) ?? [],
+        awards: (awardRows as unknown as AwardRow[]) ?? [],
+      };
     },
     [],
+  );
+
+  const loadAndApplyCardDetails = useCallback(
+    async (cardId: string) => {
+      const { cells: loadedCells, awards: loadedAwards } =
+        await loadCardDetails(cardId);
+      if (selectedCardIdRef.current !== cardId) return;
+      setCells(loadedCells);
+      setAwards(loadedAwards);
+    },
+    [loadCardDetails],
   );
 
   const reload = useCallback(async () => {
@@ -119,14 +145,17 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
       .order("updated_at", { ascending: false });
 
     if (cardsError) {
-      setError(cardsError.message);
-      return;
+      return {
+        cards: null,
+        badges: null,
+        events: null,
+        error: cardsError.message,
+      } satisfies BingoManagerSnapshot;
     }
 
     const list = ((cardRows ?? []) as Record<string, unknown>[]).map(
       normalizeBingoCardRow,
     );
-    setCards(list);
 
     const badgeSelect =
       "id, organization_id, name, slug, points, kind, description, earning_criteria, minimum_points, award_rule, image_url, status, created_at";
@@ -136,6 +165,7 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
       .eq("organization_id", organizationId)
       .order("created_at", { ascending: false });
 
+    let error = badgeError?.message ?? null;
     if (
       badgeError &&
       (isMissingColumnError(badgeError.message, "status") ||
@@ -152,52 +182,92 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
         .order("created_at", { ascending: false });
       badgeRows = fallbackResult.data as typeof badgeRows;
       badgeError = fallbackResult.error;
+      error = badgeError?.message ?? null;
     }
 
-    if (badgeError) {
-      setError(badgeError.message);
-    }
+    const normalizedBadges = ((badgeRows ?? []) as OrgBadgeRow[]).map((b) => ({
+      ...b,
+      description: b.description ?? null,
+      status: b.status ?? "active",
+    }));
 
-    setBadges(
-      ((badgeRows ?? []) as OrgBadgeRow[]).map((b) => ({
-        ...b,
-        description: b.description ?? null,
-        status: b.status ?? "active",
-      })),
-    );
-
+    let loadedEvents: BingoCardEvent[] = [];
     try {
-      const eventRows = await fetchBingoCardEvents(supabase);
-      setEvents(eventRows);
+      loadedEvents = await fetchBingoCardEvents(supabase);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not load events");
-      setEvents([]);
+      error = err instanceof Error ? err.message : "Could not load events";
     }
 
-    setSelectedCardId((current) => {
-      if (current && list.some((c) => c.id === current)) return current;
-      return (
-        list.find((c) => c.status === "active")?.id ??
-        list.find((c) => c.status === "draft")?.id ??
-        list[0]?.id ??
-        null
-      );
-    });
+    return {
+      cards: list,
+      badges: normalizedBadges,
+      events: loadedEvents,
+      error,
+    } satisfies BingoManagerSnapshot;
   }, [organizationId]);
 
-  useEffect(() => {
-    void reload();
-  }, [reload]);
+  const applySnapshot = useCallback(
+    (snapshot: BingoManagerSnapshot) => {
+      setError(snapshot.error);
+      if (!snapshot.cards) return;
+      setCards(snapshot.cards);
+      setBadges(snapshot.badges ?? []);
+      setEvents(snapshot.events ?? []);
+
+      const card =
+        snapshot.cards.find((item) => item.id === selectedCardIdRef.current) ??
+        snapshot.cards.find((item) => item.status === "active") ??
+        snapshot.cards.find((item) => item.status === "draft") ??
+        snapshot.cards[0] ??
+        null;
+      selectedCardIdRef.current = card?.id ?? null;
+      setSelectedCardId(card?.id ?? null);
+
+      if (!card) {
+        setCells([]);
+        setAwards([]);
+        return;
+      }
+
+      applyCardToForm(card);
+      void loadAndApplyCardDetails(card.id)
+        .catch((err: unknown) => {
+          setError(err instanceof Error ? err.message : "Could not load card");
+        });
+    },
+    [loadAndApplyCardDetails],
+  );
+
+  const refresh = useCallback(async () => {
+    applySnapshot(await reload());
+  }, [applySnapshot, reload]);
 
   useEffect(() => {
-    if (!selectedCard) {
-      setCells([]);
-      setAwards([]);
-      return;
-    }
-    applyCardToForm(selectedCard);
-    void loadCardDetails(selectedCard.id);
-  }, [selectedCard, loadCardDetails]);
+    let active = true;
+    void reload()
+      .then((snapshot) => {
+        if (active) applySnapshot(snapshot);
+      })
+      .catch((err: unknown) => {
+        if (active) {
+          setError(err instanceof Error ? err.message : "Could not load cards");
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [applySnapshot, reload]);
+
+  function selectCard(card: BingoCardRow) {
+    selectedCardIdRef.current = card.id;
+    setSelectedCardId(card.id);
+    applyCardToForm(card);
+    void loadAndApplyCardDetails(card.id)
+      .catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : "Could not load card");
+      });
+  }
 
   async function upsertCardBadges(
     supabase: ReturnType<typeof createClient>,
@@ -266,9 +336,10 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
       });
 
       await createBingoCardCells(supabase, newCard.id);
+      selectedCardIdRef.current = newCard.id;
       setSelectedCardId(newCard.id);
       resetFormDefaults();
-      await reload();
+      await refresh();
     } catch (err) {
       const message = getSupabaseErrorMessage(err);
       
@@ -336,7 +407,7 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
         .eq("id", selectedCard.id);
       if (updErr) throw updErr;
 
-      await reload();
+      await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
     } finally {
@@ -360,7 +431,7 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
         await saveCardInternals(supabase);
       }
       await setBingoCardStatus(supabase, organizationId, selectedCard.id, status);
-      await reload();
+      await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not update status");
     } finally {
@@ -414,8 +485,9 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
         .delete()
         .eq("id", selectedCard.id);
       if (delErr) throw delErr;
+      selectedCardIdRef.current = null;
       setSelectedCardId(null);
-      await reload();
+      await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not delete card");
     } finally {
@@ -436,7 +508,7 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
         .eq("card_id", selectedCard.id)
         .eq("position", position);
       if (updErr) throw updErr;
-      await loadCardDetails(selectedCard.id);
+      await loadAndApplyCardDetails(selectedCard.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not assign event");
     } finally {
@@ -518,7 +590,7 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
                     <button
                       type="button"
                       aria-pressed={selected}
-                      onClick={() => setSelectedCardId(card.id)}
+                      onClick={() => selectCard(card)}
                       className={`w-full rounded-xl border p-3.5 text-left transition ${
                         selected
                           ? "border-[var(--primary)] bg-[var(--primary-soft)] shadow-sm"
@@ -697,7 +769,7 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
       <OrgBadgesPanel
         organizationId={organizationId}
         badges={badges}
-        onChanged={reload}
+        onChanged={refresh}
       />
     </div>
   );

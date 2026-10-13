@@ -24,7 +24,6 @@ export function AttendanceCorrectionPanel({ isAdmin }: { isAdmin: boolean }) {
   const [busy, setBusy] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    setLoading(true);
     const supabase = createClient();
     const query = supabase
       .from("attendance_correction_requests")
@@ -35,13 +34,20 @@ export function AttendanceCorrectionPanel({ isAdmin }: { isAdmin: boolean }) {
       .limit(50);
 
     const { data } = await query;
-
-    setRows((data ?? []) as CorrectionRow[]);
-    setLoading(false);
-  }, [isAdmin]);
+    return (data ?? []) as CorrectionRow[];
+  }, []);
 
   useEffect(() => {
-    void load();
+    let active = true;
+    void load().then((loadedRows) => {
+      if (!active) return;
+      setRows(loadedRows);
+      setLoading(false);
+    });
+
+    return () => {
+      active = false;
+    };
   }, [load]);
 
   async function review(id: string, approve: boolean) {
@@ -57,7 +63,7 @@ export function AttendanceCorrectionPanel({ isAdmin }: { isAdmin: boolean }) {
       alert(error.message);
       return;
     }
-    await load();
+    setRows(await load());
   }
 
   if (loading) {

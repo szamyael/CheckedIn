@@ -3,6 +3,7 @@ import {
   analyzeSelfieImage,
   validateCaptureIntegrity,
 } from "./screenshot_detection.ts";
+import { isOfflineCheckInAttempt } from "./offline-policy.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,7 +18,6 @@ interface CheckInRequest {
   selfie_path: string;
   client_checked_in_at?: string;
   otp_code?: string;
-  event_id?: string;
   capture_integrity?: {
     screenshot_events?: number;
     screen_recording?: boolean;
@@ -27,8 +27,6 @@ interface CheckInRequest {
   };
 }
 
-/** Offline capture may sync for up to 7 days after attendance ends. */
-const OFFLINE_SYNC_GRACE_MS = 7 * 24 * 60 * 60 * 1000;
 const SELFIE_MAX_AGE_MS = 15 * 60 * 1000;
 
 function isValidCoordinate(lat: number, lng: number): boolean {
@@ -104,15 +102,22 @@ Deno.serve(async (req) => {
       latitude,
       longitude,
       selfie_path,
-      client_checked_in_at,
       otp_code,
-      event_id,
       capture_integrity,
     } = body;
 
     if (!qr_token || !selfie_path) {
       return new Response(
         JSON.stringify({ error: "Missing required check-in fields" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    if (isOfflineCheckInAttempt(body)) {
+      return new Response(
+        JSON.stringify({
+          error: "Offline attendance must be submitted for staff review",
+        }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -175,8 +180,7 @@ Deno.serve(async (req) => {
       .list(userId, { search: selfieFileName, limit: 1 });
 
     const uploadedAt = selfieMeta?.[0]?.created_at ?? selfieMeta?.[0]?.updated_at;
-    const isOfflineSyncEarly = Boolean(client_checked_in_at);
-    if (uploadedAt && !isOfflineSyncEarly) {
+    if (uploadedAt) {
       const ageMs = Date.now() - new Date(uploadedAt).getTime();
       if (ageMs > SELFIE_MAX_AGE_MS) {
         return new Response(
@@ -196,17 +200,6 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     event = byToken;
-
-    // Offline sync: QR may have rotated — fall back to event_id saved at capture.
-    if (!event && event_id && client_checked_in_at) {
-      const { data: byId } = await supabase
-        .from("events")
-        .select("*")
-        .eq("id", event_id)
-        .eq("status", "published")
-        .maybeSingle();
-      event = byId;
-    }
 
     if (!event) {
       return new Response(
@@ -251,32 +244,7 @@ Deno.serve(async (req) => {
     const lateGraceMinutes = settings?.late_grace_minutes ?? 15;
 
     const now = new Date();
-    let checkInTime = now;
-    const isOfflineSync = Boolean(client_checked_in_at);
-
-    if (isOfflineSync) {
-      const clientTime = new Date(client_checked_in_at!);
-      if (Number.isNaN(clientTime.getTime())) {
-        return new Response(
-          JSON.stringify({ error: "Invalid client check-in time" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-        );
-      }
-      if (clientTime > now) {
-        return new Response(
-          JSON.stringify({ error: "Check-in time cannot be in the future" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-        );
-      }
-      const maxAgeMs = 7 * 24 * 60 * 60 * 1000;
-      if (now.getTime() - clientTime.getTime() > maxAgeMs) {
-        return new Response(
-          JSON.stringify({ error: "Offline check-in is too old to sync" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-        );
-      }
-      checkInTime = clientTime;
-    }
+    const checkInTime = now;
 
     let otpVerified = false;
 
@@ -288,8 +256,6 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Online: OTP must still be valid now. Offline sync: OTP must have been
-      // valid at the time the student captured attendance.
       let otpQuery = supabase
         .from("event_otp_codes")
         .select("id, code, expires_at, created_at")
@@ -298,13 +264,7 @@ Deno.serve(async (req) => {
         .order("created_at", { ascending: false })
         .limit(1);
 
-      if (isOfflineSync) {
-        otpQuery = otpQuery
-          .lte("created_at", checkInTime.toISOString())
-          .gt("expires_at", checkInTime.toISOString());
-      } else {
-        otpQuery = otpQuery.gt("expires_at", now.toISOString());
-      }
+      otpQuery = otpQuery.gt("expires_at", now.toISOString());
 
       const { data: otpRow } = await otpQuery.maybeSingle();
 
@@ -327,7 +287,6 @@ Deno.serve(async (req) => {
       ? new Date(event.qr_expires_at as string)
       : attendanceEnd;
 
-    // Validate against capture time (not sync time) so offline attendees keep credit.
     if (checkInTime < attendanceStart || checkInTime > attendanceEnd) {
       return new Response(
         JSON.stringify({ error: "Attendance window is not open" }),
@@ -338,13 +297,6 @@ Deno.serve(async (req) => {
     if (checkInTime > qrExpires) {
       return new Response(
         JSON.stringify({ error: "QR code has expired" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
-
-    if (isOfflineSync && now.getTime() > attendanceEnd.getTime() + OFFLINE_SYNC_GRACE_MS) {
-      return new Response(
-        JSON.stringify({ error: "Offline check-in sync period has ended" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }

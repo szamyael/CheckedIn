@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { formPlaceholders } from "@/lib/form-placeholders";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 
 export function BootstrapAdminForm() {
-  const router = useRouter();
   const run = useAsyncAction();
   const [error, setError] = useState<string | null>(null);
 
@@ -20,6 +18,7 @@ export function BootstrapAdminForm() {
       password: form.get("password"),
       first_name: form.get("first_name"),
       last_name: form.get("last_name"),
+      bootstrap_secret: form.get("bootstrap_secret"),
     };
 
     try {
@@ -37,8 +36,7 @@ export function BootstrapAdminForm() {
         return;
       }
 
-      router.refresh();
-      (e.target as HTMLFormElement).reset();
+      window.location.reload();
     } catch {
       setError("Failed to create admin account");
     }
@@ -60,6 +58,20 @@ export function BootstrapAdminForm() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className="mb-1 block text-sm font-medium">
+            One-time setup secret
+          </label>
+          <input
+            name="bootstrap_secret"
+            type="password"
+            autoComplete="off"
+            minLength={32}
+            required
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          />
+        </div>
+
         <div>
           <label className="mb-1 block text-sm font-medium">First Name</label>
           <input

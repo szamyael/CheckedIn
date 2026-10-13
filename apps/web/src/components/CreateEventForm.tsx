@@ -28,9 +28,10 @@ export function CreateEventForm({
   const router = useRouter();
   const run = useAsyncAction();
   const [error, setError] = useState<string | null>(null);
-  const [organizationId, setOrganizationId] = useState<string | null>(
-    initialOrganizationId,
-  );
+  const [profileOrganizationId, setProfileOrganizationId] = useState<
+    string | null
+  >(null);
+  const organizationId = initialOrganizationId ?? profileOrganizationId;
   const [userRole, setUserRole] = useState<string | null>(null);
 
   const [title, setTitle] = useState("");
@@ -56,10 +57,6 @@ export function CreateEventForm({
     scheduleValidation.valid;
 
   useEffect(() => {
-    if (initialOrganizationId) {
-      setOrganizationId(initialOrganizationId);
-    }
-
     async function loadProfile() {
       const supabase = createClient();
       const {
@@ -81,7 +78,7 @@ export function CreateEventForm({
           .select("organization_id")
           .eq("id", user.id)
           .maybeSingle();
-        setOrganizationId(staff?.organization_id ?? null);
+        setProfileOrganizationId(staff?.organization_id ?? null);
       }
     }
 

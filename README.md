@@ -167,7 +167,7 @@ VERYFI_API_KEY=
 | `complete-student-registration` | Service-role profile creation after signup (`--no-verify-jwt`) |
 | `student-resolve-email` | Resolve student ID → email for login |
 | `student-verify-reset` | ID scan for forgot-password flow |
-| `student-reset-password` | Reset password after OTP |
+| `student-reset-password` | Disabled legacy direct-reset endpoint; deploy to replace any previously deployed version |
 | `generate-event-otp` | Staff generates attendance OTP |
 | `rotate-event-qr` | Rotate event QR token |
 | `event-check-in-meta` | Mobile: event title + OTP requirement for QR token |
@@ -199,6 +199,11 @@ supabase secrets set VERYFI_CLIENT_ID=your_id
 supabase secrets set VERYFI_USERNAME=your_username
 supabase secrets set VERYFI_API_KEY=your_key
 ```
+
+Configure `INITIAL_ADMIN_BOOTSTRAP_SECRET` as a server-only web environment
+variable before first-admin setup. Generate it with `openssl rand -hex 32`;
+never expose it through a `NEXT_PUBLIC_` variable. Apply migrations before
+bootstrapping so the atomic first-admin claim RPC is available.
 
 ### Web (Vercel or similar)
 

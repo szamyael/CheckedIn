@@ -6,16 +6,6 @@ interface CaptureIntegrity {
   analysis_issues?: string[];
 }
 
-interface CheckInRequest {
-  qr_token: string;
-  latitude: number;
-  longitude: number;
-  selfie_path: string;
-  client_checked_in_at?: string;
-  otp_code?: string;
-  capture_integrity?: CaptureIntegrity;
-}
-
 interface SelfieAnalysis {
   block: boolean;
   suspected: boolean;

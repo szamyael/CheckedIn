@@ -122,6 +122,10 @@ supabase functions deploy generate-event-otp rotate-event-qr event-check-in-meta
 3. Install dependencies for web and mobile
 4. Run the web app
 5. Run the mobile app
+
+Set `INITIAL_ADMIN_BOOTSTRAP_SECRET` in `apps/web/.env.local` before creating
+the first admin. Generate a secret with `openssl rand -hex 32`; keep it
+server-only and do not use a `NEXT_PUBLIC_` prefix.
 6. Test login, QR check-in, and event flows
 
 ## Troubleshooting

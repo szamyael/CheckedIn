@@ -487,7 +487,7 @@ Important helper functions include:
 | `complete-student-registration` | Creates the verified student profile using trusted server credentials |
 | `student-resolve-email` | Resolves a student ID to its registered email |
 | `student-verify-reset` | Validates student identity for password recovery |
-| `student-reset-password` | Resets a student password after verification |
+| `student-reset-password` | Disabled legacy direct-reset endpoint; deploy to replace any previously deployed version |
 | `generate-event-otp` | Creates an event attendance OTP |
 | `rotate-event-qr` | Rotates an event QR token |
 | `event-check-in-meta` | Returns event metadata and OTP requirements for scanning |
