@@ -2,6 +2,29 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'local_cache_service.dart';
 
+const _bingoLines = [
+  [0, 1, 2],
+  [3, 4, 5],
+  [6, 7, 8],
+  [0, 3, 6],
+  [1, 4, 7],
+  [2, 5, 8],
+  [0, 4, 8],
+  [2, 4, 6],
+];
+
+Set<String> completedBingoCellIds(
+  List<BingoCellView> cells,
+  Set<String> attendedEventIds,
+) =>
+    cells
+        .where(
+          (cell) =>
+              cell.eventId != null && attendedEventIds.contains(cell.eventId),
+        )
+        .map((cell) => cell.id)
+        .toSet();
+
 class BingoCardSummary {
   final String id;
   final String title;
@@ -39,7 +62,8 @@ class BingoBoardData {
     final ordered = [...cells]..sort((a, b) {
         final ta = a.startsAt?.millisecondsSinceEpoch ?? 0;
         final tb = b.startsAt?.millisecondsSinceEpoch ?? 0;
-        return ta.compareTo(tb);
+        final byStartTime = ta.compareTo(tb);
+        return byStartTime != 0 ? byStartTime : a.position.compareTo(b.position);
       });
     var best = 0;
     var run = 0;
@@ -55,23 +79,18 @@ class BingoBoardData {
     return best;
   }
 
-  bool get hasLine {
-    const lines = [
-      [0, 1, 2],
-      [3, 4, 5],
-      [6, 7, 8],
-      [0, 3, 6],
-      [1, 4, 7],
-      [2, 5, 8],
-      [0, 4, 8],
-      [2, 4, 6],
-    ];
+  List<List<int>> get completedLines {
     final done = <int>{};
     for (final c in cells) {
       if (completedCellIds.contains(c.id)) done.add(c.position);
     }
-    return lines.any((line) => line.every(done.contains));
+    return _bingoLines
+        .where((line) => line.every(done.contains))
+        .map((line) => List<int>.unmodifiable(line))
+        .toList();
   }
+
+  bool get hasLine => completedLines.isNotEmpty;
 }
 
 class BingoCellView {
@@ -177,18 +196,26 @@ class BingoService {
       );
     }).toList();
 
-    final cellIds = cells.map((cell) => cell.id).toList();
-    final completed = <String>{};
-    if (cellIds.isNotEmpty) {
-      final doneRows = await _client
-          .from('student_bingo_cells')
-          .select('cell_id')
+    final eventIds = cells
+        .map((cell) => cell.eventId)
+        .whereType<String>()
+        .toSet()
+        .toList();
+    final attendedEventIds = <String>{};
+    if (eventIds.isNotEmpty) {
+      final attendanceRows = await _client
+          .from('attendance_records')
+          .select('event_id')
           .eq('student_id', user.id)
-          .inFilter('cell_id', cellIds);
-      for (final r in (doneRows as List)) {
-        completed.add((r as Map<String, dynamic>)['cell_id'] as String);
+          .inFilter('event_id', eventIds)
+          .inFilter('status', ['checked_in', 'late', 'on_break', 'checked_out']);
+      for (final row in (attendanceRows as List)) {
+        attendedEventIds.add(
+          (row as Map<String, dynamic>)['event_id'] as String,
+        );
       }
     }
+    final completed = completedBingoCellIds(cells, attendedEventIds);
 
     final awardRows = await _client
         .from('student_org_badges')

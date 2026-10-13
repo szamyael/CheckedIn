@@ -46,6 +46,8 @@ export default function StudentBingoPage() {
   const [cells, setCells] = useState<Cell[]>([]);
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [awards, setAwards] = useState<OrgBadgeAward[]>([]);
+  const [boardError, setBoardError] = useState<string | null>(null);
+  const [awardsError, setAwardsError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const card = useMemo(
@@ -90,41 +92,69 @@ export default function StudentBingoPage() {
         setCells([]);
         setCompleted(new Set());
         setAwards([]);
+        setBoardError(null);
+        setAwardsError(null);
         return;
       }
 
+      setBoardError(null);
+      setAwardsError(null);
       const supabase = createClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: cellRows } = await supabase
+      const { data: cellRows, error: cellError } = await supabase
         .from("bingo_cells")
         .select("id, position, event_id, label, events(title, starts_at)")
         .eq("card_id", selectedId)
         .order("position");
+      if (cellError) {
+        setCells([]);
+        setCompleted(new Set());
+        setBoardError(`Unable to load Bingo card: ${cellError.message}`);
+        return;
+      }
       const nextCells = (cellRows as unknown as Cell[]) ?? [];
       setCells(nextCells);
 
-      const cellIds = nextCells.map((cell) => cell.id);
-      if (cellIds.length > 0) {
-        const { data: done } = await supabase
-          .from("student_bingo_cells")
-          .select("cell_id")
+      const eventIds = [...new Set(
+        nextCells.flatMap((cell) => cell.event_id ? [cell.event_id] : []),
+      )];
+      const attendedEventIds = new Set<string>();
+      if (eventIds.length > 0) {
+        const { data: attendanceRows, error: attendanceError } = await supabase
+          .from("attendance_records")
+          .select("event_id")
           .eq("student_id", user.id)
-          .in("cell_id", cellIds);
-        setCompleted(new Set((done ?? []).map((d) => d.cell_id as string)));
-      } else {
-        setCompleted(new Set());
+          .in("event_id", eventIds)
+          .in("status", ["checked_in", "late", "on_break", "checked_out"]);
+        if (attendanceError) {
+          setCompleted(new Set());
+          setBoardError(`Unable to load attendance progress: ${attendanceError.message}`);
+          return;
+        }
+        for (const row of attendanceRows ?? []) {
+          attendedEventIds.add(row.event_id as string);
+        }
       }
+      setCompleted(new Set(
+        nextCells
+          .filter((cell) => cell.event_id && attendedEventIds.has(cell.event_id))
+          .map((cell) => cell.id),
+      ));
 
-      const { data: badgeAwards } = await supabase
+      const { data: badgeAwards, error: awardsError } = await supabase
         .from("student_org_badges")
         .select("id, points_awarded, earned_at, org_badges(name, kind)")
         .eq("student_id", user.id)
         .eq("bingo_card_id", selectedId)
         .order("earned_at", { ascending: false });
+      if (awardsError) {
+        setAwardsError(awardsError.message);
+        return;
+      }
       setAwards((badgeAwards as unknown as OrgBadgeAward[]) ?? []);
     }
     void loadBoard();
@@ -143,7 +173,7 @@ export default function StudentBingoPage() {
     return set;
   }, [cells, completed]);
 
-  const hasLine = LINES.some((line) =>
+  const completedLines = LINES.filter((line) =>
     line.every((p) => completedPositions.has(p)),
   );
 
@@ -212,45 +242,87 @@ export default function StudentBingoPage() {
         </label>
       )}
 
-      <div className="grid grid-cols-2 border border-[#e2e5e7] bg-white text-center">
-        <div className="border-r border-[#e2e5e7] p-4">
-          <p className="text-2xl font-semibold text-[#17324d]">{streak}</p>
-          <p className="mt-1 text-xs font-medium text-[#697178]">Event streak</p>
-        </div>
-        <div className="p-4">
-          <p className="text-2xl font-semibold text-[#a46618]">{hasLine ? "1" : "0"}</p>
-          <p className="mt-1 text-xs font-medium text-[#697178]">Lines completed</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-1.5 border border-[#17324d] bg-[#17324d] p-1.5">
-        {Array.from({ length: 9 }, (_, position) => {
-          const cell = cells.find((c) => c.position === position);
-          const done = cell ? completed.has(cell.id) : false;
-          return (
-            <div
-              key={position}
-              className={`flex aspect-square flex-col items-center justify-center border p-2 text-center text-[11px] ${
-                done
-                  ? "border-[#d9c38d] bg-[#fff6df] text-[#7c5311]"
-                  : "border-[#e2e5e7] bg-white text-[#3f484f]"
-              }`}
-            >
-              <span className="text-[10px] font-semibold leading-tight sm:text-xs">
-                {cell?.events?.title ?? cell?.label ?? "Empty"}
-              </span>
-              {done && <span className="mt-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#c18a2e] text-white"><Check size={14} /></span>}
+      {boardError ? (
+        <p role="alert" className="border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          {boardError}
+        </p>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 border border-[#e2e5e7] bg-white text-center">
+            <div className="border-r border-[#e2e5e7] p-4">
+              <p className="text-2xl font-semibold text-[#17324d]">{streak}</p>
+              <p className="mt-1 text-xs font-medium text-[#697178]">Event streak</p>
             </div>
-          );
-        })}
-      </div>
+            <div className="p-4">
+              <p className="text-2xl font-semibold text-[#a46618]">{completedLines.length}</p>
+              <p className="mt-1 text-xs font-medium text-[#697178]">Lines completed</p>
+            </div>
+          </div>
+
+          <div className="relative aspect-square border border-[#17324d] bg-[#17324d] p-1.5">
+            <div className="grid h-full grid-cols-3 gap-1.5">
+              {Array.from({ length: 9 }, (_, position) => {
+                const cell = cells.find((c) => c.position === position);
+                const done = cell ? completed.has(cell.id) : false;
+                const onCompletedLine = completedLines.some((line) =>
+                  line.includes(position),
+                );
+                return (
+                  <div
+                    key={position}
+                    className={`flex flex-col items-center justify-center border p-2 text-center text-[11px] ${
+                      done
+                        ? `border-[#d9c38d] bg-[#fff6df] text-[#7c5311] ${onCompletedLine ? "ring-1 ring-inset ring-[#c18a2e]" : ""}`
+                        : "border-[#e2e5e7] bg-white text-[#3f484f]"
+                    }`}
+                  >
+                    <span className="text-[10px] font-semibold leading-tight sm:text-xs">
+                      {cell?.events?.title ?? cell?.label ?? "Empty"}
+                    </span>
+                    {done && <span className="mt-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#c18a2e] text-white"><Check size={14} /></span>}
+                  </div>
+                );
+              })}
+            </div>
+            <svg
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 h-full w-full"
+              viewBox="0 0 3 3"
+              preserveAspectRatio="none"
+            >
+              {completedLines.map((line) => {
+                const start = line[0];
+                const end = line[2];
+                return (
+                  <line
+                    key={line.join("-")}
+                    x1={(start % 3) + 0.5}
+                    y1={Math.floor(start / 3) + 0.5}
+                    x2={(end % 3) + 0.5}
+                    y2={Math.floor(end / 3) + 0.5}
+                    stroke="#c18a2e"
+                    strokeLinecap="round"
+                    strokeWidth="0.07"
+                  />
+                );
+              })}
+            </svg>
+          </div>
+        </>
+      )}
 
       <section className="border-t border-[#e2e5e7] pt-6">
         <div className="mb-3 flex items-center gap-2"><Award size={18} className="text-[#a46618]" /><h2 className="text-base font-semibold text-[#0c2238]">Recognition earned</h2></div>
         {awards.length === 0 ? (
-          <p className="text-sm text-[#697178]">
-            Complete a line or streak on this card to earn badges.
-          </p>
+          awardsError ? (
+            <p role="alert" className="text-sm text-red-700">
+              Unable to load Bingo recognition: {awardsError}
+            </p>
+          ) : (
+            <p className="text-sm text-[#697178]">
+              Complete a line or streak on this card to earn badges.
+            </p>
+          )
         ) : (
           <ul className="space-y-2">
             {awards.map((a) => (

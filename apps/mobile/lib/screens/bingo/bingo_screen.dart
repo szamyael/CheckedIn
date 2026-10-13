@@ -15,6 +15,7 @@ class _BingoScreenState extends State<BingoScreen> {
   List<BingoCardSummary> _cards = [];
   String? _selectedId;
   BingoBoardData? _board;
+  String? _error;
   bool _loading = true;
 
   @override
@@ -24,7 +25,10 @@ class _BingoScreenState extends State<BingoScreen> {
   }
 
   Future<void> _load({String? cardId}) async {
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final cards = await _service.fetchPublishedCards();
       final saved = cardId ?? await _service.readSavedCardId();
@@ -43,9 +47,12 @@ class _BingoScreenState extends State<BingoScreen> {
         _board = board;
         _loading = false;
       });
-    } catch (_) {
+    } catch (error) {
       if (!mounted) return;
-      setState(() => _loading = false);
+      setState(() {
+        _error = 'Unable to load Bingo progress: $error';
+        _loading = false;
+      });
     }
   }
 
@@ -54,14 +61,23 @@ class _BingoScreenState extends State<BingoScreen> {
     setState(() {
       _selectedId = cardId;
       _loading = true;
+      _error = null;
     });
-    await _service.saveSelectedCardId(cardId);
-    final board = await _service.fetchBoard(cardId);
-    if (!mounted) return;
-    setState(() {
-      _board = board;
-      _loading = false;
-    });
+    try {
+      await _service.saveSelectedCardId(cardId);
+      final board = await _service.fetchBoard(cardId);
+      if (!mounted) return;
+      setState(() {
+        _board = board;
+        _loading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _error = 'Unable to load Bingo progress: $error';
+        _loading = false;
+      });
+    }
   }
 
   @override
@@ -72,13 +88,34 @@ class _BingoScreenState extends State<BingoScreen> {
         : ListView(
             padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
             children: [
-              const Text('EVENT BINGO', style: TextStyle(color: StudentUi.muted, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.4)),
+              const Text(
+                'EVENT BINGO',
+                style: TextStyle(
+                  color: StudentUi.muted,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.4,
+                ),
+              ),
               const SizedBox(height: 8),
-              if (_cards.isEmpty)
-                const StudentEmptyState(icon: TablerIcons.layoutGrid, message: 'No published Bingo cards yet. Check back when an organization publishes one.')
+              if (_error != null)
+                StudentErrorBanner(message: _error!)
+              else if (_cards.isEmpty)
+                const StudentEmptyState(
+                  icon: TablerIcons.layoutGrid,
+                  message:
+                      'No published Bingo cards yet. Check back when an organization publishes one.',
+                )
               else ...[
                 if (_cards.length > 1) ...[
-                  const Text('Choose a bingo card', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF0C2238))),
+                  const Text(
+                    'Choose a bingo card',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF0C2238),
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   InputDecorator(
                     decoration: const InputDecoration(
@@ -110,39 +147,158 @@ class _BingoScreenState extends State<BingoScreen> {
                   const SizedBox(height: 16),
                 ],
                 if (_board == null)
-                  const StudentEmptyState(icon: TablerIcons.layoutGrid, message: 'This bingo card is no longer available.')
+                  const StudentEmptyState(
+                    icon: TablerIcons.layoutGrid,
+                    message: 'This bingo card is no longer available.',
+                  )
                 else ...[
-                  Text(_board!.title, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 27, color: const Color(0xFF0C2238))),
+                  Text(
+                    _board!.title,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontSize: 27,
+                      color: const Color(0xFF0C2238),
+                    ),
+                  ),
                   const SizedBox(height: 5),
-                  Text('${_board!.completedCellIds.length} / ${_board!.cells.length} completed | ${_board!.seasonLabel}', style: const TextStyle(color: StudentUi.muted, fontSize: 13)),
+                  Text(
+                    '${_board!.completedCellIds.length} / ${_board!.cells.length} completed | ${_board!.seasonLabel}',
+                    style: const TextStyle(
+                      color: StudentUi.muted,
+                      fontSize: 13,
+                    ),
+                  ),
                   const SizedBox(height: 16),
-                  Row(children: [Expanded(child: _Metric(label: 'Event streak', value: '${_board!.streak}', color: const Color(0xFF17324D))), const SizedBox(width: 8), Expanded(child: _Metric(label: 'Lines complete', value: _board!.hasLine ? '1' : '0', color: const Color(0xFFA46618)))]),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _Metric(
+                          label: 'Event streak',
+                          value: '${_board!.streak}',
+                          color: const Color(0xFF17324D),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _Metric(
+                          label: 'Lines complete',
+                          value: '${_board!.completedLines.length}',
+                          color: const Color(0xFFA46618),
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(2), color: const Color(0xFF17324D),
-                    child: GridView.builder(
-                      shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), itemCount: 9,
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 2, mainAxisSpacing: 2),
-                      itemBuilder: (context, position) {
-                        final cell = _board!.cells.cast<BingoCellView?>().firstWhere((c) => c?.position == position, orElse: () => null);
-                        final done = cell != null && _board!.completedCellIds.contains(cell.id);
-                        return Container(
-                          padding: const EdgeInsets.all(8), color: done ? const Color(0xFFFFF6DF) : Colors.white,
-                          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                            Text(cell?.eventTitle ?? cell?.label ?? 'Empty', textAlign: TextAlign.center, maxLines: 3, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: done ? const Color(0xFF7C5311) : const Color(0xFF3F484F))),
-                            if (done) const Padding(padding: EdgeInsets.only(top: 5), child: Icon(TablerIcons.circleCheck, size: 17, color: Color(0xFFA46618))),
-                          ]),
-                        );
-                      },
+                  AspectRatio(
+                    aspectRatio: 1,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      color: const Color(0xFF17324D),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: 9,
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 3,
+                                  crossAxisSpacing: 2,
+                                  mainAxisSpacing: 2,
+                                ),
+                            itemBuilder: (context, position) {
+                              final cell = _board!.cells
+                                  .cast<BingoCellView?>()
+                                  .firstWhere(
+                                    (c) => c?.position == position,
+                                    orElse: () => null,
+                                  );
+                              final done =
+                                  cell != null &&
+                                  _board!.completedCellIds.contains(cell.id);
+                              return Container(
+                                padding: const EdgeInsets.all(8),
+                                color: done
+                                    ? const Color(0xFFFFF6DF)
+                                    : Colors.white,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      cell?.eventTitle ??
+                                          cell?.label ??
+                                          'Empty',
+                                      textAlign: TextAlign.center,
+                                      maxLines: 3,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: done
+                                            ? const Color(0xFF7C5311)
+                                            : const Color(0xFF3F484F),
+                                      ),
+                                    ),
+                                    if (done)
+                                      const Padding(
+                                        padding: EdgeInsets.only(top: 5),
+                                        child: Icon(
+                                          TablerIcons.circleCheck,
+                                          size: 17,
+                                          color: Color(0xFFA46618),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                          IgnorePointer(
+                            child: CustomPaint(
+                              painter: _CompletedLinesPainter(
+                                lines: _board!.completedLines,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const Row(children: [Icon(TablerIcons.award, size: 19, color: Color(0xFFA46618)), SizedBox(width: 8), Text('Recognition earned', style: TextStyle(color: Color(0xFF0C2238), fontSize: 16, fontWeight: FontWeight.w700))]),
+                  const Row(
+                    children: [
+                      Icon(
+                        TablerIcons.award,
+                        size: 19,
+                        color: Color(0xFFA46618),
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        'Recognition earned',
+                        style: TextStyle(
+                          color: Color(0xFF0C2238),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 10),
                   if (_board!.awards.isEmpty)
-                    const Text('Complete a line or streak on this card to earn badges.', style: TextStyle(color: StudentUi.muted))
+                    const Text(
+                      'Complete a line or streak on this card to earn badges.',
+                      style: TextStyle(color: StudentUi.muted),
+                    )
                   else
-                    ..._board!.awards.map((award) => Padding(padding: const EdgeInsets.only(bottom: 8), child: _AwardRow(name: award.name, points: award.points))),
+                    ..._board!.awards.map(
+                      (award) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: _AwardRow(
+                          name: award.name,
+                          points: award.points,
+                        ),
+                      ),
+                    ),
                 ],
               ],
             ],
@@ -150,14 +306,105 @@ class _BingoScreenState extends State<BingoScreen> {
   );
 }
 
+class _CompletedLinesPainter extends CustomPainter {
+  final List<List<int>> lines;
+
+  const _CompletedLinesPainter({required this.lines});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xBFA46618)
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+
+    for (final line in lines) {
+      final start = line.first;
+      final end = line.last;
+      canvas.drawLine(
+        Offset(
+          size.width * ((start % 3) + 0.5) / 3,
+          size.height * ((start ~/ 3) + 0.5) / 3,
+        ),
+        Offset(
+          size.width * ((end % 3) + 0.5) / 3,
+          size.height * ((end ~/ 3) + 0.5) / 3,
+        ),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _CompletedLinesPainter oldDelegate) =>
+      lines != oldDelegate.lines;
+}
+
 class _Metric extends StatelessWidget {
-  final String label; final String value; final Color color;
-  const _Metric({required this.label, required this.value, required this.color});
-  @override Widget build(BuildContext context) => Container(padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: Colors.white, border: Border.all(color: StudentUi.border)), child: Column(children: [Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: color)), const SizedBox(height: 3), Text(label, style: const TextStyle(fontSize: 11, color: StudentUi.muted))]));
+  final String label;
+  final String value;
+  final Color color;
+  const _Metric({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      border: Border.all(color: StudentUi.border),
+    ),
+    child: Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            color: color,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 11, color: StudentUi.muted),
+        ),
+      ],
+    ),
+  );
 }
 
 class _AwardRow extends StatelessWidget {
-  final String name; final int points;
+  final String name;
+  final int points;
   const _AwardRow({required this.name, required this.points});
-  @override Widget build(BuildContext context) => Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13), decoration: BoxDecoration(color: Colors.white, border: Border.all(color: StudentUi.border)), child: Row(children: [const Icon(TablerIcons.stars, color: Color(0xFFC18A2E), size: 18), const SizedBox(width: 10), Expanded(child: Text(name, style: const TextStyle(fontWeight: FontWeight.w600))), Text('+$points', style: const TextStyle(color: Color(0xFFA46618), fontWeight: FontWeight.w700))]));
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      border: Border.all(color: StudentUi.border),
+    ),
+    child: Row(
+      children: [
+        const Icon(TablerIcons.stars, color: Color(0xFFC18A2E), size: 18),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            name,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+        ),
+        Text(
+          '+$points',
+          style: const TextStyle(
+            color: Color(0xFFA46618),
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    ),
+  );
 }
