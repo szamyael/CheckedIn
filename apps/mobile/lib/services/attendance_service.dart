@@ -306,6 +306,8 @@ class AttendanceService {
             : 'check_out',
         'selfie_path': selfiePath,
         'captured_at': item.capturedAt.toUtc().toIso8601String(),
+        if (item.deviceUtcOffsetMinutes != null)
+          'device_utc_offset_minutes': item.deviceUtcOffsetMinutes,
         if (item.otpCode != null && item.otpCode!.trim().isNotEmpty)
           'otp_code': item.otpCode!.trim(),
         if (item.eventId != null && item.eventId!.isNotEmpty)
@@ -342,6 +344,7 @@ class AttendanceService {
     String? eventId,
     String? eventTitleHint,
     DateTime? capturedAt,
+    int? deviceUtcOffsetMinutes,
   }) async {
     final capturedTimestamp = (capturedAt ?? DateTime.now()).toUtc();
 
@@ -399,6 +402,7 @@ class AttendanceService {
       eventTitleHint: eventTitleHint,
       eventId: eventId,
       otpCode: otpCode,
+      deviceUtcOffsetMinutes: deviceUtcOffsetMinutes,
       captureIntegrity: captureIntegrity,
       action: OfflineAttendanceAction.checkIn,
     );
@@ -415,6 +419,7 @@ class AttendanceService {
     required String otpCode,
     String? eventId,
     String? eventTitleHint,
+    int? deviceUtcOffsetMinutes,
   }) async {
     final guardError = ScreenshotGuardService.instance.validateBeforeCapture();
     if (guardError != null) throw Exception(guardError);
@@ -441,6 +446,7 @@ class AttendanceService {
       eventTitleHint: eventTitleHint,
       eventId: eventId,
       otpCode: otpCode.trim(),
+      deviceUtcOffsetMinutes: deviceUtcOffsetMinutes,
       captureIntegrity: await buildCaptureIntegrity(selfieFile),
       action: action,
     );

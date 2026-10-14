@@ -24,6 +24,7 @@ class SelfieScreen extends StatefulWidget {
   final bool requiresOtp;
   final bool offlineSubmission;
   final DateTime? scannedAt;
+  final int? deviceUtcOffsetMinutes;
   final OfflineAttendanceAction offlineAction;
 
   const SelfieScreen({
@@ -37,6 +38,7 @@ class SelfieScreen extends StatefulWidget {
     this.requiresOtp = false,
     this.offlineSubmission = false,
     this.scannedAt,
+    this.deviceUtcOffsetMinutes,
     this.offlineAction = OfflineAttendanceAction.checkIn,
   });
 
@@ -142,6 +144,7 @@ class _SelfieScreenState extends State<SelfieScreen> {
               selfieFile: selfieFile,
               capturedAt: widget.scannedAt ?? DateTime.now().toUtc(),
               otpCode: widget.otpCode ?? '',
+              deviceUtcOffsetMinutes: widget.deviceUtcOffsetMinutes,
               eventId: widget.eventId,
               eventTitleHint: widget.eventTitle,
             )
@@ -335,6 +338,7 @@ class _SelfieScreenState extends State<SelfieScreen> {
         selfieFile: selfieFile,
         capturedAt: widget.scannedAt ?? DateTime.now().toUtc(),
         otpCode: widget.otpCode!,
+        deviceUtcOffsetMinutes: widget.deviceUtcOffsetMinutes,
         eventId: widget.eventId,
         eventTitleHint: widget.eventTitle,
       );
@@ -349,6 +353,7 @@ class _SelfieScreenState extends State<SelfieScreen> {
       eventId: widget.eventId,
       eventTitleHint: widget.eventTitle,
       capturedAt: widget.scannedAt,
+      deviceUtcOffsetMinutes: widget.deviceUtcOffsetMinutes,
     );
   }
 }

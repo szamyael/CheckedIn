@@ -3,6 +3,7 @@ import {
   analyzeSelfieImage,
   validateCaptureIntegrity,
 } from "../check-in/screenshot_detection.ts";
+import { isOtpValidAtCapture } from "./otp_verification.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,6 +19,7 @@ interface OfflineAttendanceRequest {
   action: "check_in" | "check_out";
   selfie_path: string;
   captured_at: string;
+  device_utc_offset_minutes?: number;
   otp_code?: string;
   event_id?: string;
   capture_integrity?: {
@@ -85,6 +87,14 @@ Deno.serve(async (req) => {
         { error: "Attendance OTP is required for offline attendance" },
         400,
       );
+    }
+    if (
+      body.device_utc_offset_minutes !== undefined &&
+      (!Number.isInteger(body.device_utc_offset_minutes) ||
+        body.device_utc_offset_minutes < -840 ||
+        body.device_utc_offset_minutes > 840)
+    ) {
+      return response({ error: "Invalid device timezone offset" }, 400);
     }
 
     // Idempotency makes reconnect retries safe when a device loses service
@@ -176,18 +186,24 @@ Deno.serve(async (req) => {
     // OTP evidence is checked against the code valid at scan time. It is not
     // persisted in the review table; staff see only whether it could be
     // confirmed, plus the timestamp and selfie they need to decide.
-    let otpVerifiedAtCapture = false;
-    if (body.otp_code?.trim()) {
-      const { data: otp } = await supabase
-        .from("event_otp_codes")
-        .select("id")
-        .eq("event_id", event.id as string)
-        .eq("code", body.otp_code.trim())
-        .lte("created_at", capturedAt.toISOString())
-        .gt("expires_at", capturedAt.toISOString())
-        .maybeSingle();
-      otpVerifiedAtCapture = Boolean(otp);
+    const { data: otpCodes, error: otpLookupError } = await supabase
+      .from("event_otp_codes")
+      .select("code, created_at, expires_at")
+      .eq("event_id", event.id as string)
+      .lte("created_at", capturedAt.toISOString())
+      .gt("expires_at", capturedAt.toISOString());
+    if (otpLookupError) {
+      console.error("Offline attendance OTP lookup failed:", otpLookupError);
+      return response(
+        { error: "Unable to verify attendance OTP. Please retry sync." },
+        500,
+      );
     }
+    const otpVerifiedAtCapture = isOtpValidAtCapture(
+      otpCodes ?? [],
+      body.otp_code,
+      capturedAt.toISOString(),
+    );
 
     const { data: submission, error: insertError } = await supabase
       .from("offline_attendance_submissions")
@@ -198,6 +214,7 @@ Deno.serve(async (req) => {
         action: body.action,
         qr_token: body.qr_token,
         captured_at: capturedAt.toISOString(),
+        device_utc_offset_minutes: body.device_utc_offset_minutes ?? null,
         selfie_url: body.selfie_path,
         otp_verified_at_capture: otpVerifiedAtCapture,
         capture_integrity: body.capture_integrity ?? null,

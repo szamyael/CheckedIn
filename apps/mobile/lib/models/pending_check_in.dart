@@ -16,6 +16,7 @@ class PendingCheckIn {
   final String? eventTitleHint;
   final String? eventId;
   final String? otpCode;
+  final int? deviceUtcOffsetMinutes;
   final Map<String, dynamic>? captureIntegrity;
   final OfflineAttendanceAction action;
 
@@ -31,6 +32,7 @@ class PendingCheckIn {
     this.eventTitleHint,
     this.eventId,
     this.otpCode,
+    this.deviceUtcOffsetMinutes,
     this.captureIntegrity,
     this.action = OfflineAttendanceAction.checkIn,
   });
@@ -41,6 +43,7 @@ class PendingCheckIn {
     String? eventTitleHint,
     String? eventId,
     String? otpCode,
+    int? deviceUtcOffsetMinutes,
     Map<String, dynamic>? captureIntegrity,
     OfflineAttendanceAction? action,
   }) {
@@ -56,6 +59,8 @@ class PendingCheckIn {
       eventTitleHint: eventTitleHint ?? this.eventTitleHint,
       eventId: eventId ?? this.eventId,
       otpCode: otpCode ?? this.otpCode,
+      deviceUtcOffsetMinutes:
+          deviceUtcOffsetMinutes ?? this.deviceUtcOffsetMinutes,
       captureIntegrity: captureIntegrity ?? this.captureIntegrity,
       action: action ?? this.action,
     );
@@ -73,6 +78,7 @@ class PendingCheckIn {
         'event_title_hint': eventTitleHint,
         'event_id': eventId,
         'otp_code': otpCode,
+        'device_utc_offset_minutes': deviceUtcOffsetMinutes,
         'capture_integrity': captureIntegrity,
         'action': action.name,
       };
@@ -92,6 +98,7 @@ class PendingCheckIn {
       eventTitleHint: json['event_title_hint'] as String?,
       eventId: json['event_id'] as String?,
       otpCode: json['otp_code'] as String?,
+      deviceUtcOffsetMinutes: json['device_utc_offset_minutes'] as int?,
       captureIntegrity: json['capture_integrity'] is Map
           ? Map<String, dynamic>.from(json['capture_integrity'] as Map)
           : null,

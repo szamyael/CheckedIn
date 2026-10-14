@@ -68,6 +68,7 @@ class OfflineStorageService {
     String? eventTitleHint,
     String? eventId,
     String? otpCode,
+    int? deviceUtcOffsetMinutes,
     Map<String, dynamic>? captureIntegrity,
     OfflineAttendanceAction action = OfflineAttendanceAction.checkIn,
   }) async {
@@ -92,6 +93,7 @@ class OfflineStorageService {
       eventTitleHint: eventTitleHint,
       eventId: eventId,
       otpCode: otpCode,
+      deviceUtcOffsetMinutes: deviceUtcOffsetMinutes,
       captureIntegrity: captureIntegrity,
       action: action,
     );

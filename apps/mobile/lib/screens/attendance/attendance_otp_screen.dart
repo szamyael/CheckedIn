@@ -15,6 +15,7 @@ class AttendanceOtpScreen extends StatefulWidget {
   final bool locationVerified;
   final bool offlineSubmission;
   final DateTime? scannedAt;
+  final int? deviceUtcOffsetMinutes;
 
   const AttendanceOtpScreen({
     super.key,
@@ -27,6 +28,7 @@ class AttendanceOtpScreen extends StatefulWidget {
     this.locationVerified = false,
     this.offlineSubmission = false,
     this.scannedAt,
+    this.deviceUtcOffsetMinutes,
   });
 
   @override
@@ -75,6 +77,7 @@ class _AttendanceOtpScreenState extends State<AttendanceOtpScreen> {
         'location_verified': widget.locationVerified,
         'offline_submission': widget.offlineSubmission,
         'scanned_at': widget.scannedAt?.toIso8601String(),
+        'device_utc_offset_minutes': widget.deviceUtcOffsetMinutes,
         'offline_action': _offlineAction.name,
         if (_codeController.text.trim().isNotEmpty)
           'otp_code': _codeController.text.trim(),

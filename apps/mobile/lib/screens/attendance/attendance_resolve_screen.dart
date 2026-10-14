@@ -11,12 +11,14 @@ import '../../widgets/universal_loader.dart';
 class AttendanceResolveScreen extends StatefulWidget {
   final String qrToken;
   final DateTime scannedAt;
+  final int? deviceUtcOffsetMinutes;
   final bool wasOfflineAtScan;
 
   const AttendanceResolveScreen({
     super.key,
     required this.qrToken,
     required this.scannedAt,
+    this.deviceUtcOffsetMinutes,
     this.wasOfflineAtScan = false,
   });
 
@@ -62,6 +64,7 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
             'event_id': meta['id'] as String?,
             'offline_submission': true,
             'scanned_at': widget.scannedAt.toIso8601String(),
+            'device_utc_offset_minutes': widget.deviceUtcOffsetMinutes,
           },
         );
         return;
@@ -157,6 +160,7 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
       context.go('/attendance/location', extra: {
         'qr_token': widget.qrToken,
         'scanned_at': widget.scannedAt.toIso8601String(),
+        'device_utc_offset_minutes': widget.deviceUtcOffsetMinutes,
       });
     } catch (e) {
       if (!mounted) return;

@@ -1,0 +1,38 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:checkedin_mobile/models/pending_check_in.dart';
+
+void main() {
+  test('keeps the QR-scan device timezone offset in the offline queue', () {
+    final item = PendingCheckIn(
+      id: 'submission-1',
+      qrToken: 'qr-token',
+      latitude: 0,
+      longitude: 0,
+      localSelfiePath: 'selfie.jpg',
+      capturedAt: DateTime.utc(2026, 10, 14, 1, 18, 52),
+      deviceUtcOffsetMinutes: 480,
+    );
+
+    final restored = PendingCheckIn.fromJson(item.toJson());
+
+    expect(restored.deviceUtcOffsetMinutes, 480);
+  });
+
+  test(
+    'loads queued submissions created before device offsets were recorded',
+    () {
+      const oldQueueItem = {
+        'id': 'legacy-1',
+        'qr_token': 'qr-token',
+        'latitude': 0,
+        'longitude': 0,
+        'local_selfie_path': 'selfie.jpg',
+        'captured_at': '2026-10-14T01:18:52.000Z',
+      };
+
+      final restored = PendingCheckIn.fromJson(oldQueueItem);
+
+      expect(restored.deviceUtcOffsetMinutes, isNull);
+    },
+  );
+}

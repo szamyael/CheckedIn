@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { format } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
+import { formatDeviceCaptureTimestamp } from "@/lib/device-capture-timestamp";
 
 type ReviewStatus = "checked_in" | "late";
 
@@ -10,6 +11,7 @@ interface Submission {
   id: string;
   action: "check_in" | "check_out";
   captured_at: string;
+  device_utc_offset_minutes: number | null;
   synced_at: string;
   selfie_url: string;
   otp_verified_at_capture: boolean;
@@ -45,7 +47,7 @@ export function OfflineAttendanceReviewPanel({ eventId }: { eventId: string }) {
     const supabase = createClient();
     const { data, error } = await supabase
       .from("offline_attendance_submissions")
-      .select("id, action, captured_at, synced_at, selfie_url, otp_verified_at_capture, students(student_id, first_name, last_name, program)")
+      .select("id, action, captured_at, device_utc_offset_minutes, synced_at, selfie_url, otp_verified_at_capture, students(student_id, first_name, last_name, program)")
       .eq("event_id", eventId)
       .eq("review_status", "pending")
       .order("captured_at", { ascending: true });
@@ -182,10 +184,10 @@ export function OfflineAttendanceReviewPanel({ eventId }: { eventId: string }) {
                   <span className="ml-2 font-mono text-xs text-slate-500">{item.students?.student_id}</span>
                 </p>
                 <p className="mt-1 text-sm text-slate-700">
-                  Offline {item.action === "check_in" ? "time in" : "time out"} · scanned {format(new Date(item.captured_at), "MMM d, yyyy h:mm:ss a")}
+                  Offline {item.action === "check_in" ? "time in" : "time out"} · device scan {formatDeviceCaptureTimestamp(item.captured_at, item.device_utc_offset_minutes)}
                 </p>
                 <p className="mt-1 text-xs text-slate-500">
-                  Synced {format(new Date(item.synced_at), "MMM d, h:mm a")} · OTP {item.otp_verified_at_capture ? "matched at scan time" : "could not be confirmed"}
+                  Synced {format(new Date(item.synced_at), "MMM d, h:mm a")} · OTP {item.otp_verified_at_capture ? "valid at scan time" : "not confirmed at scan time"}
                 </p>
               </div>
               <div className="flex self-center gap-2 sm:flex-col">

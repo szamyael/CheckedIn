@@ -53,7 +53,9 @@ class _QrScanScreenState extends State<QrScanScreen> {
     }
 
     _handled = true;
-    final scannedAt = DateTime.now().toUtc();
+    final deviceScanTime = DateTime.now();
+    final scannedAt = deviceScanTime.toUtc();
+    final deviceUtcOffsetMinutes = deviceScanTime.timeZoneOffset.inMinutes;
     final offline = !await _attendance.hasConnectivity();
     if (!mounted) return;
     if (offline) {
@@ -65,13 +67,19 @@ class _QrScanScreenState extends State<QrScanScreen> {
           'event_title': 'Offline event',
           'offline_submission': true,
           'scanned_at': scannedAt.toIso8601String(),
+          'device_utc_offset_minutes': deviceUtcOffsetMinutes,
         },
       );
       return;
     }
     context.push(
       '/attendance/resolve',
-      extra: {'qr_token': token, 'scanned_at': scannedAt.toIso8601String(), 'offline': false},
+      extra: {
+        'qr_token': token,
+        'scanned_at': scannedAt.toIso8601String(),
+        'device_utc_offset_minutes': deviceUtcOffsetMinutes,
+        'offline': false,
+      },
     );
   }
 
