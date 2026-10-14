@@ -1,9 +1,42 @@
 "use client";
 
-import { useEffect } from "react";
-import { Radio, X } from "@/lib/icons";
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import { Check, Radio, UserRound, X } from "@/lib/icons";
+import { createClient } from "@/lib/supabase/client";
 import type { Event } from "@/lib/types";
 import { EventSecurityControls } from "@/components/EventSecurityControls";
+import {
+  getAttendanceAction,
+  type AttendanceAction,
+  type AttendanceTimestamps,
+} from "@/lib/attendance-confirmation";
+
+interface AttendanceRow extends AttendanceTimestamps {
+  id: string;
+  student_id: string;
+}
+
+interface AttendanceConfirmationStudent {
+  first_name: string;
+  last_name: string;
+  year_level: number | null;
+  section: string | null;
+  profile_photo_url: string | null;
+}
+
+interface AttendanceConfirmation {
+  action: AttendanceAction;
+  student: AttendanceConfirmationStudent;
+  avatarUrl: string | null;
+}
+
+const actionLabels: Record<AttendanceAction, string> = {
+  check_in: "Check in confirmed",
+  check_out: "Check out confirmed",
+  break_in: "Break in confirmed",
+  break_out: "Break out confirmed",
+};
 
 export function EventStreamModal({
   event,
@@ -12,6 +45,8 @@ export function EventStreamModal({
   event: Event;
   onClose: () => void;
 }) {
+  const [confirmation, setConfirmation] = useState<AttendanceConfirmation | null>(null);
+
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -19,6 +54,167 @@ export function EventStreamModal({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    const attendanceById = new Map<string, AttendanceRow>();
+    let active = true;
+    let dismissTimer: number | undefined;
+    let latestConfirmation = 0;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    async function showConfirmation(row: AttendanceRow, action: AttendanceAction) {
+      const requestId = ++latestConfirmation;
+      const { data: student, error: studentError } = await supabase
+        .from("students")
+        .select("first_name, last_name, year_level, section, profile_photo_url")
+        .eq("id", row.student_id)
+        .maybeSingle();
+
+      if (studentError) {
+        console.error("Failed to load student details for attendance confirmation:", studentError);
+        return;
+      }
+      if (!student) {
+        console.error(`Student ${row.student_id} was missing for attendance confirmation.`);
+        return;
+      }
+
+      let avatarUrl: string | null = null;
+      if (student.profile_photo_url) {
+        const { data: signedPhoto, error: photoError } = await supabase.storage
+          .from("student-ids")
+          .createSignedUrl(student.profile_photo_url, 3600);
+        if (photoError) {
+          console.error("Failed to load student avatar for attendance confirmation:", photoError);
+        } else {
+          avatarUrl = signedPhoto.signedUrl;
+        }
+      }
+
+      if (!active || requestId !== latestConfirmation) return;
+      setConfirmation({
+        action,
+        student,
+        avatarUrl,
+      });
+      window.clearTimeout(dismissTimer);
+      dismissTimer = window.setTimeout(() => setConfirmation(null), 5000);
+    }
+
+    function handleAttendanceChange(eventType: "INSERT" | "UPDATE", row: AttendanceRow) {
+      const previous = attendanceById.get(row.id) ?? null;
+      const action = getAttendanceAction(eventType, previous, row);
+      attendanceById.set(row.id, row);
+      if (action) void showConfirmation(row, action);
+    }
+
+    async function subscribeToAttendance() {
+      const { data, error } = await supabase
+        .from("attendance_records")
+        .select("id, student_id, checked_in_at, break_out_at, break_in_at, checked_out_at")
+        .eq("event_id", event.id);
+
+      if (error) {
+        console.error("Failed to initialize event attendance confirmations:", error);
+        return;
+      }
+      for (const row of data ?? []) {
+        attendanceById.set(row.id, row);
+      }
+      if (!active) return;
+
+      channel = supabase
+        .channel(`event-confirmations-${event.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "attendance_records",
+            filter: `event_id=eq.${event.id}`,
+          },
+          (payload) => handleAttendanceChange("INSERT", payload.new as AttendanceRow),
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "attendance_records",
+            filter: `event_id=eq.${event.id}`,
+          },
+          (payload) => handleAttendanceChange("UPDATE", payload.new as AttendanceRow),
+        )
+        .subscribe((status) => {
+          if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+            console.error(`Event attendance confirmation channel failed: ${status}`);
+          }
+        });
+    }
+
+    void subscribeToAttendance();
+    return () => {
+      active = false;
+      window.clearTimeout(dismissTimer);
+      if (channel) void supabase.removeChannel(channel);
+    };
+  }, [event.id]);
+
+  const confirmationPanel = (
+    <aside
+      aria-live="polite"
+      aria-atomic="true"
+      className="flex min-h-64 flex-col justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-soft)]"
+    >
+      <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
+        Attendance confirmation
+      </p>
+      {confirmation ? (
+        <div className="mt-4 rounded-2xl border border-[color-mix(in_srgb,var(--success)_30%,transparent)] bg-[color-mix(in_srgb,var(--success)_8%,var(--surface))] p-4">
+          <div className="flex items-center gap-3">
+            {confirmation.avatarUrl ? (
+              <Image
+                src={confirmation.avatarUrl}
+                alt=""
+                width={56}
+                height={56}
+                unoptimized
+                className="h-14 w-14 shrink-0 rounded-full object-cover"
+              />
+            ) : (
+              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-[var(--primary-soft)] text-sm font-semibold text-[var(--foreground)]">
+                {confirmation.student.first_name.charAt(0)}
+                {confirmation.student.last_name.charAt(0)}
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="truncate font-semibold text-[var(--foreground)]">
+                {confirmation.student.first_name} {confirmation.student.last_name}
+              </p>
+              <p className="mt-1 text-xs text-[var(--muted)]">
+                Year {confirmation.student.year_level ?? "—"} · Section{" "}
+                {confirmation.student.section || "—"}
+              </p>
+            </div>
+          </div>
+          <p className="mt-4 flex items-center gap-2 text-sm font-semibold text-[var(--foreground)]">
+            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[var(--success)] text-white">
+              <Check size={16} aria-hidden="true" />
+            </span>
+            {actionLabels[confirmation.action]}
+          </p>
+        </div>
+      ) : (
+        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-dashed border-[var(--border)] px-4 py-5 text-sm text-[var(--muted)]">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--primary-soft)] text-[var(--foreground)]">
+            <UserRound size={19} aria-hidden="true" />
+          </span>
+          Successful student attendance will appear here.
+        </div>
+      )}
+    </aside>
+  );
 
   return (
     <div
@@ -86,7 +282,11 @@ export function EventStreamModal({
           </div>
 
           <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-3 shadow-[var(--shadow-card)] sm:p-3">
-            <EventSecurityControls event={event} stream />
+            <EventSecurityControls
+              event={event}
+              stream
+              confirmationPanel={confirmationPanel}
+            />
           </div>
         </section>
 

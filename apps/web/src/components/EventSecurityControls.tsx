@@ -1,17 +1,26 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { KeyRound, LoaderCircle, RotateCw } from "@/lib/icons";
 import { createClient } from "@/lib/supabase/client";
 import { EventQrCode } from "@/components/EventQrCode";
 import type { Event } from "@/lib/types";
 
-interface EventSecurityControlsProps { event: Event; stream?: boolean; }
+interface EventSecurityControlsProps {
+  event: Event;
+  stream?: boolean;
+  confirmationPanel?: ReactNode;
+}
 type Otp = { code: string; expiresAt: string; deadline: number; duration: number };
 
 /** Live credentials. Requests deliberately use local state so the operator can
  * keep using the portal while a new QR or OTP is generated. */
-export function EventSecurityControls({ event, stream = false }: EventSecurityControlsProps) {
+export function EventSecurityControls({
+  event,
+  stream = false,
+  confirmationPanel,
+}: EventSecurityControlsProps) {
   // Cards and the fullscreen stream can be mounted at the same time for one
   // event. Realtime channel names must therefore be unique per UI instance.
   const instanceId = useId().replace(/:/g, "");
@@ -175,7 +184,13 @@ export function EventSecurityControls({ event, stream = false }: EventSecurityCo
         </div>
       </div>
 
-      <div className={stream ? "grid gap-4 lg:grid-cols-2 lg:items-stretch" : ""}>
+      <div
+        className={
+          stream
+            ? "grid gap-4 lg:grid-cols-2 lg:items-stretch xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(17rem,0.9fr)]"
+            : ""
+        }
+      >
         <div className={stream ? `rounded-2xl border ${themeBorder} ${themeSurface} p-3 sm:p-4` : ""}>
           {stream && (
             <div className="mb-4 text-center">
@@ -256,6 +271,7 @@ export function EventSecurityControls({ event, stream = false }: EventSecurityCo
             </div>
           )}
         </div>
+        {stream && confirmationPanel}
       </div>
       {error && (
         <p role="alert" className={`rounded-xl border px-4 py-3 text-sm ${stream ? "border-[color-mix(in_srgb,var(--error)_30%,transparent)] bg-[var(--surface-muted)] text-[var(--error)]" : "border-red-200 bg-red-50 text-red-800"}`}>
