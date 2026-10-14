@@ -53,11 +53,6 @@ class UniversalNavigationObserver extends NavigatorObserver {
     super.didPop(route, previousRoute);
   }
 
-  @override
-  void dispose() {
-    _hideTimer?.cancel();
-    super.dispose();
-  }
 }
 
 GoRouter createRouter(
