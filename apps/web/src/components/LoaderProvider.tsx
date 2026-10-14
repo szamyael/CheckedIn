@@ -20,16 +20,16 @@ type LoaderContextValue = {
 const LoaderContext = createContext<LoaderContextValue | null>(null);
 
 export function LoaderProvider({ children }: { children: ReactNode }) {
-  const [visible, setVisible] = useState(false);
   const [message, setMessage] = useState("Please wait…");
+  const [activeOperations, setActiveOperations] = useState(0);
 
   const showLoader = useCallback((msg = "Please wait…") => {
     setMessage(msg);
-    setVisible(true);
+    setActiveOperations((count) => count + 1);
   }, []);
 
   const hideLoader = useCallback(() => {
-    setVisible(false);
+    setActiveOperations((count) => Math.max(0, count - 1));
   }, []);
 
   const withLoader = useCallback(
@@ -45,26 +45,38 @@ export function LoaderProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ visible, message, showLoader, hideLoader, withLoader }),
-    [visible, message, showLoader, hideLoader, withLoader],
+    () => ({
+      visible: activeOperations > 0,
+      message,
+      showLoader,
+      hideLoader,
+      withLoader,
+    }),
+    [activeOperations, message, showLoader, hideLoader, withLoader],
   );
 
   return (
     <LoaderContext.Provider value={value}>
       {children}
-      {visible && (
+      {activeOperations > 0 && (
         <div
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/55 backdrop-blur-[2px]"
           role="status"
           aria-live="polite"
           aria-busy="true"
         >
-          <div className="flex min-w-[220px] flex-col items-center gap-4 rounded-2xl border border-slate-700 bg-slate-900 px-8 py-7 shadow-2xl">
-            <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-teal-500/30 border-t-teal-400" />
-            <p className="text-center text-sm font-medium text-slate-100">
+          <div className="relative flex min-w-[240px] flex-col items-center gap-4 overflow-hidden rounded-[1.5rem] border border-[var(--border)] bg-[var(--surface)] px-8 py-7 text-[var(--foreground)] shadow-[var(--shadow-lift)]">
+            <div className="absolute inset-x-0 top-0 h-1 overflow-hidden bg-[var(--primary-soft)]">
+              <div className="h-full w-1/3 animate-[loader-sweep_1.1s_ease-in-out_infinite] bg-[var(--accent)]" />
+            </div>
+            <div className="relative grid h-12 w-12 place-items-center rounded-2xl bg-[var(--primary-soft)]">
+              <div className="h-7 w-7 animate-spin rounded-full border-[3px] border-[var(--primary)]/20 border-t-[var(--primary)]" />
+              <span className="absolute h-2 w-2 rounded-full bg-[var(--accent)]" />
+            </div>
+            <p className="text-center text-sm font-medium">
               {message}
             </p>
-            <p className="text-center text-xs text-slate-400">
+            <p className="text-center text-xs text-[var(--muted)]">
               Process is ongoing…
             </p>
           </div>

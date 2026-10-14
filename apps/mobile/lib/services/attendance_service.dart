@@ -135,6 +135,7 @@ class AttendanceService {
     required String qrToken,
     required double latitude,
     required double longitude,
+    required double accuracyM,
   }) async {
     final cacheKey = CacheKeys.checkInMeta(qrToken);
 
@@ -145,6 +146,7 @@ class AttendanceService {
           'qr_token': qrToken,
           'latitude': latitude,
           'longitude': longitude,
+          'accuracy_m': accuracyM,
         },
       );
 
@@ -255,6 +257,7 @@ class AttendanceService {
     required String qrToken,
     required double latitude,
     required double longitude,
+    required double accuracyM,
     required String selfiePath,
     DateTime? clientCheckedInAt,
     String? otpCode,
@@ -265,6 +268,7 @@ class AttendanceService {
       'qr_token': qrToken,
       'latitude': latitude,
       'longitude': longitude,
+      'accuracy_m': accuracyM,
       'selfie_path': selfiePath,
     };
     if (clientCheckedInAt != null) {
@@ -342,6 +346,7 @@ class AttendanceService {
     required String qrToken,
     required double latitude,
     required double longitude,
+    required double accuracyM,
     required File selfieFile,
     String? otpCode,
     String? eventId,
@@ -385,6 +390,7 @@ class AttendanceService {
           qrToken: qrToken,
           latitude: latitude,
           longitude: longitude,
+          accuracyM: accuracyM,
           selfiePath: selfiePath,
           otpCode: otpCode,
           eventId: eventId,

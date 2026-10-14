@@ -13,12 +13,15 @@ import {
 } from "@/lib/student/browser-permissions";
 import { createClient } from "@/lib/supabase/client";
 
+const MAX_ACCEPTED_ACCURACY_METERS = 75;
+
 function getPosition(): Promise<GeolocationPosition> {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
       reject(new Error("Geolocation is not supported in this browser."));
       return;
     }
+
     navigator.geolocation.getCurrentPosition(resolve, reject, {
       enableHighAccuracy: true,
       timeout: 25000,
@@ -54,6 +57,14 @@ export default function AttendanceLocationPage() {
     showLoader("Verifying location…");
     try {
       const pos = await getPosition();
+      if (
+        !Number.isFinite(pos.coords.accuracy) ||
+        pos.coords.accuracy > MAX_ACCEPTED_ACCURACY_METERS
+      ) {
+        throw new Error(
+          `GPS accuracy is too low (${Math.round(pos.coords.accuracy)}m). Move to an open area and try again.`,
+        );
+      }
       const supabase = createClient();
       const { data, error: fnError } = await supabase.functions.invoke(
         "event-check-in-meta",
@@ -62,6 +73,7 @@ export default function AttendanceLocationPage() {
             qr_token: flow.qrToken,
             latitude: pos.coords.latitude,
             longitude: pos.coords.longitude,
+            accuracy_m: pos.coords.accuracy,
           },
         },
       );
@@ -81,6 +93,7 @@ export default function AttendanceLocationPage() {
         ...flow,
         latitude: pos.coords.latitude,
         longitude: pos.coords.longitude,
+        accuracyM: pos.coords.accuracy,
         requiresOtp: meta.requires_otp === true,
         eventId: meta.id ?? flow.eventId,
         eventTitle: meta.title ?? flow.eventTitle,

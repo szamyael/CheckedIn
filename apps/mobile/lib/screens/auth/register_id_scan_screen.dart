@@ -120,7 +120,8 @@ class _RegisterIdScanScreenState extends State<RegisterIdScanScreen> {
         ..ocrSnapshot = parsed
         ..idCardImagePath = photo.path
         ..avatarImagePath = avatarFile?.path
-        ..avatarFromId = avatarFile != null;
+        ..avatarFromId = avatarFile != null
+        ..idCardVerified = true;
 
       if (!mounted) return;
       context.push('/register/confirm', extra: widget.draft);

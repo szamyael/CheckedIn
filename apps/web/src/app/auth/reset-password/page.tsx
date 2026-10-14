@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { formPlaceholders } from "@/lib/form-placeholders";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import { createClient } from "@/lib/supabase/client";
+import { PasswordRequirements, passwordRules } from "@/components/PasswordRequirements";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -17,8 +18,8 @@ export default function ResetPasswordPage() {
     e.preventDefault();
     setError(null);
 
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+    if (passwordRules(password).some((rule) => !rule.met)) {
+      setError("Password must meet all the requirements shown below.");
       return;
     }
 
@@ -66,6 +67,7 @@ export default function ResetPasswordPage() {
               placeholder={formPlaceholders.password}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
+            <PasswordRequirements value={password} />
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-700">

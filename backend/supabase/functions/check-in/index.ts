@@ -15,6 +15,7 @@ interface CheckInRequest {
   qr_token: string;
   latitude: number;
   longitude: number;
+  accuracy_m?: number;
   selfie_path: string;
   client_checked_in_at?: string;
   otp_code?: string;
@@ -104,6 +105,7 @@ Deno.serve(async (req) => {
       selfie_path,
       otp_code,
       capture_integrity,
+      accuracy_m,
     } = body;
 
     if (!qr_token || !selfie_path) {
@@ -125,6 +127,12 @@ Deno.serve(async (req) => {
     if (!isValidCoordinate(latitude, longitude)) {
       return new Response(
         JSON.stringify({ error: "Invalid GPS coordinates" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    if (!Number.isFinite(accuracy_m) || accuracy_m! > 75) {
+      return new Response(
+        JSON.stringify({ error: "GPS accuracy is too low. Move to an open area and try again." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -367,6 +375,7 @@ Deno.serve(async (req) => {
         student_id: userId,
         latitude,
         longitude,
+        location_accuracy_m: accuracy_m,
         selfie_url: selfie_path,
         distance_from_venue_m: distanceM,
         checked_in_at: checkInTime.toISOString(),

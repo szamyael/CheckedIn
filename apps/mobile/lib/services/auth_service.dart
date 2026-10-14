@@ -141,7 +141,9 @@ class AuthService extends ChangeNotifier {
       if (!_registrationResubmissionAllowed ||
           user == null ||
           user.email?.toLowerCase() != email) {
-        throw Exception('Sign in to the account that received the re-registration request.');
+        throw Exception(
+          'Sign in to the account that received the re-registration request.',
+        );
       }
       signUp = null;
       userId = user.id;
@@ -191,6 +193,7 @@ class AuthService extends ChangeNotifier {
         'year_level': draft.yearLevel,
         'section': draft.section?.trim(),
         'image_base64': base64Encode(compressedId),
+        'id_card_verified': draft.idCardVerified,
         'avatar_base64': ?avatarBase64,
       },
     );
@@ -470,7 +473,9 @@ class AuthService extends ChangeNotifier {
   Future<RegistrationDraft> loadReregistrationDraft() async {
     final user = _client.auth.currentUser;
     if (!_registrationResubmissionAllowed || user == null) {
-      throw Exception('Sign in to the account that received the re-registration request.');
+      throw Exception(
+        'Sign in to the account that received the re-registration request.',
+      );
     }
 
     final profile = await _client
@@ -485,7 +490,9 @@ class AuthService extends ChangeNotifier {
 
     final student = await _client
         .from('students')
-        .select('student_id, first_name, middle_name, last_name, name_extension, program, year_level, section')
+        .select(
+          'student_id, first_name, middle_name, last_name, name_extension, program, year_level, section',
+        )
         .eq('id', user.id)
         .maybeSingle();
     if (student == null) {

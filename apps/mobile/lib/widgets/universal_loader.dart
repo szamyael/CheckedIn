@@ -7,6 +7,7 @@ class UniversalLoaderController extends ChangeNotifier {
       UniversalLoaderController._();
 
   bool _visible = false;
+  int _activeOperations = 0;
   String _message = 'Please wait…';
 
   bool get visible => _visible;
@@ -14,12 +15,15 @@ class UniversalLoaderController extends ChangeNotifier {
 
   void show([String message = 'Please wait…']) {
     _message = message;
+    _activeOperations++;
     _visible = true;
     notifyListeners();
   }
 
   void hide() {
-    if (!_visible) return;
+    if (_activeOperations == 0) return;
+    _activeOperations--;
+    if (_activeOperations > 0) return;
     _visible = false;
     notifyListeners();
   }
@@ -68,37 +72,39 @@ class UniversalLoaderScope extends StatelessWidget {
                             vertical: 24,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF0F172A),
+                            color: Theme.of(context).colorScheme.surface,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFF334155)),
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.outline,
+                            ),
                           ),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const SizedBox(
+                              SizedBox(
                                 width: 36,
                                 height: 36,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 3,
-                                  color: Color(0xFF14B8A6),
+                                  color: Theme.of(context).colorScheme.primary,
                                 ),
                               ),
                               const SizedBox(height: 16),
                               Text(
                                 controller.message,
                                 textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  color: Colors.white,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.onSurface,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
                               const SizedBox(height: 6),
-                              const Text(
+                              Text(
                                 'Process is ongoing…',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  color: Color(0xFF94A3B8),
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                                   fontSize: 12,
                                 ),
                               ),

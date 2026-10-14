@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AnalyticsCharts } from "@/components/AnalyticsCharts";
 import { DashboardPageHeader, DashboardSection, DashboardStat } from "@/components/DashboardUi";
 import { addWeeks, format, startOfWeek, subWeeks } from "date-fns";
+import { canonicalProgramName, programNameKey } from "@/lib/program-name";
 
 export default async function AnalyticsPage() {
   const supabase = await createClient();
@@ -51,11 +52,12 @@ export default async function AnalyticsPage() {
     const count = Array.isArray(row.attendance_records)
       ? (row.attendance_records[0] as { count: number })?.count ?? 0
       : (row.attendance_records as { count: number })?.count ?? 0;
-    programMap.set(program, (programMap.get(program) ?? 0) + count);
+    const key = programNameKey(program);
+    programMap.set(key, (programMap.get(key) ?? 0) + count);
   }
 
   const programRankings = [...programMap.entries()]
-    .map(([label, value]) => ({ label, value }))
+    .map(([label, value]) => ({ label: canonicalProgramName(label), value }))
     .sort((a, b) => b.value - a.value)
     .slice(0, 8);
 

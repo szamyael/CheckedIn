@@ -43,6 +43,7 @@ Deno.serve(async (req) => {
     const qr_token = body.qr_token as string | undefined;
     const latitude = body.latitude as number | undefined;
     const longitude = body.longitude as number | undefined;
+    const accuracyM = body.accuracy_m as number | undefined;
 
     if (!qr_token) {
       return new Response(JSON.stringify({ error: "Missing qr_token" }), {
@@ -145,6 +146,16 @@ Deno.serve(async (req) => {
 
     // Location verification gate — required before OTP / selfie.
     if (latitude != null && longitude != null) {
+      if (!Number.isFinite(accuracyM) || accuracyM! > 75) {
+        return new Response(
+          JSON.stringify({
+            error: "GPS accuracy is too low. Move to an open area and try again.",
+            location_ok: false,
+            accuracy_m: accuracyM ?? null,
+          }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
       if (
         !Number.isFinite(latitude) ||
         !Number.isFinite(longitude) ||

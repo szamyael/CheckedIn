@@ -9,6 +9,7 @@ class AttendanceOtpScreen extends StatefulWidget {
   final String qrToken;
   final double latitude;
   final double longitude;
+  final double accuracyM;
   final bool requiresOtp;
   final String eventTitle;
   final String? eventId;
@@ -23,6 +24,7 @@ class AttendanceOtpScreen extends StatefulWidget {
     required this.qrToken,
     required this.latitude,
     required this.longitude,
+    this.accuracyM = 0,
     required this.requiresOtp,
     required this.eventTitle,
     this.eventId,
@@ -73,6 +75,7 @@ class _AttendanceOtpScreenState extends State<AttendanceOtpScreen> {
         'qr_token': widget.qrToken,
         'latitude': widget.latitude,
         'longitude': widget.longitude,
+        'accuracy_m': widget.accuracyM,
         'event_id': widget.eventId,
         'event_title': widget.eventTitle,
         'requires_otp': widget.requiresOtp,

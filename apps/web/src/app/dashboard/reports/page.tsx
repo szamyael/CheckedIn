@@ -11,6 +11,7 @@ import { AbsenteeReport } from "@/components/AbsenteeReport";
 import { AttendanceCorrectionPanel } from "@/components/AttendanceCorrectionPanel";import type { ExportRow } from "@/lib/export-report";
 import { DashboardPageHeader, DashboardSection } from "@/components/DashboardUi";
 import { AttendanceLocationViewer } from "@/components/AttendanceLocationViewer";
+import { canonicalProgramName, programNameKey } from "@/lib/program-name";
 
 type AttendanceRow = {
   id: string;
@@ -19,6 +20,7 @@ type AttendanceRow = {
   break_in_at: string | null;
   checked_out_at: string | null;
   distance_from_venue_m: number | null;
+  location_accuracy_m: number | null;
   latitude: number | null;
   longitude: number | null;
   venue_latitude: number | null;
@@ -100,7 +102,7 @@ export default async function ReportsPage({
     const { data } = await supabase
       .from("attendance_records")
       .select(
-        "id, event_id, status, checked_in_at, break_out_at, break_in_at, checked_out_at, distance_from_venue_m, latitude, longitude, selfie_url, students(student_id, first_name, last_name, program, year_level, section)",
+        "id, event_id, status, checked_in_at, break_out_at, break_in_at, checked_out_at, distance_from_venue_m, location_accuracy_m, latitude, longitude, selfie_url, students(student_id, first_name, last_name, program, year_level, section)",
       )
       .in("event_id", targetEventIds)
       .in("status", ["checked_in", "late", "excused", "on_break", "checked_out"])
@@ -113,7 +115,7 @@ export default async function ReportsPage({
           : row.students;
         const s = student as AttendanceRow["students"];
 
-        programs.add(s.program);
+        programs.add(canonicalProgramName(s.program));
         if (s.year_level != null) years.add(s.year_level);
         if (s.section) sections.add(s.section);
 
@@ -135,6 +137,7 @@ export default async function ReportsPage({
           break_in_at: row.break_in_at as string | null,
           checked_out_at: row.checked_out_at as string | null,
           distance_from_venue_m: row.distance_from_venue_m as number | null,
+          location_accuracy_m: row.location_accuracy_m as number | null,
           latitude: row.latitude as number | null,
           longitude: row.longitude as number | null,
           venue_latitude: events?.find((event) => event.id === eid)?.latitude ?? null,
@@ -149,7 +152,9 @@ export default async function ReportsPage({
     );
 
     if (program) {
-      attendance = attendance.filter((r) => r.students.program === program);
+      attendance = attendance.filter(
+        (r) => programNameKey(r.students.program) === programNameKey(program),
+      );
     }
     if (year) {
       attendance = attendance.filter(
@@ -165,7 +170,7 @@ export default async function ReportsPage({
     student_id: r.students.student_id,
     first_name: r.students.first_name,
     last_name: r.students.last_name,
-    program: r.students.program,
+    program: canonicalProgramName(r.students.program),
     year_level: r.students.year_level,
     section: r.students.section,
     checked_in_at: r.checked_in_at,
@@ -280,7 +285,7 @@ export default async function ReportsPage({
                   <td className="px-4 py-3">{row.break_in_at ? format(new Date(row.break_in_at), "MMM d, h:mm:ss a") : "—"}</td>
                   <td className="px-4 py-3">{row.checked_out_at ? format(new Date(row.checked_out_at), "MMM d, h:mm:ss a") : "—"}</td>
                   <td className="px-4 py-3">
-                    {row.distance_from_venue_m != null && row.latitude != null && row.longitude != null && row.venue_latitude != null && row.venue_longitude != null && row.venue_radius_m != null ? <AttendanceLocationViewer distanceMeters={row.distance_from_venue_m} scanLatitude={row.latitude} scanLongitude={row.longitude} venueLatitude={row.venue_latitude} venueLongitude={row.venue_longitude} radiusMeters={row.venue_radius_m} venueName={row.venue_name} /> : row.distance_from_venue_m?.toFixed(1) ?? "—"}
+                    {row.distance_from_venue_m != null && row.latitude != null && row.longitude != null && row.venue_latitude != null && row.venue_longitude != null && row.venue_radius_m != null ? <AttendanceLocationViewer distanceMeters={row.distance_from_venue_m} accuracyMeters={row.location_accuracy_m} scanLatitude={row.latitude} scanLongitude={row.longitude} venueLatitude={row.venue_latitude} venueLongitude={row.venue_longitude} radiusMeters={row.venue_radius_m} venueName={row.venue_name} /> : row.distance_from_venue_m?.toFixed(1) ?? "—"}
                   </td>
                   <td className="px-4 py-3">
                     {row.selfie_signed_url ? (

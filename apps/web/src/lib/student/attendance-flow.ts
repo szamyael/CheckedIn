@@ -2,6 +2,7 @@ export type AttendanceFlowState = {
   qrToken: string;
   latitude?: number;
   longitude?: number;
+  accuracyM?: number;
   requiresOtp?: boolean;
   otpCode?: string;
   eventId?: string;

@@ -7,6 +7,7 @@ import '../../core/constants.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/student_ui.dart';
 import '../../widgets/universal_loader.dart';
+import '../../widgets/password_requirements.dart';
 
 class ForgotPasswordCodeScreen extends StatefulWidget {
   final String email;
@@ -41,6 +42,13 @@ class _ForgotPasswordCodeScreenState extends State<ForgotPasswordCodeScreen> {
     super.dispose();
   }
 
+  bool _passwordMeetsRequirements(String value) {
+    return RegExp(r'[^A-Za-z0-9]').hasMatch(value) &&
+        RegExp(r'\d').allMatches(value).length >= 2 &&
+        RegExp(r'[A-Z]').hasMatch(value) &&
+        value.length >= 8;
+  }
+
   Future<void> _resendCode() async {
     setState(() {
       _resending = true;
@@ -52,7 +60,9 @@ class _ForgotPasswordCodeScreenState extends State<ForgotPasswordCodeScreen> {
       await _auth.sendPasswordResetCode(widget.email);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('A new code was sent to ${widget.maskedEmail}.')),
+        SnackBar(
+          content: Text('A new code was sent to ${widget.maskedEmail}.'),
+        ),
       );
     } catch (e) {
       setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
@@ -74,8 +84,8 @@ class _ForgotPasswordCodeScreenState extends State<ForgotPasswordCodeScreen> {
         throw Exception('Enter the reset code from your email.');
       }
 
-      if (_passwordController.text.length < 8) {
-        throw Exception('Password must be at least 8 characters.');
+      if (!_passwordMeetsRequirements(_passwordController.text)) {
+        throw Exception('Password must meet all the requirements shown below.');
       }
 
       if (_passwordController.text != _confirmController.text) {
@@ -132,6 +142,7 @@ class _ForgotPasswordCodeScreenState extends State<ForgotPasswordCodeScreen> {
             const SizedBox(height: 12),
             TextField(
               controller: _passwordController,
+              onChanged: (_) => setState(() {}),
               decoration: const InputDecoration(
                 labelText: 'New password',
                 hintText: 'At least 8 characters',
@@ -139,6 +150,7 @@ class _ForgotPasswordCodeScreenState extends State<ForgotPasswordCodeScreen> {
               obscureText: true,
               textInputAction: TextInputAction.next,
             ),
+            PasswordRequirements(value: _passwordController.text),
             const SizedBox(height: 12),
             TextField(
               controller: _confirmController,

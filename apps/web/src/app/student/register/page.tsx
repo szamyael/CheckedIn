@@ -26,6 +26,8 @@ import {
 } from "@/lib/student/registration-draft";
 import { formPlaceholders } from "@/lib/form-placeholders";
 import { isStudentTermsAccepted } from "@/lib/student/terms";
+import { canonicalProgramName } from "@/lib/program-name";
+import { PasswordRequirements, passwordRules } from "@/components/PasswordRequirements";
 
 export default function StudentRegisterPage() {
   const router = useRouter();
@@ -170,9 +172,15 @@ export default function StudentRegisterPage() {
         last_name?: string;
         name_extension?: string;
         program?: string;
+        is_id_document?: boolean;
         error?: string;
       };
       if (parsed.error) throw new Error(parsed.error);
+      if (parsed.is_id_document !== true) {
+        throw new Error(
+          "This does not look like a student ID. Upload a clear photo of your official school ID.",
+        );
+      }
       const sid =
         normalizeStudentId(parsed.student_id ?? "") ??
         parsed.student_id ??
@@ -197,6 +205,7 @@ export default function StudentRegisterPage() {
         imageBase64: image_base64,
         avatarBase64: avatarBase64 ?? "",
         avatarFromId: Boolean(avatarBase64),
+        idCardVerified: true,
       };
       setDraft(nextDraft);
       saveRegistrationDraft(nextDraft, 2);
@@ -228,8 +237,8 @@ export default function StudentRegisterPage() {
     if (submitting) return;
 
     setError(null);
-    if (!isResubmission && password.length < 8) {
-      setError("Password must be at least 8 characters.");
+    if (!isResubmission && passwordRules(password).some((rule) => !rule.met)) {
+      setError("Password must meet all the requirements shown below.");
       return;
     }
     if (!isResubmission && password !== confirm) {
@@ -289,6 +298,7 @@ export default function StudentRegisterPage() {
             section: (draft.section ?? "").trim() || null,
             year_level: draft.yearLevel,
             image_base64: draft.imageBase64,
+            id_card_verified: draft.idCardVerified === true,
             avatar_base64: draft.avatarBase64 || null,
           },
         },
@@ -503,6 +513,15 @@ export default function StudentRegisterPage() {
             required
             placeholder={formPlaceholders.program}
           />
+          {draft.program.trim() &&
+            canonicalProgramName(draft.program) !== draft.program.trim() && (
+              <p className="-mt-2 text-xs text-slate-500">
+                Standardized for matching:{" "}
+                <span className="font-medium text-slate-700">
+                  {canonicalProgramName(draft.program)}
+                </span>
+              </p>
+            )}
           <Field
             label="Section"
             value={draft.section}
@@ -561,6 +580,7 @@ export default function StudentRegisterPage() {
               autoComplete="new-password"
               placeholder={formPlaceholders.password}
             />
+            <PasswordRequirements value={password} />
             <Field
               label="Confirm password"
               value={confirm}

@@ -13,6 +13,7 @@ export type RegistrationDraft = {
   imageBase64: string;
   avatarBase64: string;
   avatarFromId: boolean;
+  idCardVerified: boolean;
 };
 
 export const emptyRegistrationDraft = (): RegistrationDraft => ({
@@ -28,6 +29,7 @@ export const emptyRegistrationDraft = (): RegistrationDraft => ({
   imageBase64: "",
   avatarBase64: "",
   avatarFromId: false,
+  idCardVerified: false,
 });
 
 export function loadRegistrationDraft(): RegistrationDraft | null {

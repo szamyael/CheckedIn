@@ -89,6 +89,11 @@ body {
   to { opacity: 1; }
 }
 
+@keyframes loader-sweep {
+  0% { transform: translateX(-120%); }
+  55%, 100% { transform: translateX(360%); }
+}
+
 :root[data-mode="dark"] .bg-white { background-color: var(--surface) !important; }
 :root[data-mode="dark"] .bg-white\/95 { background-color: color-mix(in srgb, var(--surface) 95%, transparent) !important; }
 :root[data-mode="dark"] .bg-\[\#f6f7f5\], :root[data-mode="dark"] .bg-slate-50 { background-color: var(--surface-muted) !important; }

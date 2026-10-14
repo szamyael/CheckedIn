@@ -7,6 +7,7 @@ import '../../models/registration_draft.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/student_ui.dart';
 import '../../widgets/universal_loader.dart';
+import '../../widgets/password_requirements.dart';
 
 class RegisterPasswordScreen extends StatefulWidget {
   final RegistrationDraft draft;
@@ -30,8 +31,16 @@ class _RegisterPasswordScreenState extends State<RegisterPasswordScreen> {
     super.dispose();
   }
 
+  bool _passwordMeetsRequirements(String value) {
+    return RegExp(r'[^A-Za-z0-9]').hasMatch(value) &&
+        RegExp(r'\d').allMatches(value).length >= 2 &&
+        RegExp(r'[A-Z]').hasMatch(value) &&
+        value.length >= 8;
+  }
+
   Future<void> _register() async {
-    if (!widget.draft.isResubmission && _passwordController.text.length < 8) {
+    if (!widget.draft.isResubmission &&
+        !_passwordMeetsRequirements(_passwordController.text)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Password must be at least 8 characters.')),
       );
@@ -122,9 +131,11 @@ class _RegisterPasswordScreenState extends State<RegisterPasswordScreen> {
             if (!widget.draft.isResubmission) ...[
               TextField(
                 controller: _passwordController,
+                onChanged: (_) => setState(() {}),
                 decoration: const InputDecoration(labelText: 'Password'),
                 obscureText: true,
               ),
+              PasswordRequirements(value: _passwordController.text),
               const SizedBox(height: 16),
               TextField(
                 controller: _confirmController,

@@ -18,6 +18,7 @@ class SelfieScreen extends StatefulWidget {
   final String qrToken;
   final double latitude;
   final double longitude;
+  final double accuracyM;
   final String? otpCode;
   final String? eventId;
   final String? eventTitle;
@@ -32,6 +33,7 @@ class SelfieScreen extends StatefulWidget {
     required this.qrToken,
     required this.latitude,
     required this.longitude,
+    this.accuracyM = 0,
     this.otpCode,
     this.eventId,
     this.eventTitle,
@@ -370,6 +372,7 @@ class _SelfieScreenState extends State<SelfieScreen> {
       qrToken: widget.qrToken,
       latitude: position.latitude,
       longitude: position.longitude,
+      accuracyM: position.accuracy,
       selfieFile: selfieFile,
       otpCode: widget.otpCode,
       eventId: widget.eventId,

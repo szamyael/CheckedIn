@@ -10,6 +10,7 @@ import { PendingStudentsBatchActions } from "@/components/PendingStudentsBatchAc
 import { StudentAchievementsPanel } from "@/components/StudentAchievementsPanel";
 import { AdminBingoOverview } from "@/components/bingo/AdminBingoOverview";
 import { OrganizationProgramAlignmentPanel } from "@/components/OrganizationProgramAlignmentPanel";
+import { canonicalProgramName, programNameKey } from "@/lib/program-name";
 import { OrganizationModerationPanel } from "@/components/OrganizationModerationPanel";
 import { formatStudentDisplayName } from "@/lib/student/display-name";
 import { DashboardPageHeader, DashboardSection, DashboardStat } from "@/components/DashboardUi";
@@ -87,7 +88,9 @@ export default async function AdminPage() {
   });
   const pendingCount = pendingStudents.length;
   const pendingIds = pendingStudents.map((s) => s.id);
-  const allPrograms = [...new Set((students ?? []).map((s) => s.program.trim()).filter(Boolean))].sort((a, b) =>
+  const allPrograms = [...new Map((students ?? [])
+    .map((s) => [programNameKey(s.program), canonicalProgramName(s.program)] as const)
+    .filter(([key]) => Boolean(key)))].map(([, name]) => name).sort((a, b) =>
     a.localeCompare(b),
   );
 

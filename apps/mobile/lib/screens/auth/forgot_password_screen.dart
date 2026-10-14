@@ -112,10 +112,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       if (!mounted) return;
       context.push(
         '/forgot-password/code',
-        extra: {
-          'email': result.email,
-          'masked_email': result.maskedEmail,
-        },
+        extra: {'email': result.email, 'masked_email': result.maskedEmail},
       );
     } catch (e) {
       setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
@@ -166,7 +163,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             const SizedBox(height: 12),
             OutlinedButton(
               onPressed: _loading ? null : _captureId,
-              child: Text(_idCardImage == null ? 'Capture ID card' : 'Retake photo'),
+              child: Text(
+                _idCardImage == null ? 'Capture ID card' : 'Retake photo',
+              ),
             ),
             const SizedBox(height: 24),
             TextField(

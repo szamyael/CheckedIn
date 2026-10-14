@@ -26,6 +26,7 @@ class LocationCheckScreen extends StatefulWidget {
 }
 
 class _LocationCheckScreenState extends State<LocationCheckScreen> {
+  static const _maxAcceptedAccuracyMeters = 75.0;
   final _attendance = AttendanceService();
   bool _checking = false;
   String? _error;
@@ -59,12 +60,19 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
     try {
       final position = await _attendance.getCurrentPosition();
       if (!mounted) return;
+      if (!position.accuracy.isFinite ||
+          position.accuracy > _maxAcceptedAccuracyMeters) {
+        throw Exception(
+          'GPS accuracy is too low (${position.accuracy.round()}m). Move to an open area and try again.',
+        );
+      }
       setState(() => _status = 'Verifying you are at the venue…');
 
       final meta = await _attendance.verifyLocationForCheckIn(
         qrToken: widget.qrToken,
         latitude: position.latitude,
         longitude: position.longitude,
+        accuracyM: position.accuracy,
       );
 
       if (!mounted) return;
@@ -91,6 +99,8 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
           'qr_token': widget.qrToken,
           'latitude': position.latitude,
           'longitude': position.longitude,
+          'accuracy_m': position.accuracy,
+          'accuracy_m': position.accuracy,
           'requires_otp': meta['requires_otp'] == true,
           'event_title': meta['title'] as String? ?? 'Event',
           'event_id': meta['id'] as String?,

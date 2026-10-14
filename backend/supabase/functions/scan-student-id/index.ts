@@ -27,6 +27,20 @@ interface ParsedIdCard extends ParsedName {
   student_id: string | null;
   program: string | null;
   raw: Record<string, unknown>;
+  is_id_document: boolean;
+}
+
+function isIdDocument(data: Record<string, unknown>, text: string): boolean {
+  const category = [
+    data.category,
+    data.document_type,
+    data.document_category,
+    data.type,
+  ]
+    .filter((value): value is string => typeof value === "string")
+    .join(" ");
+  return /\b(student\s*)?ids?\b|identity|driver|passport|license/i.test(category) ||
+    /\b(student\s*id|id\s*(no|number)|school\s*id|identification)\b/i.test(text);
 }
 
 function normalizeStudentId(value: string | null | undefined): string | null {
@@ -196,6 +210,7 @@ function extractFromVeryfi(data: Record<string, unknown>): ParsedIdCard {
     name_extension: mergedName.name_extension,
     program,
     raw: data,
+    is_id_document: isIdDocument(data, fields),
   };
 }
 
@@ -260,6 +275,19 @@ Deno.serve(async (req) => {
     }
 
     let parsed = extractFromVeryfi(veryfiData);
+
+    if (!parsed.is_id_document) {
+      return new Response(
+        JSON.stringify({
+          error:
+            "This does not look like a student ID. Upload a clear photo of your official school ID.",
+        }),
+        {
+          status: 422,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
 
     if (!hasCompleteName(parsed)) {
       const fallback = await ocrSpaceExtractName(image_base64);

@@ -8,6 +8,7 @@ import { useLoader } from "@/components/LoaderProvider";
 import { formPlaceholders } from "@/lib/form-placeholders";
 import { EMAIL_OTP_LENGTH } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
+import { PasswordRequirements, passwordRules } from "@/components/PasswordRequirements";
 
 function ResetCodeForm() {
   const router = useRouter();
@@ -26,8 +27,8 @@ function ResetCodeForm() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+    if (passwordRules(password).some((rule) => !rule.met)) {
+      setError("Password must meet all the requirements shown below.");
       return;
     }
     if (password !== confirm) {
@@ -74,6 +75,7 @@ function ResetCodeForm() {
           className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm"
           required
         />
+        <PasswordRequirements value={password} />
         <input
           type="password"
           value={password}

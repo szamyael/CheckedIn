@@ -39,8 +39,9 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
     _firstName = TextEditingController(text: widget.draft.firstName ?? '');
     _middleName = TextEditingController(text: widget.draft.middleName ?? '');
     _lastName = TextEditingController(text: widget.draft.lastName ?? '');
-    _nameExtension =
-        TextEditingController(text: widget.draft.nameExtension ?? '');
+    _nameExtension = TextEditingController(
+      text: widget.draft.nameExtension ?? '',
+    );
     _program = TextEditingController(text: widget.draft.program ?? '');
     _section = TextEditingController(text: widget.draft.section ?? '');
     _yearLevel = widget.draft.yearLevel ?? 1;
@@ -146,10 +147,15 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
             child: CircleAvatar(
               radius: 48,
               backgroundColor: StudentUi.tealSoft,
-              backgroundImage:
-                  avatarPath != null ? FileImage(File(avatarPath)) : null,
+              backgroundImage: avatarPath != null
+                  ? FileImage(File(avatarPath))
+                  : null,
               child: avatarPath == null
-                  ? const Icon(TablerIcons.user, size: 40, color: StudentUi.teal)
+                  ? const Icon(
+                      TablerIcons.user,
+                      size: 40,
+                      color: StudentUi.teal,
+                    )
                   : null,
             ),
           ),
@@ -273,6 +279,16 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
                   : 'Enter the program shown under your name',
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Equivalent spellings are matched automatically.',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+          ),
           const SizedBox(height: 16),
           TextField(
             controller: _section,
@@ -288,18 +304,13 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
             label: const Text('Year Level *'),
             dropdownMenuEntries: List.generate(
               5,
-              (i) => DropdownMenuEntry<int>(
-                value: i + 1,
-                label: 'Year ${i + 1}',
-              ),
+              (i) =>
+                  DropdownMenuEntry<int>(value: i + 1, label: 'Year ${i + 1}'),
             ),
             onSelected: (v) => setState(() => _yearLevel = v ?? 1),
           ),
           const SizedBox(height: 32),
-          FilledButton(
-            onPressed: _continue,
-            child: const Text('Continue'),
-          ),
+          FilledButton(onPressed: _continue, child: const Text('Continue')),
         ],
       ),
     );

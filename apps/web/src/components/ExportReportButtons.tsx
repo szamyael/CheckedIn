@@ -33,6 +33,17 @@ async function imageDataUrl(src: string): Promise<string> {
   return canvas.toDataURL("image/png");
 }
 
+async function fontBase64(src: string): Promise<string> {
+  const response = await fetch(src);
+  if (!response.ok) {
+    throw new Error(`Could not load PDF font: ${src}`);
+  }
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary);
+}
+
 export function ExportReportButtons({
   rows,
   baseFilename,
@@ -99,6 +110,9 @@ export function ExportReportButtons({
       imageDataUrl("/report-header/seal.png"),
       imageDataUrl("/report-header/college-logo.jpeg"),
     ]);
+    const oldEnglishFont = await fontBase64("/fonts/UnifrakturCook-Bold.ttf");
+    doc.addFileToVFS("UnifrakturCook-Bold.ttf", oldEnglishFont);
+    doc.addFont("UnifrakturCook-Bold.ttf", "UnifrakturCook", "bold");
 
     const drawHeader = () => {
       const width = doc.internal.pageSize.getWidth();
@@ -108,7 +122,7 @@ export function ExportReportButtons({
       doc.setFont("times", "normal");
       doc.setFontSize(9);
       doc.text("Republic of the Philippines", width / 2, 10, { align: "center" });
-      doc.setFont("times", "bold");
+      doc.setFont("UnifrakturCook", "bold");
       doc.setFontSize(12);
       doc.text("Laguna State Polytechnic University", width / 2, 15, { align: "center" });
       doc.setFont("times", "normal");

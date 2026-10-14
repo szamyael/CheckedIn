@@ -96,6 +96,11 @@ export default function AttendanceSelfiePage() {
           timeout: 20000,
         });
       });
+      if (!Number.isFinite(pos.coords.accuracy) || pos.coords.accuracy > 75) {
+        throw new Error(
+          `GPS accuracy is too low (${Math.round(pos.coords.accuracy)}m). Move to an open area and try again.`,
+        );
+      }
 
       const supabase = createClient();
       const {
@@ -113,6 +118,7 @@ export default function AttendanceSelfiePage() {
         qr_token: flow.qrToken,
         latitude: pos.coords.latitude,
         longitude: pos.coords.longitude,
+        accuracy_m: pos.coords.accuracy,
         selfie_path: path,
         capture_integrity: {
           live_camera_capture: true,

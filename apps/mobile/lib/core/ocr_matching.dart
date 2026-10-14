@@ -10,7 +10,14 @@ class OcrMatching {
 
   static String normalizeProgram(String? value) {
     var v = normalize(value);
-    v = v.replaceAll(RegExp(r'^b\.?\s*s\.?\s*'), 'bs ');
+    v = v.replaceFirst(RegExp(r'^bachelor of science in\s+'), 'bs ');
+    v = v.replaceFirst(RegExp(r'^bachelor science in\s+'), 'bs ');
+    v = v.replaceFirst(RegExp(r'^bachelor of arts in\s+'), 'ba ');
+    v = v.replaceFirst(RegExp(r'^bachelor arts in\s+'), 'ba ');
+    v = v.replaceFirst(RegExp(r'^b\.?\s*s\.?\s+in\s+'), 'bs ');
+    v = v.replaceFirst(RegExp(r'^b\.?\s*a\.?\s+in\s+'), 'ba ');
+    v = v.replaceFirst(RegExp(r'^b\.?\s*s\.?\s*'), 'bs ');
+    v = v.replaceFirst(RegExp(r'^b\.?\s*a\.?\s*'), 'ba ');
     return v.trim();
   }
 

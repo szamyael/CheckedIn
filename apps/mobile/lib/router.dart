@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../models/registration_draft.dart';
 import '../models/pending_check_in.dart';
@@ -25,6 +28,37 @@ import '../screens/auth/register_password_screen.dart';
 import '../screens/notifications/notifications_screen.dart';
 import '../screens/shell/main_shell.dart';
 import '../services/auth_service.dart';
+import '../widgets/universal_loader.dart';
+
+class UniversalNavigationObserver extends NavigatorObserver {
+  Timer? _hideTimer;
+
+  void _showForNavigation() {
+    _hideTimer?.cancel();
+    UniversalLoaderController.instance.show('Opening page…');
+    _hideTimer = Timer(const Duration(milliseconds: 420), () {
+      UniversalLoaderController.instance.hide();
+    });
+  }
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    _showForNavigation();
+    super.didPush(route, previousRoute);
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    _showForNavigation();
+    super.didPop(route, previousRoute);
+  }
+
+  @override
+  void dispose() {
+    _hideTimer?.cancel();
+    super.dispose();
+  }
+}
 
 GoRouter createRouter(
   AuthService auth,
@@ -32,6 +66,7 @@ GoRouter createRouter(
   TermsService terms,
 ) {
   return GoRouter(
+    observers: [UniversalNavigationObserver()],
     refreshListenable: Listenable.merge([auth, onboarding, terms]),
     initialLocation: _initialLocation(auth, onboarding, terms),
     redirect: (context, state) {
@@ -179,6 +214,7 @@ GoRouter createRouter(
             qrToken: data['qr_token'] as String,
             latitude: (data['latitude'] as num?)?.toDouble() ?? 0,
             longitude: (data['longitude'] as num?)?.toDouble() ?? 0,
+            accuracyM: (data['accuracy_m'] as num?)?.toDouble() ?? 0,
             requiresOtp: data['requires_otp'] as bool? ?? false,
             eventTitle: data['event_title'] as String? ?? 'Event',
             eventId: data['event_id'] as String?,
@@ -205,6 +241,7 @@ GoRouter createRouter(
             qrToken: data['qr_token'] as String,
             latitude: (data['latitude'] as num?)?.toDouble() ?? 0,
             longitude: (data['longitude'] as num?)?.toDouble() ?? 0,
+            accuracyM: (data['accuracy_m'] as num?)?.toDouble() ?? 0,
             otpCode: data['otp_code'] as String?,
             eventId: data['event_id'] as String?,
             eventTitle: data['event_title'] as String?,

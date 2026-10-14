@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BrandMark } from "@/components/BrandLogo";
+import { IdCardCameraCapture } from "@/components/student/IdCardCameraCapture";
 import { useLoader } from "@/components/LoaderProvider";
 import { formPlaceholders } from "@/lib/form-placeholders";
 import {
@@ -100,15 +101,16 @@ function ForgotPasswordForm() {
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium">ID card photo</label>
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="w-full text-sm"
-            required
+          <label className="mb-2 block text-sm font-medium">Scan your ID card</label>
+          <IdCardCameraCapture
+            onCapture={setFile}
+            disabled={false}
           />
+          {file && (
+            <p className="mt-2 text-center text-xs font-medium text-emerald-700">
+              ID captured. Review it, then send the reset code.
+            </p>
+          )}
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button

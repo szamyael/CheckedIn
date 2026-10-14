@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAsyncAction } from "@/lib/useAsyncAction";
+import { canonicalProgramName, programNameKey } from "@/lib/program-name";
 
 interface Organization {
   id: string;
@@ -35,8 +36,6 @@ export function OrganizationProgramAlignmentPanel({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const normalizeProgramName = (value: string) => value.trim().toLowerCase();
-
   const grouped = mappings.reduce<Record<string, ExistingMapping[]>>((acc, row) => {
     const orgId = row.organization_id;
     acc[orgId] = [...(acc[orgId] ?? []), row];
@@ -44,7 +43,7 @@ export function OrganizationProgramAlignmentPanel({
   }, {});
 
   const programToOrganizations = mappings.reduce<Record<string, string[]>>((acc, row) => {
-    const normalizedProgram = normalizeProgramName(row.program);
+    const normalizedProgram = programNameKey(row.program);
     if (!normalizedProgram) return acc;
 
     const relationName = Array.isArray(row.organizations)
@@ -93,7 +92,7 @@ export function OrganizationProgramAlignmentPanel({
         },
       ]);
       setProgram("");
-      setSuccess(`Added ${trimmedProgram} to ${organizations.find((o) => o.id === organizationId)?.name ?? "organization"}.`);
+      setSuccess(`Added ${canonicalProgramName(trimmedProgram)} to ${organizations.find((o) => o.id === organizationId)?.name ?? "organization"}.`);
       router.refresh();
     } catch {
       setError("Failed to save program alignment.");
@@ -127,7 +126,7 @@ export function OrganizationProgramAlignmentPanel({
       ));
       setEditingId(null);
       setEditingValue("");
-      setSuccess(`Updated mapping to ${updated}.`);
+      setSuccess(`Updated mapping to ${canonicalProgramName(updated)}.`);
       router.refresh();
     } catch {
       setError("Failed to update mapping.");
@@ -199,7 +198,7 @@ export function OrganizationProgramAlignmentPanel({
             <option value="">Choose a program or course</option>
             {allPrograms.map((programName) => (
               <option key={programName} value={programName}>
-                {programName}
+                {canonicalProgramName(programName)}
               </option>
             ))}
           </select>
@@ -224,7 +223,7 @@ export function OrganizationProgramAlignmentPanel({
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
             {allPrograms.map((program) => {
-              const normalizedProgram = normalizeProgramName(program);
+              const normalizedProgram = programNameKey(program);
               const assignedTo = programToOrganizations[normalizedProgram] ?? [];
               return (
                 <div key={program} className="rounded-xl border border-slate-200 bg-slate-50 p-3">

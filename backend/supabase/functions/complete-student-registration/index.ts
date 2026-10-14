@@ -18,6 +18,7 @@ interface CompleteRegistrationRequest {
   year_level: number;
   section?: string | null;
   image_base64: string;
+  id_card_verified: boolean;
   /** Optional cropped face from the ID card for the profile avatar. */
   avatar_base64?: string | null;
 }
@@ -27,6 +28,10 @@ function normalizeStudentId(value: string | null | undefined): string | null {
   const digits = value.replace(/\D/g, "");
   if (digits.length !== 8 || !digits.startsWith("0")) return null;
   return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+}
+
+function normalizeProgram(value: string): string {
+  return value.trim().replace(/\s+/g, " ");
 }
 
 function decodeBase64Image(base64: string): Uint8Array {
@@ -64,6 +69,7 @@ Deno.serve(async (req) => {
       year_level,
       section,
       image_base64,
+      id_card_verified,
       avatar_base64,
     } = body;
 
@@ -76,10 +82,15 @@ Deno.serve(async (req) => {
       !program ||
       year_level == null ||
       year_level === undefined ||
-      !image_base64
+      !image_base64 ||
+      id_card_verified !== true
     ) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields" }),
+        JSON.stringify({
+          error: id_card_verified === true
+            ? "Missing required fields"
+            : "A verified student ID photo is required to register",
+        }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -267,7 +278,7 @@ Deno.serve(async (req) => {
           middle_name: middle_name?.trim() || null,
           last_name: last_name.trim(),
           name_extension: name_extension?.trim() || null,
-          program: program.trim(),
+          program: normalizeProgram(program),
           year_level: year,
           section: section?.trim() || null,
           id_card_image_url: path,
@@ -334,7 +345,7 @@ Deno.serve(async (req) => {
       middle_name: middle_name?.trim() || null,
       last_name: last_name.trim(),
       name_extension: name_extension?.trim() || null,
-      program: program.trim(),
+      program: normalizeProgram(program),
       year_level: year,
       section: section?.trim() || null,
       id_card_image_url: path,
