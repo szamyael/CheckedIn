@@ -212,9 +212,9 @@ export function EventSecurityControls({
         </div>
         <div className={stream ? `flex min-h-64 flex-col justify-center rounded-2xl border ${themeBorder} ${themeSurface} p-5 sm:p-7` : ""}>
           {activeOtp ? (
-            <div className={`flex flex-col items-center gap-4 rounded-2xl border p-5 text-center sm:flex-row sm:text-left ${stream ? "border-[var(--border)] bg-[var(--primary-soft)] sm:gap-6 sm:p-7" : "border-amber-200 bg-amber-50"}`}>
+            <div className={`flex flex-col items-center gap-4 rounded-2xl border p-5 text-center sm:flex-row sm:text-left ${stream ? "border-[var(--border)] bg-[var(--primary-soft)] sm:gap-6 sm:p-7 xl:flex-col xl:gap-3 xl:p-5 xl:text-center" : "border-amber-200 bg-amber-50"}`}>
               <div
-                className={`relative grid h-20 w-20 shrink-0 place-items-center ${stream ? "sm:h-24 sm:w-24" : ""}`}
+                className={`relative grid h-20 w-20 shrink-0 place-items-center ${stream ? "sm:h-24 sm:w-24 xl:h-20 xl:w-20" : ""}`}
                 aria-label={`OTP expires in ${secondsLeft} seconds`}
               >
                 <svg className="h-full w-full -rotate-90" viewBox="0 0 40 40" aria-hidden="true">
@@ -225,11 +225,11 @@ export function EventSecurityControls({
                   {secondsLeft}s
                 </span>
               </div>
-              <div className="min-w-0">
+              <div className={`min-w-0 ${stream ? "xl:text-center" : ""}`}>
                 <p className={`text-xs font-semibold uppercase tracking-wider ${stream ? themeMutedText : "text-amber-900"}`}>
                   Current attendance OTP
                 </p>
-                <p className={`${stream ? "text-5xl sm:text-6xl" : "text-3xl"} mt-2 font-bold tracking-[0.18em] tabular-nums ${stream ? themePrimaryText : "text-amber-950"}`}>
+                <p className={`${stream ? "text-4xl sm:text-5xl xl:text-5xl tracking-[0.1em]" : "text-3xl tracking-[0.18em]"} mt-2 max-w-full font-bold tabular-nums ${stream ? themePrimaryText : "text-amber-950"}`}>
                   {activeOtp.code}
                 </p>
                 <p className={`mt-2 text-xs ${stream ? themeMutedText : "text-amber-800"}`}>
