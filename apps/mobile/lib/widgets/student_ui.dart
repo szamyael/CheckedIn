@@ -114,17 +114,18 @@ class StudentErrorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFFEF2F2),
+        color: colors.errorContainer,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: const Color(0xFFFECACA)),
+        border: Border.all(color: colors.error.withValues(alpha: 0.35)),
       ),
       child: Text(
         message,
-        style: const TextStyle(color: Color(0xFFDC2626), fontSize: 13),
+        style: TextStyle(color: colors.onErrorContainer, fontSize: 13),
       ),
     );
   }
@@ -256,7 +257,9 @@ class StudentAuthScaffold extends StatelessWidget {
             return SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
               child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight - 48),
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight - 48,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   mainAxisAlignment: MainAxisAlignment.center,

@@ -523,6 +523,118 @@ select {
     font-size: 11px;
   }
 
+  /* CheckedIn visual system v2: calm ink surfaces, confident teal actions, and
+     consistent component geometry across every route. */
+  :root {
+    --radius-sm: 0.625rem;
+    --radius-md: 0.875rem;
+    --radius-lg: 1.25rem;
+    --radius-xl: 1.75rem;
+    --shadow-lift: 0 16px 40px rgb(31 52 44 / 10%);
+    --shadow-focus: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+
+  :root[data-mode="dark"] {
+    --shadow-lift: 0 18px 48px rgb(0 0 0 / 28%);
+  }
+
+  button,
+  [role="button"] {
+    font-weight: 650;
+  }
+
+  button:not(:disabled):hover,
+  [role="button"]:not([aria-disabled="true"]):hover {
+    filter: brightness(1.02);
+  }
+
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    box-shadow: var(--shadow-focus);
+  }
+
+  .dashboard-workspace .dashboard-page-header,
+  .dashboard-workspace > main > div > header {
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lift);
+  }
+
+  .dashboard-workspace section.border,
+  .dashboard-workspace .table-scroll,
+  .student-portal .border.bg-white {
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .dashboard-workspace input,
+  .dashboard-workspace textarea,
+  .dashboard-workspace select,
+  .student-portal input,
+  .student-portal textarea,
+  .student-portal select {
+    border-radius: var(--radius-sm);
+    border-width: 1px;
+    box-shadow: inset 0 1px 1px rgb(31 52 44 / 3%);
+  }
+
+  .dashboard-workspace input:hover,
+  .dashboard-workspace textarea:hover,
+  .dashboard-workspace select:hover,
+  .student-portal input:hover,
+  .student-portal textarea:hover,
+  .student-portal select:hover {
+    border-color: color-mix(in srgb, var(--primary) 52%, var(--border));
+  }
+
+  .dashboard-workspace table tbody tr:hover {
+    background: color-mix(in srgb, var(--primary-soft) 44%, transparent);
+  }
+
+  .student-bottom-nav a span {
+    border-radius: 0.75rem;
+  }
+
+  .student-bottom-nav a[aria-current="page"] span {
+    background: color-mix(in srgb, var(--primary-soft) 72%, transparent);
+  }
+
+  .student-portal .student-nav-link {
+    border-radius: var(--radius-sm);
+  }
+
+  .student-portal .student-nav-link[aria-current="page"] {
+    background: var(--primary-soft);
+  }
+
+  .status-error,
+  .error-state {
+    border: 1px solid color-mix(in srgb, var(--error) 35%, var(--border));
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--error) 8%, var(--surface));
+    color: var(--error);
+  }
+
+  .status-success,
+  .success-state {
+    border: 1px solid color-mix(in srgb, var(--success) 35%, var(--border));
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--success) 8%, var(--surface));
+    color: var(--success);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      transition-duration: 0.001ms !important;
+      animation-duration: 0.001ms !important;
+    }
+  }
+
   .student-portal nav a {
     font-size: 10px;
   }
