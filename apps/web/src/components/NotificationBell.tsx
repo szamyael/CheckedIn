@@ -6,6 +6,10 @@ import { createClient } from "@/lib/supabase/client";
 import { NotificationPopup, type NotificationPopupItem } from "@/components/NotificationPopup";
 import { NotificationSoundToggle } from "@/components/NotificationSoundToggle";
 import { playNotificationSound } from "@/lib/notification-sound";
+import {
+  getUpdatedNotificationIds,
+  requireNotificationUpdated,
+} from "@/lib/notification-read";
 
 interface NotificationRow {
   id: string;
@@ -21,6 +25,7 @@ export function NotificationBell() {
   const [items, setItems] = useState<NotificationRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [popup, setPopup] = useState<NotificationPopupItem | null>(null);
+  const [readError, setReadError] = useState<string | null>(null);
 
   const unread = items.filter((n) => !n.read_at).length;
 
@@ -76,28 +81,45 @@ export function NotificationBell() {
   }, [load]);
 
   async function markRead(id: string) {
-    const supabase = createClient();
-    await supabase
-      .from("notifications")
-      .update({ read_at: new Date().toISOString() })
-      .eq("id", id);
-    setItems((prev) =>
-      prev.map((n) =>
-        n.id === id ? { ...n, read_at: new Date().toISOString() } : n,
-      ),
-    );
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("notifications")
+        .update({ read_at: new Date().toISOString() })
+        .eq("id", id)
+        .is("read_at", null)
+        .select("id");
+      const updatedIds = new Set(requireNotificationUpdated({ data, error }, id));
+      const readAt = new Date().toISOString();
+      setItems((prev) =>
+        prev.map((n) => updatedIds.has(n.id) ? { ...n, read_at: readAt } : n),
+      );
+      setReadError(null);
+    } catch (error) {
+      setReadError(error instanceof Error ? error.message : "Unable to mark notification as read.");
+    }
   }
 
   async function markAllRead() {
-    const supabase = createClient();
     const unreadIds = items.filter((n) => !n.read_at).map((n) => n.id);
     if (unreadIds.length === 0) return;
-    const now = new Date().toISOString();
-    await supabase
-      .from("notifications")
-      .update({ read_at: now })
-      .in("id", unreadIds);
-    setItems((prev) => prev.map((n) => ({ ...n, read_at: n.read_at ?? now })));
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("notifications")
+        .update({ read_at: new Date().toISOString() })
+        .in("id", unreadIds)
+        .is("read_at", null)
+        .select("id");
+      const updatedIds = new Set(getUpdatedNotificationIds({ data, error }));
+      const readAt = new Date().toISOString();
+      setItems((prev) =>
+        prev.map((n) => updatedIds.has(n.id) ? { ...n, read_at: readAt } : n),
+      );
+      setReadError(null);
+    } catch (error) {
+      setReadError(error instanceof Error ? error.message : "Unable to mark notifications as read.");
+    }
   }
 
   return (
@@ -141,6 +163,11 @@ export function NotificationBell() {
                 )}
               </div>
             </div>
+            {readError && (
+              <p role="alert" className="border-b border-red-100 bg-red-50 px-4 py-2 text-xs text-red-700">
+                {readError}
+              </p>
+            )}
             <div className="max-h-96 overflow-y-auto">
               {loading && (
                 <p className="px-4 py-6 text-center text-sm text-slate-700">

@@ -1,8 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
+import {
+  getUpdatedNotificationIds,
+  requireNotificationUpdated,
+} from "@/lib/notification-read";
+import { StudentNotificationsReadContext } from "@/components/student/StudentAppLayout";
 import {
   StudentEmptyState,
   StudentPageTitle,
@@ -19,6 +24,8 @@ type Notif = {
 
 export default function StudentNotificationsPage() {
   const [items, setItems] = useState<Notif[]>([]);
+  const [readError, setReadError] = useState<string | null>(null);
+  const reportNotificationsRead = useContext(StudentNotificationsReadContext);
 
   async function load(): Promise<Notif[]> {
     const supabase = createClient();
@@ -46,31 +53,59 @@ export default function StudentNotificationsPage() {
   }, []);
 
   async function markRead(id: string) {
-    const supabase = createClient();
-    await supabase
-      .from("notifications")
-      .update({ read_at: new Date().toISOString() })
-      .eq("id", id);
-    setItems((prev) =>
-      prev.map((n) =>
-        n.id === id ? { ...n, read_at: new Date().toISOString() } : n,
-      ),
-    );
+    if (!items.some((n) => n.id === id && !n.read_at)) return;
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!user) throw new Error("Sign in to update notifications.");
+      const { data, error } = await supabase
+        .from("notifications")
+        .update({ read_at: new Date().toISOString() })
+        .eq("id", id)
+        .eq("user_id", user.id)
+        .is("read_at", null)
+        .select("id");
+      const updatedIds = new Set(requireNotificationUpdated({ data, error }, id));
+      const readAt = new Date().toISOString();
+      setItems((prev) =>
+        prev.map((n) => updatedIds.has(n.id) ? { ...n, read_at: readAt } : n),
+      );
+      reportNotificationsRead?.(updatedIds.size);
+      setReadError(null);
+    } catch (error) {
+      setReadError(error instanceof Error ? error.message : "Unable to mark notification as read.");
+    }
   }
 
   async function markAll() {
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-    await supabase
-      .from("notifications")
-      .update({ read_at: new Date().toISOString() })
-      .eq("user_id", user.id)
-      .is("read_at", null);
-    const now = new Date().toISOString();
-    setItems((prev) => prev.map((n) => ({ ...n, read_at: n.read_at ?? now })));
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!user) throw new Error("Sign in to update notifications.");
+      const { data, error } = await supabase
+        .from("notifications")
+        .update({ read_at: new Date().toISOString() })
+        .eq("user_id", user.id)
+        .is("read_at", null)
+        .select("id");
+      const updatedIds = new Set(getUpdatedNotificationIds({ data, error }));
+      const readAt = new Date().toISOString();
+      setItems((prev) =>
+        prev.map((n) => updatedIds.has(n.id) ? { ...n, read_at: readAt } : n),
+      );
+      reportNotificationsRead?.(updatedIds.size);
+      setReadError(null);
+    } catch (error) {
+      setReadError(error instanceof Error ? error.message : "Unable to mark notifications as read.");
+    }
   }
 
   return (
@@ -85,6 +120,11 @@ export default function StudentNotificationsPage() {
           Mark all read
         </button>
       </div>
+      {readError && (
+        <p role="alert" className="text-sm text-red-700">
+          {readError}
+        </p>
+      )}
       {items.length === 0 ? (
         <StudentEmptyState message="No notifications." />
       ) : (

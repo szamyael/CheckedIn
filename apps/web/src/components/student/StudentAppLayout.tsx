@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { isStudentOnboardingComplete } from "@/lib/student/onboarding";
@@ -8,6 +8,10 @@ import { isStudentTermsAccepted } from "@/lib/student/terms";
 import { StudentShell } from "@/components/student/StudentShell";
 import { playNotificationSound } from "@/lib/notification-sound";
 import type { NotificationPopupItem } from "@/components/NotificationPopup";
+
+export const StudentNotificationsReadContext = createContext<
+  ((count: number) => void) | null
+>(null);
 
 /** Authenticated student chrome with bottom nav (Home / Events / Profile). */
 export function StudentAppLayout({ children }: { children: React.ReactNode }) {
@@ -130,13 +134,17 @@ export function StudentAppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <StudentShell
-      notificationCount={unread}
-      notificationPopup={popup}
-      onDismissNotification={() => setPopup(null)}
-      onSignOut={() => void signOut()}
+    <StudentNotificationsReadContext.Provider
+      value={(count) => setUnread((current) => Math.max(0, current - count))}
     >
-      {children}
-    </StudentShell>
+      <StudentShell
+        notificationCount={unread}
+        notificationPopup={popup}
+        onDismissNotification={() => setPopup(null)}
+        onSignOut={() => void signOut()}
+      >
+        {children}
+      </StudentShell>
+    </StudentNotificationsReadContext.Provider>
   );
 }
