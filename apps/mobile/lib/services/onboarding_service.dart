@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import 'local_cache_service.dart';
+import 'permission_service.dart';
 
 /// Tracks whether the student has completed the first-launch walkthrough.
 class OnboardingService extends ChangeNotifier {
@@ -21,6 +22,17 @@ class OnboardingService extends ChangeNotifier {
       (value) => value == true,
     );
     _complete = raw ?? false;
+    if (_complete) {
+      final cameraGranted = await PermissionService.instance.isGranted(
+        AppPermission.camera,
+      );
+      final locationGranted = await PermissionService.instance.isGranted(
+        AppPermission.location,
+      );
+      if (!cameraGranted || !locationGranted) {
+        _complete = false;
+      }
+    }
     _loaded = true;
     notifyListeners();
   }

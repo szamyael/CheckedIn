@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 /// Global blocking loader so users know a process is ongoing.
@@ -7,7 +9,8 @@ class UniversalLoaderController extends ChangeNotifier {
       UniversalLoaderController._();
 
   bool _visible = false;
-  int _activeOperations = 0;
+  static const _loaderDelay = Duration(milliseconds: 500);
+  final List<_LoaderOperation> _operations = [];
   String _message = 'Please wait…';
 
   bool get visible => _visible;
@@ -15,20 +18,29 @@ class UniversalLoaderController extends ChangeNotifier {
 
   void show([String message = 'Please wait…']) {
     _message = message;
-    _activeOperations++;
-    _visible = true;
+    final operation = _LoaderOperation();
+    _operations.add(operation);
+    operation.timer = Timer(_loaderDelay, () {
+      if (!_operations.contains(operation)) return;
+      operation.visible = true;
+      _visible = true;
+      notifyListeners();
+    });
     notifyListeners();
   }
 
   void hide() {
-    if (_activeOperations == 0) return;
-    _activeOperations--;
-    if (_activeOperations > 0) return;
-    _visible = false;
+    if (_operations.isEmpty) return;
+    final operation = _operations.removeLast();
+    operation.timer?.cancel();
+    _visible = _operations.any((item) => item.visible);
     notifyListeners();
   }
 
-  Future<T> during<T>(Future<T> Function() action, {String message = 'Please wait…'}) async {
+  Future<T> during<T>(
+    Future<T> Function() action, {
+    String message = 'Please wait…',
+  }) async {
     show(message);
     try {
       return await action();
@@ -36,6 +48,11 @@ class UniversalLoaderController extends ChangeNotifier {
       hide();
     }
   }
+}
+
+class _LoaderOperation {
+  Timer? timer;
+  bool visible = false;
 }
 
 /// Wraps the app and paints a full-screen loader when [controller] is visible.
@@ -94,7 +111,9 @@ class UniversalLoaderScope extends StatelessWidget {
                                 controller.message,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurface,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -104,7 +123,9 @@ class UniversalLoaderScope extends StatelessWidget {
                                 'Process is ongoing…',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                   fontSize: 12,
                                 ),
                               ),

@@ -5,9 +5,12 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
+
+const LOADER_DELAY_MS = 500;
 
 type LoaderContextValue = {
   visible: boolean;
@@ -21,15 +24,31 @@ const LoaderContext = createContext<LoaderContextValue | null>(null);
 
 export function LoaderProvider({ children }: { children: ReactNode }) {
   const [message, setMessage] = useState("Please wait…");
-  const [activeOperations, setActiveOperations] = useState(0);
+  const [visibleOperations, setVisibleOperations] = useState(0);
+  const operations = useRef(new Map<number, { visible: boolean; timer: ReturnType<typeof setTimeout> }>());
+  const nextOperationId = useRef(0);
 
   const showLoader = useCallback((msg = "Please wait…") => {
+    const id = nextOperationId.current++;
     setMessage(msg);
-    setActiveOperations((count) => count + 1);
+    const timer = setTimeout(() => {
+      const operation = operations.current.get(id);
+      if (!operation) return;
+      operation.visible = true;
+      setVisibleOperations((count) => count + 1);
+    }, LOADER_DELAY_MS);
+    operations.current.set(id, { visible: false, timer });
   }, []);
 
   const hideLoader = useCallback(() => {
-    setActiveOperations((count) => Math.max(0, count - 1));
+    const entry = operations.current.entries().next();
+    if (entry.done) return;
+    const [id, operation] = entry.value;
+    clearTimeout(operation.timer);
+    operations.current.delete(id);
+    if (operation.visible) {
+      setVisibleOperations((count) => Math.max(0, count - 1));
+    }
   }, []);
 
   const withLoader = useCallback(
@@ -46,19 +65,19 @@ export function LoaderProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(
     () => ({
-      visible: activeOperations > 0,
+      visible: visibleOperations > 0,
       message,
       showLoader,
       hideLoader,
       withLoader,
     }),
-    [activeOperations, message, showLoader, hideLoader, withLoader],
+    [visibleOperations, message, showLoader, hideLoader, withLoader],
   );
 
   return (
     <LoaderContext.Provider value={value}>
       {children}
-      {activeOperations > 0 && (
+      {visibleOperations > 0 && (
         <div
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/55 backdrop-blur-[2px]"
           role="status"

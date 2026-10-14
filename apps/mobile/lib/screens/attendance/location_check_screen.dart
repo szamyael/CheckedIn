@@ -100,7 +100,6 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
           'latitude': position.latitude,
           'longitude': position.longitude,
           'accuracy_m': position.accuracy,
-          'accuracy_m': position.accuracy,
           'requires_otp': meta['requires_otp'] == true,
           'event_title': meta['title'] as String? ?? 'Event',
           'event_id': meta['id'] as String?,

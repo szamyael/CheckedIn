@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../models/registration_draft.dart';
@@ -34,10 +33,14 @@ class UniversalNavigationObserver extends NavigatorObserver {
   Timer? _hideTimer;
 
   void _showForNavigation() {
+    if (_hideTimer != null) {
+      UniversalLoaderController.instance.hide();
+    }
     _hideTimer?.cancel();
     UniversalLoaderController.instance.show('Opening page…');
     _hideTimer = Timer(const Duration(milliseconds: 420), () {
       UniversalLoaderController.instance.hide();
+      _hideTimer = null;
     });
   }
 
@@ -52,7 +55,6 @@ class UniversalNavigationObserver extends NavigatorObserver {
     _showForNavigation();
     super.didPop(route, previousRoute);
   }
-
 }
 
 GoRouter createRouter(
