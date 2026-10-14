@@ -10,7 +10,7 @@ class AppLogo extends StatelessWidget {
     this.fit = BoxFit.contain,
   });
 
-  static const assetPath = 'assets/images/logo.png';
+  static const assetPath = 'assets/images/Checkedin_logo_without_background.png';
 
   @override
   Widget build(BuildContext context) {

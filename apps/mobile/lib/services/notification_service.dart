@@ -1,9 +1,20 @@
-import 'package:flutter/services.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'appearance_service.dart';
 import 'auth_service.dart';
 import 'local_cache_service.dart';
+
+class NotificationSoundService {
+  static const assetPath = 'audio/checkdin.mp3.mp3';
+  static final _player = AudioPlayer();
+
+  static Future<void> play() async {
+    await _player.setVolume(0.75);
+    await _player.play(AssetSource(assetPath));
+  }
+}
 
 class AppNotification {
   final String id;
@@ -181,7 +192,9 @@ class NotificationService {
       callback: (payload) {
         final notification = AppNotification.fromJson(payload.newRecord);
         if (playSound && AppearanceService.instance.notificationSoundEnabled) {
-          SystemSound.play(SystemSoundType.alert);
+          NotificationSoundService.play().catchError((Object error) {
+            debugPrint('Failed to play notification sound: $error');
+          });
         }
         onInsert(notification);
       },

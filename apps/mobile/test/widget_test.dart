@@ -1,8 +1,27 @@
 import 'package:checkedin_mobile/core/constants.dart';
 import 'package:checkedin_mobile/services/bingo_service.dart';
+import 'package:checkedin_mobile/services/notification_service.dart';
+import 'package:checkedin_mobile/widgets/app_logo.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  test('notification sound is bundled as a Flutter asset', () async {
+    final sound = await rootBundle.load('assets/audio/checkdin.mp3.mp3');
+
+    expect(sound.lengthInBytes, greaterThan(0));
+    expect(NotificationSoundService.assetPath, 'audio/checkdin.mp3.mp3');
+  });
+
+  test('app logo uses the transparent CheckedIn brand asset', () {
+    expect(
+      AppLogo.assetPath,
+      'assets/images/Checkedin_logo_without_background.png',
+    );
+  });
+
   test('student ID normalization matches web format', () {
     expect(AppConstants.normalizeStudentId('01234567'), '0123-4567');
     expect(AppConstants.isValidStudentId('0123-4567'), isTrue);
