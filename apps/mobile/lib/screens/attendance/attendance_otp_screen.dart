@@ -16,6 +16,7 @@ class AttendanceOtpScreen extends StatefulWidget {
   final bool offlineSubmission;
   final DateTime? scannedAt;
   final int? deviceUtcOffsetMinutes;
+  final String? otpError;
 
   const AttendanceOtpScreen({
     super.key,
@@ -29,6 +30,7 @@ class AttendanceOtpScreen extends StatefulWidget {
     this.offlineSubmission = false,
     this.scannedAt,
     this.deviceUtcOffsetMinutes,
+    this.otpError,
   });
 
   @override
@@ -110,6 +112,10 @@ class _AttendanceOtpScreenState extends State<AttendanceOtpScreen> {
                   : 'Location verified. If staff announced an OTP for ${widget.eventTitle}, enter it below. Otherwise continue.',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
+            if (widget.otpError != null) ...[
+              const SizedBox(height: 12),
+              StudentErrorBanner(message: widget.otpError!),
+            ],
             const SizedBox(height: 24),
             if (widget.offlineSubmission) ...[
               const Text('Attendance action', style: TextStyle(fontWeight: FontWeight.w600)),

@@ -6,7 +6,9 @@ import { PermissionBlockedCard } from "@/components/student/PermissionBlockedCar
 import { useLoader } from "@/components/LoaderProvider";
 import {
   clearFlow,
+  isRecoverableOtpError,
   loadFlow,
+  saveFlow,
   type AttendanceFlowState,
 } from "@/lib/student/attendance-flow";
 import { createClient } from "@/lib/supabase/client";
@@ -145,7 +147,17 @@ export default function AttendanceSelfiePage() {
         eventId: payload.event?.id ?? flow.eventId,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Check-in failed");
+      const message = err instanceof Error ? err.message : "Check-in failed";
+      if (isRecoverableOtpError(message)) {
+        saveFlow({
+          ...flow,
+          otpCode: undefined,
+          otpError: "That OTP expired while you were completing check-in.",
+        });
+        router.push("/student/attendance/otp");
+        return;
+      }
+      setError(message);
     } finally {
       hideLoader();
     }

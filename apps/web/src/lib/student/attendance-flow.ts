@@ -7,9 +7,14 @@ export type AttendanceFlowState = {
   eventId?: string;
   eventTitle?: string;
   locationVerified?: boolean;
+  otpError?: string;
 };
 
 const FLOW_KEY = "checkedin_attendance_flow";
+
+export function isRecoverableOtpError(message: string) {
+  return /invalid or expired attendance otp/i.test(message);
+}
 
 export function saveFlow(state: AttendanceFlowState) {
   sessionStorage.setItem(FLOW_KEY, JSON.stringify(state));

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:checkedin_mobile/models/pending_check_in.dart';
+import 'package:checkedin_mobile/services/attendance_service.dart';
 
 void main() {
   test('keeps the QR-scan device timezone offset in the offline queue', () {
@@ -35,4 +36,17 @@ void main() {
       expect(restored.deviceUtcOffsetMinutes, isNull);
     },
   );
+
+  test('recognizes an expired attendance OTP as recoverable', () {
+    expect(
+      AttendanceService.isRecoverableOtpError(
+        'Invalid or expired attendance OTP',
+      ),
+      isTrue,
+    );
+    expect(
+      AttendanceService.isRecoverableOtpError('QR code has expired'),
+      isFalse,
+    );
+  });
 }

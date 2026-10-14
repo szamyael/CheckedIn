@@ -155,8 +155,7 @@ GoRouter createRouter(
           return AttendanceResolveScreen(
             qrToken: data['qr_token'] as String,
             scannedAt: DateTime.parse(data['scanned_at'] as String),
-            deviceUtcOffsetMinutes:
-                data['device_utc_offset_minutes'] as int?,
+            deviceUtcOffsetMinutes: data['device_utc_offset_minutes'] as int?,
             wasOfflineAtScan: data['offline'] as bool? ?? false,
           );
         },
@@ -168,8 +167,7 @@ GoRouter createRouter(
           return LocationCheckScreen(
             qrToken: data['qr_token'] as String,
             scannedAt: DateTime.parse(data['scanned_at'] as String),
-            deviceUtcOffsetMinutes:
-                data['device_utc_offset_minutes'] as int?,
+            deviceUtcOffsetMinutes: data['device_utc_offset_minutes'] as int?,
           );
         },
       ),
@@ -189,8 +187,8 @@ GoRouter createRouter(
             scannedAt: data['scanned_at'] is String
                 ? DateTime.parse(data['scanned_at'] as String)
                 : null,
-            deviceUtcOffsetMinutes:
-                data['device_utc_offset_minutes'] as int?,
+            deviceUtcOffsetMinutes: data['device_utc_offset_minutes'] as int?,
+            otpError: data['otp_error'] as String?,
           );
         },
       ),
@@ -215,8 +213,7 @@ GoRouter createRouter(
             scannedAt: data['scanned_at'] is String
                 ? DateTime.parse(data['scanned_at'] as String)
                 : null,
-            deviceUtcOffsetMinutes:
-                data['device_utc_offset_minutes'] as int?,
+            deviceUtcOffsetMinutes: data['device_utc_offset_minutes'] as int?,
             offlineAction: OfflineAttendanceAction.values.byName(
               data['offline_action'] as String? ??
                   OfflineAttendanceAction.checkIn.name,

@@ -174,8 +174,30 @@ class _SelfieScreenState extends State<SelfieScreen> {
       final points = result['points_awarded'];
       _showSuccessDialog(eventTitle as String, badges, eventId, points);
     } catch (e) {
+      final message = e.toString().replaceFirst('Exception: ', '');
+      if (AttendanceService.isRecoverableOtpError(message) &&
+          widget.requiresOtp &&
+          mounted) {
+        context.go(
+          '/attendance/otp',
+          extra: {
+            'qr_token': widget.qrToken,
+            'latitude': widget.latitude,
+            'longitude': widget.longitude,
+            'requires_otp': true,
+            'event_title': widget.eventTitle ?? 'Event',
+            'event_id': widget.eventId,
+            'location_verified': true,
+            'scanned_at': widget.scannedAt?.toIso8601String(),
+            'device_utc_offset_minutes': widget.deviceUtcOffsetMinutes,
+            'otp_error':
+                'That OTP expired while you were completing check-in. Enter the latest OTP and try again.',
+          },
+        );
+        return;
+      }
       setState(() {
-        _error = e.toString().replaceFirst('Exception: ', '');
+        _error = message;
       });
     } finally {
       UniversalLoaderController.instance.hide();

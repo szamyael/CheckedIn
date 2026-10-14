@@ -4,6 +4,7 @@ import {
   getAttendanceAction,
   getAttendanceActionLabel,
 } from "../src/lib/attendance-confirmation.ts";
+import { isRecoverableOtpError } from "../src/lib/student/attendance-flow.ts";
 
 test("recognizes a newly inserted check-in", () => {
   assert.equal(
@@ -53,4 +54,12 @@ test("labels each attendance confirmation for the notification", () => {
     ["check_in", "check_out", "break_in", "break_out"].map(getAttendanceActionLabel),
     ["Check in confirmed", "Check out confirmed", "Break in confirmed", "Break out confirmed"],
   );
+});
+
+test("recognizes an expired attendance OTP as recoverable", () => {
+  assert.equal(
+    isRecoverableOtpError("Invalid or expired attendance OTP"),
+    true,
+  );
+  assert.equal(isRecoverableOtpError("QR code has expired"), false);
 });

@@ -32,6 +32,9 @@ class CheckInSubmission {
 class AttendanceService {
   SupabaseClient get _client => Supabase.instance.client;
 
+  static bool isRecoverableOtpError(String message) =>
+      message.toLowerCase().contains('invalid or expired attendance otp');
+
   String? get currentUserId => AuthService.instance.currentUserId;
 
   Future<bool> hasConnectivity() => ConnectivityService.instance.refresh();

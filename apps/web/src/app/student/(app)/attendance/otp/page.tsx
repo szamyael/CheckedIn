@@ -9,6 +9,7 @@ export default function AttendanceOtpPage() {
   const [code, setCode] = useState("");
   const [requiresOtp, setRequiresOtp] = useState(false);
   const [title, setTitle] = useState("Event");
+  const [error, setError] = useState<string | undefined>();
 
   useEffect(() => {
     const flow = loadFlow();
@@ -20,6 +21,7 @@ export default function AttendanceOtpPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRequiresOtp(flow.requiresOtp === true);
     setTitle(flow.eventTitle ?? "Event");
+    setError(flow.otpError);
   }, [router]);
 
   function continueNext() {
@@ -32,6 +34,7 @@ export default function AttendanceOtpPage() {
     saveFlow({
       ...flow,
       otpCode: requiresOtp ? code.trim() : undefined,
+      otpError: undefined,
     });
     router.push("/student/attendance/selfie");
   }
@@ -40,6 +43,11 @@ export default function AttendanceOtpPage() {
     <div className="flex min-h-[60vh] flex-col space-y-4">
       <h1 className="text-xl font-bold">Step 2 of 3 — OTP</h1>
       <p className="text-sm text-slate-600">{title}</p>
+      {error && (
+        <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          {error} Enter the latest OTP announced at the event, then continue.
+        </p>
+      )}
       {requiresOtp ? (
         <>
           <p className="text-sm text-slate-600">

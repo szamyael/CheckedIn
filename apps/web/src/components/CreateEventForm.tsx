@@ -201,8 +201,8 @@ export function CreateEventForm({
         </p>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,.9fr)]">
-        <section className="space-y-5">
+      <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,.9fr)]">
+        <section className="min-w-0 space-y-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
           <label className="mb-1 block text-sm font-medium text-slate-800">
@@ -270,7 +270,7 @@ export function CreateEventForm({
           </div>
         </section>
 
-        <aside className="rounded-xl border border-slate-200 bg-slate-50 p-4 lg:sticky lg:top-4 lg:self-start">
+        <aside className="min-w-0 rounded-xl border border-slate-200 bg-slate-50 p-4 xl:sticky xl:top-4 xl:self-start">
           <EventLocationPicker
             value={location}
             radiusMeters={locationRadiusM}
