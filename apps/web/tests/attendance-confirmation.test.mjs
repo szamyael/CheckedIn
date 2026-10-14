@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getAttendanceAction } from "../src/lib/attendance-confirmation.ts";
+import {
+  getAttendanceAction,
+  getAttendanceActionLabel,
+} from "../src/lib/attendance-confirmation.ts";
 
 test("recognizes a newly inserted check-in", () => {
   assert.equal(
@@ -42,5 +45,12 @@ test("ignores unrelated updates and already-recorded attendance actions", () => 
   assert.equal(
     getAttendanceAction("UPDATE", row, { ...row, break_out_at: row.break_out_at }),
     null,
+  );
+});
+
+test("labels each attendance confirmation for the notification", () => {
+  assert.deepEqual(
+    ["check_in", "check_out", "break_in", "break_out"].map(getAttendanceActionLabel),
+    ["Check in confirmed", "Check out confirmed", "Break in confirmed", "Break out confirmed"],
   );
 });

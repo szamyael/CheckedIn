@@ -1,5 +1,16 @@
 export type AttendanceAction = "check_in" | "break_out" | "break_in" | "check_out";
 
+const attendanceActionLabels: Record<AttendanceAction, string> = {
+  check_in: "Check in confirmed",
+  check_out: "Check out confirmed",
+  break_in: "Break in confirmed",
+  break_out: "Break out confirmed",
+};
+
+export function getAttendanceActionLabel(action: AttendanceAction): string {
+  return attendanceActionLabels[action];
+}
+
 export interface AttendanceTimestamps {
   checked_in_at: string | null;
   break_out_at: string | null;

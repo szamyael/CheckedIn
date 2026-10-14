@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Check, Radio, UserRound, X } from "@/lib/icons";
+import { Check, Radio, X } from "@/lib/icons";
 import { createClient } from "@/lib/supabase/client";
 import type { Event } from "@/lib/types";
 import { EventSecurityControls } from "@/components/EventSecurityControls";
 import {
   getAttendanceAction,
+  getAttendanceActionLabel,
   type AttendanceAction,
   type AttendanceTimestamps,
 } from "@/lib/attendance-confirmation";
@@ -31,13 +32,6 @@ interface AttendanceConfirmation {
   avatarUrl: string | null;
 }
 
-const actionLabels: Record<AttendanceAction, string> = {
-  check_in: "Check in confirmed",
-  check_out: "Check out confirmed",
-  break_in: "Break in confirmed",
-  break_out: "Break out confirmed",
-};
-
 export function EventStreamModal({
   event,
   onClose,
@@ -46,6 +40,7 @@ export function EventStreamModal({
   onClose: () => void;
 }) {
   const [confirmation, setConfirmation] = useState<AttendanceConfirmation | null>(null);
+  const [confirmationVisible, setConfirmationVisible] = useState(false);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -56,10 +51,19 @@ export function EventStreamModal({
   }, [onClose]);
 
   useEffect(() => {
+    if (!confirmation) return;
+    const fadeTimer = window.setTimeout(() => setConfirmationVisible(false), 4500);
+    const dismissTimer = window.setTimeout(() => setConfirmation(null), 5000);
+    return () => {
+      window.clearTimeout(fadeTimer);
+      window.clearTimeout(dismissTimer);
+    };
+  }, [confirmation]);
+
+  useEffect(() => {
     const supabase = createClient();
     const attendanceById = new Map<string, AttendanceRow>();
     let active = true;
-    let dismissTimer: number | undefined;
     let latestConfirmation = 0;
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
@@ -98,8 +102,7 @@ export function EventStreamModal({
         student,
         avatarUrl,
       });
-      window.clearTimeout(dismissTimer);
-      dismissTimer = window.setTimeout(() => setConfirmation(null), 5000);
+      setConfirmationVisible(true);
     }
 
     function handleAttendanceChange(eventType: "INSERT" | "UPDATE", row: AttendanceRow) {
@@ -156,65 +159,9 @@ export function EventStreamModal({
     void subscribeToAttendance();
     return () => {
       active = false;
-      window.clearTimeout(dismissTimer);
       if (channel) void supabase.removeChannel(channel);
     };
   }, [event.id]);
-
-  const confirmationPanel = (
-    <aside
-      aria-live="polite"
-      aria-atomic="true"
-      className="flex min-h-64 flex-col justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-soft)]"
-    >
-      <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
-        Attendance confirmation
-      </p>
-      {confirmation ? (
-        <div className="mt-4 rounded-2xl border border-[color-mix(in_srgb,var(--success)_30%,transparent)] bg-[color-mix(in_srgb,var(--success)_8%,var(--surface))] p-4">
-          <div className="flex items-center gap-3">
-            {confirmation.avatarUrl ? (
-              <Image
-                src={confirmation.avatarUrl}
-                alt=""
-                width={56}
-                height={56}
-                unoptimized
-                className="h-14 w-14 shrink-0 rounded-full object-cover"
-              />
-            ) : (
-              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-[var(--primary-soft)] text-sm font-semibold text-[var(--foreground)]">
-                {confirmation.student.first_name.charAt(0)}
-                {confirmation.student.last_name.charAt(0)}
-              </div>
-            )}
-            <div className="min-w-0">
-              <p className="truncate font-semibold text-[var(--foreground)]">
-                {confirmation.student.first_name} {confirmation.student.last_name}
-              </p>
-              <p className="mt-1 text-xs text-[var(--muted)]">
-                Year {confirmation.student.year_level ?? "—"} · Section{" "}
-                {confirmation.student.section || "—"}
-              </p>
-            </div>
-          </div>
-          <p className="mt-4 flex items-center gap-2 text-sm font-semibold text-[var(--foreground)]">
-            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[var(--success)] text-white">
-              <Check size={16} aria-hidden="true" />
-            </span>
-            {actionLabels[confirmation.action]}
-          </p>
-        </div>
-      ) : (
-        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-dashed border-[var(--border)] px-4 py-5 text-sm text-[var(--muted)]">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--primary-soft)] text-[var(--foreground)]">
-            <UserRound size={19} aria-hidden="true" />
-          </span>
-          Successful student attendance will appear here.
-        </div>
-      )}
-    </aside>
-  );
 
   return (
     <div
@@ -285,10 +232,64 @@ export function EventStreamModal({
             <EventSecurityControls
               event={event}
               stream
-              confirmationPanel={confirmationPanel}
             />
           </div>
         </section>
+
+        {confirmation && (
+          <aside
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            className={`fixed bottom-4 right-4 z-[60] w-[calc(100vw-2rem)] max-w-sm rounded-2xl border border-[color-mix(in_srgb,var(--success)_35%,var(--border))] bg-[var(--surface)] p-3 shadow-[var(--shadow-card)] transition-all duration-500 ease-out motion-reduce:transition-none ${
+              confirmationVisible
+                ? "translate-y-0 opacity-100"
+                : "pointer-events-none translate-y-2 opacity-0"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              {confirmation.avatarUrl ? (
+                <Image
+                  src={confirmation.avatarUrl}
+                  alt=""
+                  width={44}
+                  height={44}
+                  unoptimized
+                  className="h-11 w-11 shrink-0 rounded-full object-cover"
+                />
+              ) : (
+                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[var(--primary-soft)] text-sm font-semibold text-[var(--foreground)]">
+                  {confirmation.student.first_name.charAt(0)}
+                  {confirmation.student.last_name.charAt(0)}
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-[var(--foreground)]">
+                  {confirmation.student.first_name} {confirmation.student.last_name}
+                </p>
+                <p className="mt-0.5 text-xs text-[var(--muted)]">
+                  Year {confirmation.student.year_level ?? "—"} · Section{" "}
+                  {confirmation.student.section || "—"}
+                </p>
+                <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-[var(--foreground)]">
+                  <Check size={15} className="text-[var(--success)]" aria-hidden="true" />
+                  {getAttendanceActionLabel(confirmation.action)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirmationVisible(false);
+                  setConfirmation(null);
+                }}
+                aria-label="Dismiss attendance confirmation"
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[var(--muted)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+              >
+                <X size={17} aria-hidden="true" />
+              </button>
+            </div>
+          </aside>
+        )}
 
         <footer className="mt-auto flex flex-col gap-2 border-t border-[var(--border)] py-2 text-xs text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between">
           <p>Keep this display open for projection. Credentials refresh automatically.</p>
