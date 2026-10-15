@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-labelledby="title">
+  <title id="title">CheckedIn app icon</title>
+  <rect width="512" height="512" fill="#12366A"/>
+  <g transform="scale(2)">
+    <path d="M68 190V120A60 60 0 0 1 188 120V144" fill="none" stroke="#FFFFFF" stroke-width="28" stroke-linecap="round"/>
+    <circle cx="145" cy="168" r="18" fill="#0EB89A"/>
+  </g>
+</svg>

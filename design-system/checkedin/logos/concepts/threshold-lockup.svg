@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 256" width="800" height="256" role="img" aria-labelledby="title">
+  <title id="title">CheckedIn Threshold concept lockup</title>
+  <g transform="translate(0 0)">
+    <path d="M72 192V120A56 56 0 0 1 184 120V142" fill="none" stroke="#111111" stroke-width="24" stroke-linecap="round"/>
+    <circle cx="145" cy="166" r="15" fill="#111111"/>
+  </g>
+  <text x="270" y="164" fill="#111111" font-family="Arial, sans-serif" font-size="76" font-weight="700" letter-spacing="-3">CheckedIn</text>
+</svg>

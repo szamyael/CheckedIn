@@ -1,0 +1,24 @@
+<svg fill="#12366a" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 850 256" width="850" height="256" role="img" aria-labelledby="title"><title>CheckedIn horizontal logo</title>
+  <title id="title">CheckedIn horizontal logo</title>
+  <g transform="translate(21 0)">
+    <g id="symbol" transform="translate(3 6) scale(.94)">
+      <path d="M68 190V120A60 60 0 0 1 188 120V144" fill="none" stroke="#12366a" stroke-width="28" stroke-linecap="round"/>
+      <circle cx="145" cy="168" r="18" fill="#12366a"/>
+    </g>
+    <g id="wordmark" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="11">
+      <g stroke="#12366a">
+        <path d="M286 95C275 82 259 79 248 86C230 98 230 136 248 148C260 156 276 152 287 138"/>
+        <path d="M311 82V164M311 125C311 111 323 106 334 112C343 117 344 123 344 134V164"/>
+        <path d="M367 136H405C405 121 396 113 386 113C374 113 367 122 367 137C367 152 379 163 393 159C398 158 402 155 405 151"/>
+        <path d="M461 121C450 110 436 111 428 121C419 132 421 150 431 159C441 168 454 164 462 154"/>
+        <path d="M484 82V164M484 137L514 113M493 131L517 164"/>
+        <path d="M531 136H569C569 121 560 113 550 113C538 113 531 122 531 137C531 152 543 163 557 159C562 158 566 155 569 151"/>
+        <path d="M630 82V164M628 123C619 111 606 110 596 118C586 127 587 149 597 158C607 167 620 162 629 151"/>
+      </g>
+      <g stroke="#12366a">
+        <path d="M655 91H681M668 91V164M655 164H681"/>
+        <path d="M704 114V164M704 132C704 119 715 112 726 115C737 118 740 126 740 137V164"/>
+      </g>
+    </g>
+  </g>
+</svg>

@@ -74,7 +74,7 @@ export default function EventFeedbackPage() {
               onClick={() => setRating(n)}
               className={`h-10 w-10 rounded-full text-sm font-bold ${
                 rating >= n
-                  ? "bg-teal-600 text-white"
+                  ? "bg-[var(--action-background)] text-[var(--action-foreground)]"
                   : "bg-slate-100 text-slate-500"
               }`}
             >

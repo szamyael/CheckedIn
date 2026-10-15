@@ -51,12 +51,16 @@ export default function LoginPage() {
           });
           return;
         }
+        if (profile.role === "student" && profile.status !== "active") {
+          await supabase.auth.signOut();
+          setAccountDecision({
+            status: profile.status,
+            reason: profile.account_status_reason,
+          });
+          return;
+        }
         if (profile.status !== "active") {
           await supabase.auth.signOut();
-          if (profile.role === "student" && profile.status === "suspended") {
-            setAccountDecision({ status: "suspended", reason: profile.account_status_reason });
-            return;
-          }
           const reason = profile.account_status_reason ? ` Reason: ${profile.account_status_reason}` : "";
           return setError(profile.status === "pending"
             ? "Your account is still under review. Contact your program's organization to settle your account status."

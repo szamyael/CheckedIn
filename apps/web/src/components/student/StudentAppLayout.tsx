@@ -119,7 +119,7 @@ export function StudentAppLayout({ children }: { children: React.ReactNode }) {
 
   if (error) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-slate-50 p-6 text-center text-red-600">
+      <div className="flex min-h-dvh items-center justify-center bg-[var(--background)] p-6 text-center text-[var(--error)]">
         {error}
       </div>
     );
@@ -127,8 +127,8 @@ export function StudentAppLayout({ children }: { children: React.ReactNode }) {
 
   if (!ready) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-slate-50">
-        <div className="h-9 w-9 animate-spin rounded-full border-[3px] border-teal-500/30 border-t-teal-500" />
+      <div className="flex min-h-dvh items-center justify-center bg-[var(--background)]">
+        <div className="h-9 w-9 animate-spin rounded-full border-[3px] border-[color-mix(in_srgb,var(--primary)_30%,transparent)] border-t-[var(--primary)]" />
       </div>
     );
   }

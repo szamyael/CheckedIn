@@ -181,7 +181,7 @@ export default function AttendanceSelfiePage() {
         <h1 className="text-xl font-bold">Checked in</h1>
         <p className="text-sm text-slate-600">{success.title}</p>
         {success.points != null && (
-          <p className="text-sm font-medium text-teal-600">
+          <p className="text-sm font-medium text-[var(--primary)]">
             +{success.points} points
           </p>
         )}
@@ -237,7 +237,7 @@ export default function AttendanceSelfiePage() {
         )}
       </div>
       {error && !cameraBlocked && (
-        <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-sm text-[var(--error)]">
+        <p role="alert" className="rounded-xl border border-[color-mix(in_srgb,var(--error)_35%,var(--border))] bg-[color-mix(in_srgb,var(--error)_12%,var(--surface))] px-3 py-2 text-sm text-[var(--error)]">
           {error}
         </p>
       )}

@@ -116,7 +116,7 @@ export default function HomePage() {
             <div className="absolute -inset-4 -z-10 rounded-[2rem] bg-[#d9eefa] blur-2xl" aria-hidden="true" />
             <div className="relative aspect-[2.4/1] overflow-hidden rounded-[1.75rem] border border-[#d5e3ef] bg-white shadow-[0_24px_70px_rgba(29,65,105,0.18)]">
               <Image
-                src="/logos/checkedin-banner.png"
+                src="/logos/checkedin-banner.svg"
                 alt="CheckedIn campus event and attendance platform illustration"
                 fill
                 priority

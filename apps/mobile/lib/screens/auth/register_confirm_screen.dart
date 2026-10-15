@@ -146,15 +146,15 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
           Center(
             child: CircleAvatar(
               radius: 48,
-              backgroundColor: StudentUi.tealSoft,
+              backgroundColor: StudentUi.of(context).accentSoft,
               backgroundImage: avatarPath != null
                   ? FileImage(File(avatarPath))
                   : null,
               child: avatarPath == null
-                  ? const Icon(
+                  ? Icon(
                       TablerIcons.user,
                       size: 40,
-                      color: StudentUi.teal,
+                      color: StudentUi.of(context).accent,
                     )
                   : null,
             ),

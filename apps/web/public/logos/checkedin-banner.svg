@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 375" role="img" aria-labelledby="title description">
+  <title id="title">CheckedIn campus events</title>
+  <desc id="description">An event organizer view beside a student's event QR check-in screen.</desc>
+  <defs>
+    <linearGradient id="backdrop" x1="48" y1="36" x2="840" y2="350" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EAF4FB"/>
+    </linearGradient>
+    <linearGradient id="event" x1="58" y1="125" x2="278" y2="225" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E2F2F8"/>
+      <stop offset="1" stop-color="#D9EEEA"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="896" height="371" rx="28" fill="url(#backdrop)"/>
+  <circle cx="837" cy="59" r="100" fill="#CFE7F3" opacity=".45"/>
+  <circle cx="67" cy="355" r="86" fill="#BFE6DF" opacity=".38"/>
+
+  <rect x="30" y="39" width="513" height="297" rx="20" fill="#FFFFFF" stroke="#D7E4EE" stroke-width="2"/>
+  <path d="M50 105H523" stroke="#E6EDF3" stroke-width="2"/>
+  <path d="M83 68V78A11 11 0 0 1 105 78V82" fill="none" stroke="#12366A" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="99" cy="88" r="3.5" fill="#0EB89A"/>
+  <text x="120" y="82" fill="#12366A" font-family="Arial, sans-serif" font-size="14" font-weight="700">EVENT WORKSPACE</text>
+  <rect x="418" y="59" width="100" height="28" rx="14" fill="#E9F6F3"/>
+  <circle cx="434" cy="73" r="4" fill="#0EB89A"/>
+  <text x="446" y="78" fill="#087D79" font-family="Arial, sans-serif" font-size="11" font-weight="700">LIVE</text>
+
+  <rect x="50" y="122" width="218" height="119" rx="13" fill="url(#event)"/>
+  <circle cx="226" cy="155" r="44" fill="#B9DFE8" opacity=".75"/>
+  <path d="M75 226L137 156L190 211L213 187L267 240H50Z" fill="#8AC9C2" opacity=".76"/>
+  <circle cx="101" cy="162" r="13" fill="#F1BD72"/>
+  <path d="M79 239L154 180L209 237" fill="none" stroke="#FFFFFF" stroke-width="4" opacity=".85"/>
+  <text x="292" y="143" fill="#668097" font-family="Arial, sans-serif" font-size="10" font-weight="700" letter-spacing="1.5">UPCOMING EVENT</text>
+  <text x="292" y="169" fill="#12366A" font-family="Arial, sans-serif" font-size="21" font-weight="700">Welcome week</text>
+  <text x="292" y="190" fill="#597188" font-family="Arial, sans-serif" font-size="13">Kickoff · Today, 5:30 PM</text>
+  <rect x="292" y="207" width="123" height="25" rx="12.5" fill="#EAF5F4"/>
+  <text x="307" y="224" fill="#087D79" font-family="Arial, sans-serif" font-size="11" font-weight="700">QR CHECK-IN</text>
+
+  <text x="52" y="272" fill="#12366A" font-family="Arial, sans-serif" font-size="18" font-weight="700">246</text>
+  <text x="88" y="272" fill="#698096" font-family="Arial, sans-serif" font-size="12">registered</text>
+  <path d="M180 259V287" stroke="#E3EBF1" stroke-width="2"/>
+  <circle cx="208" cy="269" r="5" fill="#0EB89A"/>
+  <text x="222" y="273" fill="#35546F" font-family="Arial, sans-serif" font-size="12" font-weight="600">Attendance is updating live</text>
+  <path d="M52 298H516" stroke="#EDF1F5" stroke-width="2"/>
+  <circle cx="63" cy="316" r="5" fill="#0EB89A"/>
+  <text x="77" y="320" fill="#597188" font-family="Arial, sans-serif" font-size="11">Verified arrivals · event reports · campus engagement</text>
+
+  <rect x="604" y="12" width="218" height="350" rx="31" fill="#12366A"/>
+  <rect x="612" y="20" width="202" height="334" rx="25" fill="#FFFFFF"/>
+  <rect x="681" y="27" width="64" height="12" rx="6" fill="#12366A"/>
+  <path d="M671 69V79A14 14 0 0 1 699 79V83" fill="none" stroke="#12366A" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="692" cy="93" r="4" fill="#0EB89A"/>
+  <text x="710" y="84" fill="#12366A" font-family="Arial, sans-serif" font-size="13" font-weight="700">CheckedIn</text>
+  <text x="632" y="123" fill="#718398" font-family="Arial, sans-serif" font-size="10" font-weight="700" letter-spacing="1.2">YOUR NEXT EVENT</text>
+  <text x="632" y="147" fill="#12366A" font-family="Arial, sans-serif" font-size="17" font-weight="700">Welcome week</text>
+  <text x="632" y="166" fill="#718398" font-family="Arial, sans-serif" font-size="11">Scan the event QR to check in</text>
+  <rect x="661" y="184" width="104" height="104" rx="13" fill="#FFFFFF" stroke="#DCE8EF" stroke-width="2"/>
+  <g fill="#12366A">
+    <path d="M675 198H697V220H675ZM679 202V216H693V202Z"/>
+    <path d="M729 198H751V220H729ZM733 202V216H747V202Z"/>
+    <path d="M675 252H697V274H675ZM679 256V270H693V256Z"/>
+    <path d="M704 198H710V204H704ZM713 207H719V213H713ZM704 216H710V222H704ZM722 225H728V231H722ZM710 234H716V240H710ZM722 243H728V249H722ZM704 252H710V258H704ZM713 261H719V267H713ZM722 270H728V276H722Z"/>
+    <path d="M738 225H744V231H738ZM750 234H756V240H750ZM738 243H744V249H738ZM750 252H756V258H750ZM738 261H744V267H738ZM750 270H756V276H750Z"/>
+  </g>
+  <path d="M652 184H666V192M760 184H774V198M652 274V288H666M760 288V274H774" fill="none" stroke="#0EB89A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="633" y="305" width="160" height="30" rx="15" fill="#0EB89A"/>
+  <text x="713" y="324" text-anchor="middle" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="12" font-weight="700">OPEN STUDENT APP</text>
+</svg>

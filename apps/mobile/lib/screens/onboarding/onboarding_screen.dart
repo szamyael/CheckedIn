@@ -145,10 +145,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 children: [
                   const AppLogo(size: 28),
                   const SizedBox(width: 10),
-                  const Text(
+                  Text(
                     'CHECKEDIN',
                     style: TextStyle(
-                      color: StudentUi.tealText,
+                      color: StudentUi.of(context).accentText,
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1.8,
@@ -158,7 +158,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
                     decoration: BoxDecoration(
-                      border: Border.all(color: StudentUi.border),
+                      border: Border.all(
+                        color: StudentUi.of(context).border,
+                      ),
                       borderRadius: BorderRadius.circular(99),
                     ),
                     child: Text(
@@ -181,7 +183,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   builder: (context, value, _) => LinearProgressIndicator(
                     value: value,
                     minHeight: 3,
-                    backgroundColor: StudentUi.border,
+                    backgroundColor: StudentUi.of(context).border,
                     color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
@@ -238,8 +240,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         height: 8,
                         decoration: BoxDecoration(
                           color: i == _page
-                              ? StudentUi.teal
-                              : StudentUi.border,
+                              ? StudentUi.of(context).accent
+                              : StudentUi.of(context).border,
                           borderRadius: BorderRadius.circular(99),
                         ),
                       ),
@@ -247,12 +249,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                   const SizedBox(height: 20),
                   if (!isTermsPage)
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.only(bottom: 12),
                       child: Text(
                         'Swipe left or use Continue',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: StudentUi.muted, fontSize: 12),
+                        style: TextStyle(
+                          color: StudentUi.of(context).muted,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                   FilledButton(
@@ -335,9 +340,9 @@ class _WalkthroughPage extends StatelessWidget {
               width: double.infinity,
               height: 170,
               decoration: BoxDecoration(
-                color: StudentUi.slateBg,
+                color: StudentUi.of(context).neutralBackground,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: StudentUi.border),
+                border: Border.all(color: StudentUi.of(context).border),
               ),
               child: Stack(
                 alignment: Alignment.center,
@@ -350,7 +355,10 @@ class _WalkthroughPage extends StatelessWidget {
                       height: 112,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: StudentUi.tealBorder, width: 12),
+                        border: Border.all(
+                          color: StudentUi.of(context).border,
+                          width: 12,
+                        ),
                       ),
                     ),
                   ),
@@ -360,20 +368,36 @@ class _WalkthroughPage extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: StudentUi.border),
+                      border: Border.all(color: StudentUi.of(context).border),
                     ),
                     child: Icon(data.icon, size: 36, color: Theme.of(context).colorScheme.primary),
                   ),
-                  const Positioned(
+                  Positioned(
                     bottom: 15,
-                    child: Text('CHECKEDIN STUDENT PORTAL', style: TextStyle(color: StudentUi.muted, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.2)),
+                    child: Text(
+                      'CHECKEDIN STUDENT PORTAL',
+                      style: TextStyle(
+                        color: StudentUi.of(context).muted,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 24),
-          const Text('GET STARTED', style: TextStyle(color: StudentUi.tealText, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.4)),
+          Text(
+            'GET STARTED',
+            style: TextStyle(
+              color: StudentUi.of(context).accentText,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.4,
+            ),
+          ),
           const SizedBox(height: 8),
           StudentPageTitle(title: data.title, subtitle: data.body),
           const SizedBox(height: 20),
@@ -383,9 +407,13 @@ class _WalkthroughPage extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.only(top: 2),
-                    child: Icon(TablerIcons.circleCheck, size: 18, color: StudentUi.teal),
+                    child: Icon(
+                      TablerIcons.circleCheck,
+                      size: 18,
+                      color: StudentUi.of(context).accent,
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -491,7 +519,7 @@ class _PermissionCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, color: StudentUi.teal),
+              Icon(icon, color: StudentUi.of(context).accent),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -500,7 +528,11 @@ class _PermissionCard extends StatelessWidget {
                 ),
               ),
               if (granted)
-                const Icon(TablerIcons.circleCheck, color: StudentUi.teal, size: 22),
+                Icon(
+                  TablerIcons.circleCheck,
+                  color: StudentUi.of(context).accent,
+                  size: 22,
+                ),
             ],
           ),
           const SizedBox(height: 8),

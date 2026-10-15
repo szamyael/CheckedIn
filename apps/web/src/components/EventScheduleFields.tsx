@@ -16,8 +16,8 @@ interface EventScheduleFieldsProps {
 
 const inputClass = (compact?: boolean) =>
   compact
-    ? "w-full rounded border border-slate-300 px-2 py-1 text-sm"
-    : "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm";
+    ? "w-full rounded border border-[var(--border)] px-2 py-1 text-sm text-[var(--foreground)]"
+    : "w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)]";
 
 export function EventScheduleFieldsInput({
   value,
@@ -66,7 +66,7 @@ export function EventScheduleFieldsInput({
     <div className="space-y-4">
       <div className={compact ? "grid gap-3 sm:grid-cols-2" : "grid gap-4 sm:grid-cols-2"}>
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-800">
+          <label className="mb-1 block text-sm font-medium text-[var(--text-strong)]">
             Event starts
           </label>
           <input
@@ -78,7 +78,7 @@ export function EventScheduleFieldsInput({
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-800">
+          <label className="mb-1 block text-sm font-medium text-[var(--text-strong)]">
             Event ends
           </label>
           <input
@@ -92,26 +92,26 @@ export function EventScheduleFieldsInput({
         </div>
       </div>
 
-      <div className="rounded-lg border border-slate-200 bg-white/80 p-3">
+      <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-medium text-slate-800">Check-in window</p>
+          <p className="text-sm font-medium text-[var(--text-strong)]">Check-in window</p>
           {attendanceCustomized ? (
             <button
               type="button"
               onClick={resetAttendanceSync}
-              className="text-xs text-blue-600 hover:underline"
+              className="text-xs text-[var(--primary)] hover:underline"
             >
               Match event times
             </button>
           ) : (
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-[var(--muted)]">
               Synced with event schedule
             </span>
           )}
         </div>
         <div className={compact ? "grid gap-3 sm:grid-cols-2" : "grid gap-4 sm:grid-cols-2"}>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-800">
+            <label className="mb-1 block text-sm font-medium text-[var(--text-strong)]">
               Attendance opens
             </label>
             <input
@@ -123,7 +123,7 @@ export function EventScheduleFieldsInput({
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-800">
+            <label className="mb-1 block text-sm font-medium text-[var(--text-strong)]">
               Attendance closes (QR expires)
             </label>
             <input

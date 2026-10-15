@@ -23,3 +23,24 @@ class AppLogo extends StatelessWidget {
     );
   }
 }
+
+class AppBrand extends StatelessWidget {
+  const AppBrand({super.key});
+
+  static const wordmarkAssetPath = 'assets/images/checkedin-horizontal.png';
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) => constraints.maxWidth < 200
+          ? const AppLogo(size: 34)
+          : Image.asset(
+              wordmarkAssetPath,
+              width: 160,
+              height: 48,
+              fit: BoxFit.contain,
+              semanticLabel: 'CheckedIn logo',
+            ),
+    );
+  }
+}

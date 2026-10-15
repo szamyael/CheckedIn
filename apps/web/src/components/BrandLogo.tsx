@@ -14,14 +14,14 @@ export function BrandLogo({
   const src =
     variant === "background"
       ? "/logos/banner-with-background.png"
-      : "/logos/banner-transparent.png";
+      : "/logos/checkedin-horizontal.svg";
 
   return (
     <Image
       src={src}
-      alt="CheckedIn — QR Events Attendance Monitoring & Incentives System"
-      width={320}
-      height={120}
+      alt="CheckedIn"
+      width={850}
+      height={256}
       priority={priority}
       className={`h-auto w-auto max-w-full object-contain ${className}`}
     />
@@ -37,7 +37,7 @@ export function BrandMark({
 }) {
   return (
     <Image
-      src="/logos/logo.png"
+      src="/logos/checkedin-symbol.svg"
       alt="CheckedIn"
       width={size}
       height={size}

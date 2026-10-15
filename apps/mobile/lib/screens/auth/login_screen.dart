@@ -8,6 +8,7 @@ import '../../models/registration_draft.dart';
 import '../../services/auth_service.dart';
 import '../../services/offline_credential_store.dart';
 import '../../widgets/app_logo.dart';
+import '../../widgets/student_account_status_dialog.dart';
 import '../../widgets/student_ui.dart';
 import '../../widgets/universal_loader.dart';
 
@@ -89,74 +90,29 @@ class _LoginScreenState extends State<LoginScreen> {
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        icon: Icon(
-          requiresReregistration
-              ? TablerIcons.alertTriangle
-              : TablerIcons.ban,
-          color: requiresReregistration
-              ? Colors.orange.shade800
-              : Colors.red.shade700,
-        ),
-        title: Text(
-          requiresReregistration
-              ? 'Registration needs changes'
-              : 'Account banned',
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              requiresReregistration
-                  ? 'An administrator has asked you to register again.'
-                  : 'An administrator has banned this account. Contact the administration if you believe this decision was made in error.',
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Admin reason',
-              style: TextStyle(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              decision.reason?.trim().isNotEmpty == true
-                  ? decision.reason!
-                  : 'No reason was provided.',
-            ),
-          ],
-        ),
-        actions: [
-          if (requiresReregistration)
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Close'),
-            ),
-          FilledButton(
-            onPressed: () async {
-              if (!requiresReregistration) {
-                Navigator.of(dialogContext).pop();
-                return;
-              }
-              try {
-                final draft = await _auth.loadReregistrationDraft();
-                if (!mounted || !dialogContext.mounted) return;
-                Navigator.of(dialogContext).pop();
-                router.go('/register/id-scan', extra: draft);
-              } catch (error) {
-                if (!mounted || !dialogContext.mounted) return;
-                Navigator.of(dialogContext).pop();
-                messenger.showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      error.toString().replaceFirst('Exception: ', ''),
+      builder: (dialogContext) => StudentAccountStatusDialog(
+        status: decision.status,
+        reason: decision.reason,
+        onRegisterAgain: requiresReregistration
+            ? () async {
+                try {
+                  final draft = await _auth.loadReregistrationDraft();
+                  if (!mounted || !dialogContext.mounted) return;
+                  Navigator.of(dialogContext).pop();
+                  router.go('/register/id-scan', extra: draft);
+                } catch (error) {
+                  if (!mounted || !dialogContext.mounted) return;
+                  Navigator.of(dialogContext).pop();
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        error.toString().replaceFirst('Exception: ', ''),
+                      ),
                     ),
-                  ),
-                );
+                  );
+                }
               }
-            },
-            child: Text(requiresReregistration ? 'Register again' : 'Close'),
-          ),
-        ],
+            : null,
       ),
     );
   }
@@ -257,7 +213,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: StudentUi.border),
+                          border: Border.all(
+                            color: StudentUi.of(context).border,
+                          ),
                           boxShadow: const [
                             BoxShadow(
                               color: Color(0x120C2238),
@@ -349,15 +307,21 @@ class _LoginScreenState extends State<LoginScreen> {
                           message:
                               'Sign in once online to unlock offline access, cached events, and background sync on this device.',
                           icon: TablerIcons.bolt,
-                          background: const Color(0xFFEEF1F0),
-                          border: StudentUi.border,
-                          foreground: StudentUi.muted,
+                          background: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHighest,
+                          border: Theme.of(context).colorScheme.outline,
+                          foreground: Theme.of(
+                            context,
+                          ).colorScheme.onSurfaceVariant,
                         ),
                         const SizedBox(height: 18),
-                        const Text(
+                        Text(
                           'New to CheckedIn?',
                           style: TextStyle(
-                            color: Color(0xFF697178),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                             fontSize: 14,
                           ),
                         ),

@@ -125,7 +125,7 @@ export function IdCardCameraCapture({
         )}
       </div>
 
-      <p className="text-center text-xs text-slate-500">
+      <p className="text-center text-xs text-[var(--muted)]">
         Hold your phone upright. Fit the ID inside the frame with your name
         above the yellow course/program line.
       </p>
@@ -134,7 +134,7 @@ export function IdCardCameraCapture({
         type="button"
         disabled={disabled || cameraBlocked || !ready}
         onClick={capture}
-        className="w-full rounded-xl bg-teal-600 py-3 text-sm font-semibold text-white disabled:opacity-60"
+        className="min-h-11 w-full rounded-xl bg-[var(--action-background)] py-3 text-sm font-semibold text-[var(--action-foreground)] disabled:opacity-60"
       >
         Capture ID
       </button>

@@ -37,6 +37,7 @@ export function StudentShell({
     ...RIGHT_TABS,
     { href: "/student/notifications", label: "Notifications", icon: Bell, exact: false },
   ];
+  const notificationLabel = notificationCount > 99 ? "99+" : notificationCount;
   const isActive = (href: string, exact: boolean) =>
     exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
 
@@ -73,8 +74,8 @@ export function StudentShell({
                 <Icon className="h-[18px] w-[18px]" strokeWidth={active ? 2 : 1.6} aria-hidden="true" />
                 {label}
                 {href === "/student/notifications" && notificationCount > 0 && (
-                  <span className="ml-auto bg-[var(--accent)] px-1.5 py-0.5 text-[10px] font-bold text-white">
-                    {notificationCount > 9 ? "9+" : notificationCount}
+                  <span className="student-notification-count ml-auto">
+                    {notificationLabel}
                   </span>
                 )}
               </Link>
@@ -100,13 +101,13 @@ export function StudentShell({
             <NotificationSoundToggle />
             <Link
               href="/student/notifications"
-            className="relative grid h-11 w-11 place-items-center text-[var(--muted)] transition hover:bg-[var(--primary-soft)] hover:text-[var(--primary-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
-              aria-label="Notifications"
+              className="student-notification-link relative grid h-11 w-11 place-items-center text-[var(--muted)] transition hover:bg-[var(--primary-soft)] hover:text-[var(--primary-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+              aria-label={notificationCount > 0 ? `Notifications, ${notificationCount} unread` : "Notifications"}
             >
               <Bell className="h-[22px] w-[22px]" />
               {notificationCount > 0 && (
-                <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center bg-[var(--accent)] px-1 text-[10px] font-bold text-white">
-                  {notificationCount > 9 ? "9+" : notificationCount}
+                <span className="student-notification-count student-notification-count--header absolute right-1 top-1">
+                  {notificationLabel}
                 </span>
               )}
             </Link>
@@ -125,10 +126,10 @@ export function StudentShell({
         </main>
 
         <nav
-          className="student-bottom-nav fixed inset-x-0 bottom-0 z-20 w-full border-t pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+          className="student-bottom-nav fixed inset-x-0 bottom-0 z-20 w-full border-t backdrop-blur lg:hidden"
           aria-label="Student navigation"
         >
-          <ul className="grid grid-cols-5">
+          <ul className="grid grid-cols-5 gap-1 px-2 py-2">
             {tabs
               .filter(({ href }) => href !== "/student/notifications")
               .map(({ href, label, icon: Icon, exact }) => {
@@ -138,14 +139,14 @@ export function StudentShell({
                     <Link
                       href={href}
                       aria-current={active ? "page" : undefined}
-                      className={`flex min-h-16 flex-col items-center justify-center gap-1 py-2 text-[10px] font-medium transition-colors ${
-                        active ? "text-[var(--primary-strong)]" : "text-[#697178]"
-                      }`}
+                      className={`student-bottom-nav-item flex min-h-16 flex-col items-center justify-center gap-1 py-2 text-[10px] font-medium transition-colors ${
+                        href === "/student/attendance/scan" ? "student-bottom-nav-item--scan" : ""
+                      } ${active ? "text-[var(--primary-strong)]" : "text-[var(--muted)]"}`}
                     >
-                      <span className={`grid h-8 w-10 place-items-center transition-colors ${href === "/student/attendance/scan" ? "bg-[var(--action-background)] text-[var(--action-foreground)]" : active ? "text-[var(--accent)]" : ""}`}>
+                      <span className={`student-bottom-nav-icon grid h-8 w-10 place-items-center transition-colors ${active && href !== "/student/attendance/scan" ? "text-[var(--accent)]" : ""}`}>
                         <Icon className="h-[19px] w-[19px]" strokeWidth={active ? 2 : 1.6} aria-hidden="true" />
                       </span>
-                      {label}
+                      <span className="student-bottom-nav-label">{label}</span>
                     </Link>
                   </li>
                 );

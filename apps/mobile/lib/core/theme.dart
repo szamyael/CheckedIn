@@ -1,33 +1,173 @@
 import 'package:flutter/material.dart';
 
-enum AppColorTheme { navy }
+enum AppColorTheme {
+  navy(
+    label: 'CheckedIn',
+    description: 'Indigo, cyan & emerald',
+    primary: Color(0xFF31578A),
+    primaryDark: Color(0xFF8FB3E3),
+    primaryStrong: Color(0xFF203C69),
+    primarySoft: Color(0xFFE6EEF9),
+    accent: Color(0xFF087F8C),
+    background: Color(0xFFF7F9FC),
+    backgroundDark: Color(0xFF111A2B),
+    surfaceDark: Color(0xFF192640),
+    surfaceMutedDark: Color(0xFF223452),
+    borderDark: Color(0xFF354A6A),
+    primarySoftDark: Color(0xFF29456D),
+  ),
+  violet(
+    label: 'Violet',
+    description: 'Rich violet with lilac highlights',
+    primary: Color(0xFF68428C),
+    primaryDark: Color(0xFFC9A9E6),
+    primaryStrong: Color(0xFF492766),
+    primarySoft: Color(0xFFF0E7F7),
+    accent: Color(0xFF68428C),
+    background: Color(0xFFFAF8FC),
+    backgroundDark: Color(0xFF1A1420),
+    surfaceDark: Color(0xFF282032),
+    surfaceMutedDark: Color(0xFF352941),
+    borderDark: Color(0xFF554563),
+    primarySoftDark: Color(0xFF422D55),
+  ),
+  orange(
+    label: 'Orange',
+    description: 'Warm orange with apricot highlights',
+    primary: Color(0xFF9A4E18),
+    primaryDark: Color(0xFFF0B17D),
+    primaryStrong: Color(0xFF71370E),
+    primarySoft: Color(0xFFFBEBDD),
+    accent: Color(0xFF9A4E18),
+    background: Color(0xFFFCF8F5),
+    backgroundDark: Color(0xFF1F1712),
+    surfaceDark: Color(0xFF2D221A),
+    surfaceMutedDark: Color(0xFF3B2D22),
+    borderDark: Color(0xFF5B4332),
+    primarySoftDark: Color(0xFF593019),
+  ),
+  maroon(
+    label: 'Maroon',
+    description: 'Deep maroon with soft rose highlights',
+    primary: Color(0xFF7B3047),
+    primaryDark: Color(0xFFE8A6B6),
+    primaryStrong: Color(0xFF5A2234),
+    primarySoft: Color(0xFFF5E7EC),
+    accent: Color(0xFF7B3047),
+    background: Color(0xFFFBF7F8),
+    backgroundDark: Color(0xFF1D1418),
+    surfaceDark: Color(0xFF2A1D23),
+    surfaceMutedDark: Color(0xFF38262E),
+    borderDark: Color(0xFF5A3B48),
+    primarySoftDark: Color(0xFF512B36),
+  ),
+  armyGreen(
+    label: 'Army Green',
+    description: 'Olive green with sage highlights',
+    primary: Color(0xFF4B6339),
+    primaryDark: Color(0xFFA9C686),
+    primaryStrong: Color(0xFF34472A),
+    primarySoft: Color(0xFFE9EDE3),
+    accent: Color(0xFF4B6339),
+    background: Color(0xFFF8F9F5),
+    backgroundDark: Color(0xFF151A12),
+    surfaceDark: Color(0xFF21291C),
+    surfaceMutedDark: Color(0xFF2C3625),
+    borderDark: Color(0xFF46533B),
+    primarySoftDark: Color(0xFF34442C),
+  ),
+  black(
+    label: 'Black',
+    description: 'Monochrome with clean contrast',
+    primary: Color(0xFF303030),
+    primaryDark: Color(0xFFD6D6D6),
+    primaryStrong: Color(0xFF202020),
+    primarySoft: Color(0xFFECECEC),
+    accent: Color(0xFF303030),
+    background: Color(0xFFF7F7F7),
+    backgroundDark: Color(0xFF121212),
+    surfaceDark: Color(0xFF202020),
+    surfaceMutedDark: Color(0xFF2B2B2B),
+    borderDark: Color(0xFF484848),
+    primarySoftDark: Color(0xFF383838),
+  ),
+  grey(
+    label: 'Grey',
+    description: 'Slate grey with cool highlights',
+    primary: Color(0xFF526276),
+    primaryDark: Color(0xFFB5C4D6),
+    primaryStrong: Color(0xFF344455),
+    primarySoft: Color(0xFFE9EDF2),
+    accent: Color(0xFF526276),
+    background: Color(0xFFF7F8FA),
+    backgroundDark: Color(0xFF141A21),
+    surfaceDark: Color(0xFF202934),
+    surfaceMutedDark: Color(0xFF2C3744),
+    borderDark: Color(0xFF465464),
+    primarySoftDark: Color(0xFF34414F),
+  );
 
-extension AppColorThemeDetails on AppColorTheme {
-  String get label => 'CheckedIn';
+  const AppColorTheme({
+    required this.label,
+    required this.description,
+    required this.primary,
+    required this.primaryDark,
+    required this.primaryStrong,
+    required this.primarySoft,
+    required this.accent,
+    required this.background,
+    required this.backgroundDark,
+    required this.surfaceDark,
+    required this.surfaceMutedDark,
+    required this.borderDark,
+    required this.primarySoftDark,
+  });
 
-  String get description => 'Indigo, cyan & emerald';
+  final String label;
+  final String description;
+  final Color primary;
+  final Color primaryDark;
+  final Color primaryStrong;
+  final Color primarySoft;
+  final Color accent;
+  final Color background;
+  final Color backgroundDark;
+  final Color surfaceDark;
+  final Color surfaceMutedDark;
+  final Color borderDark;
+  final Color primarySoftDark;
+}
 
-  Color get primary => const Color(0xFF31578A);
+class CheckedInPageTransitionsBuilder extends PageTransitionsBuilder {
+  const CheckedInPageTransitionsBuilder();
 
-  Color get primaryDark => const Color(0xFF8FB3E3);
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final progress = CurvedAnimation(
+      parent: animation,
+      curve: reduceMotion
+          ? const Interval(0, 0.4, curve: Curves.easeOutCubic)
+          : Curves.easeOutCubic,
+    );
+    final content = FadeTransition(opacity: progress, child: child);
 
-  Color get primaryStrong => const Color(0xFF203C69);
+    if (reduceMotion) return content;
 
-  Color get primarySoft => const Color(0xFFE6EEF9);
-
-  Color get accent => const Color(0xFF087F8C);
-
-  Color get background => const Color(0xFFF7F9FC);
-
-  Color get backgroundDark => const Color(0xFF111A2B);
-
-  Color get surfaceDark => const Color(0xFF192640);
-
-  Color get surfaceMutedDark => const Color(0xFF223452);
-
-  Color get borderDark => const Color(0xFF354A6A);
-
-  Color get primarySoftDark => const Color(0xFF29456D);
+    return SlideTransition(
+      position: Tween<Offset>(
+        begin: const Offset(0, 0.035),
+        end: Offset.zero,
+      ).animate(progress),
+      child: content,
+    );
+  }
 }
 
 class AppTheme {
@@ -52,13 +192,22 @@ class AppTheme {
               : selected.primarySoft,
           onPrimaryContainer: dark ? Colors.white : selected.primaryStrong,
           secondary: selected.accent,
-          onSecondary: const Color(0xFF31230D),
+          onSecondary: dark ? background : Colors.white,
           surface: surface,
           onSurface: text,
           surfaceContainerHighest: dark
               ? selected.surfaceMutedDark
               : selected.primarySoft,
+          onSurfaceVariant: muted,
           outline: border,
+          tertiary: dark ? const Color(0xFFF1C67B) : const Color(0xFFA46618),
+          onTertiary: dark ? const Color(0xFF3B2B11) : Colors.white,
+          tertiaryContainer: dark
+              ? const Color(0xFF44351D)
+              : const Color(0xFFFFF7E7),
+          onTertiaryContainer: dark
+              ? const Color(0xFFF9E2B8)
+              : const Color(0xFF79530F),
           error: const Color(0xFFAE4146),
         );
 
@@ -67,6 +216,16 @@ class AppTheme {
       brightness: brightness,
       scaffoldBackgroundColor: background,
       colorScheme: scheme,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: CheckedInPageTransitionsBuilder(),
+          TargetPlatform.iOS: CheckedInPageTransitionsBuilder(),
+          TargetPlatform.linux: CheckedInPageTransitionsBuilder(),
+          TargetPlatform.macOS: CheckedInPageTransitionsBuilder(),
+          TargetPlatform.windows: CheckedInPageTransitionsBuilder(),
+          TargetPlatform.fuchsia: CheckedInPageTransitionsBuilder(),
+        },
+      ),
       visualDensity: VisualDensity.standard,
       splashFactory: InkSparkle.splashFactory,
       textTheme: TextTheme(
@@ -103,7 +262,7 @@ class AppTheme {
         labelLarge: const TextStyle(fontWeight: FontWeight.w700),
       ),
       iconTheme: IconThemeData(color: primary),
-      primaryIconTheme: const IconThemeData(color: Colors.white),
+      primaryIconTheme: IconThemeData(color: dark ? background : Colors.white),
       listTileTheme: ListTileThemeData(
         textColor: text,
         iconColor: primary,
@@ -231,7 +390,9 @@ class AppTheme {
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
         color: primary,
-        linearTrackColor: selected.primarySoft,
+        linearTrackColor: dark
+            ? selected.primarySoftDark
+            : selected.primarySoft,
       ),
     );
   }

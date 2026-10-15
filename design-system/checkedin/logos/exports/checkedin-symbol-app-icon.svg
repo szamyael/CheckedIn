@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256"><title>CheckedIn Threshold symbol</title><rect width="256" height="256" rx="57.6" fill="#12366A"/><g transform="translate(-5.63 0.63) scale(1.044)" fill="#ffffff">
+  <title id="title">CheckedIn Threshold small-size symbol</title>
+  <path d="M58 198V116A70 70 0 0 1 198 116V142" fill="none" stroke="#ffffff" stroke-width="34" stroke-linecap="round"/>
+  <circle cx="150" cy="173" r="22" fill="#ffffff"/>
+</g></svg>

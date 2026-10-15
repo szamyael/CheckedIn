@@ -203,12 +203,12 @@ export default function StudentBingoPage() {
   }, [cells, completed]);
 
   if (loading) {
-    return <p className="text-sm text-[#697178]">Loading your Bingo cards…</p>;
+    return <p className="text-sm text-[var(--muted)]">Loading your Bingo cards…</p>;
   }
 
   if (!card) {
     return (
-      <div className="border border-dashed border-[#cbd2d4] bg-white p-10 text-center text-sm text-[#697178]">
+      <div className="border border-dashed border-[var(--border)] bg-[var(--surface)] p-10 text-center text-sm text-[var(--muted)]">
         No published bingo cards yet. Check back when an organization publishes one.
       </div>
     );
@@ -216,16 +216,16 @@ export default function StudentBingoPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <header className="border-l-2 border-[#c18a2e] pl-4">
-        <p className="text-xs font-semibold tracking-[0.14em] text-[#697178]">EVENT BINGO</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[#0c2238]">{card.title}</h1>
-        <p className="mt-2 text-sm text-[#697178]">
+      <header className="border-l-2 border-[var(--accent)] pl-4">
+        <p className="text-xs font-semibold tracking-[0.14em] text-[var(--muted)]">EVENT BINGO</p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--primary-strong)]">{card.title}</h1>
+        <p className="mt-2 text-sm text-[var(--muted)]">
           {completed.size} / {cells.length || 9} completed · {card.season_label}
         </p>
       </header>
 
       {cards.length > 1 && (
-        <label className="block text-sm font-medium text-[#0c2238]">
+        <label className="block text-sm font-medium text-[var(--primary-strong)]">
           Choose a bingo card
           <select
             className={`${studentInputClass} mt-2`}
@@ -243,23 +243,23 @@ export default function StudentBingoPage() {
       )}
 
       {boardError ? (
-        <p role="alert" className="border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+        <p role="alert" className="border border-[color-mix(in_srgb,var(--error)_35%,var(--border))] bg-[color-mix(in_srgb,var(--error)_12%,var(--surface))] p-4 text-sm text-[var(--error)]">
           {boardError}
         </p>
       ) : (
         <>
-          <div className="grid grid-cols-2 border border-[#e2e5e7] bg-white text-center">
-            <div className="border-r border-[#e2e5e7] p-4">
-              <p className="text-2xl font-semibold text-[#17324d]">{streak}</p>
-              <p className="mt-1 text-xs font-medium text-[#697178]">Event streak</p>
+          <div className="grid grid-cols-2 border border-[var(--border)] bg-[var(--surface)] text-center">
+            <div className="border-r border-[var(--border)] p-4">
+              <p className="text-2xl font-semibold text-[var(--primary-strong)]">{streak}</p>
+              <p className="mt-1 text-xs font-medium text-[var(--muted)]">Event streak</p>
             </div>
             <div className="p-4">
-              <p className="text-2xl font-semibold text-[#a46618]">{completedLines.length}</p>
-              <p className="mt-1 text-xs font-medium text-[#697178]">Lines completed</p>
+              <p className="text-2xl font-semibold text-[var(--warning)]">{completedLines.length}</p>
+              <p className="mt-1 text-xs font-medium text-[var(--muted)]">Lines completed</p>
             </div>
           </div>
 
-          <div className="relative aspect-square border border-[#17324d] bg-[#17324d] p-1.5">
+          <div className="relative aspect-square border border-[var(--border)] bg-[var(--surface-muted)] p-1.5">
             <div className="grid h-full grid-cols-3 gap-1.5">
               {Array.from({ length: 9 }, (_, position) => {
                 const cell = cells.find((c) => c.position === position);
@@ -272,14 +272,14 @@ export default function StudentBingoPage() {
                     key={position}
                     className={`flex flex-col items-center justify-center border p-2 text-center text-[11px] ${
                       done
-                        ? `border-[#d9c38d] bg-[#fff6df] text-[#7c5311] ${onCompletedLine ? "ring-1 ring-inset ring-[#c18a2e]" : ""}`
-                        : "border-[#e2e5e7] bg-white text-[#3f484f]"
+                        ? `border-[color-mix(in_srgb,var(--warning)_38%,var(--border))] bg-[color-mix(in_srgb,var(--warning)_14%,var(--surface))] text-[var(--warning)] ${onCompletedLine ? "ring-1 ring-inset ring-[var(--warning)]" : ""}`
+                        : "border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)]"
                     }`}
                   >
                     <span className="text-[10px] font-semibold leading-tight sm:text-xs">
                       {cell?.events?.title ?? cell?.label ?? "Empty"}
                     </span>
-                    {done && <span className="mt-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#c18a2e] text-white"><Check size={14} /></span>}
+                    {done && <span className="mt-2 flex h-6 w-6 items-center justify-center rounded-full bg-[var(--action-background)] text-[var(--action-foreground)]"><Check size={14} /></span>}
                   </div>
                 );
               })}
@@ -300,7 +300,7 @@ export default function StudentBingoPage() {
                     y1={Math.floor(start / 3) + 0.5}
                     x2={(end % 3) + 0.5}
                     y2={Math.floor(end / 3) + 0.5}
-                    stroke="#c18a2e"
+                    stroke="var(--warning)"
                     strokeLinecap="round"
                     strokeWidth="0.07"
                   />
@@ -311,15 +311,15 @@ export default function StudentBingoPage() {
         </>
       )}
 
-      <section className="border-t border-[#e2e5e7] pt-6">
-        <div className="mb-3 flex items-center gap-2"><Award size={18} className="text-[#a46618]" /><h2 className="text-base font-semibold text-[#0c2238]">Recognition earned</h2></div>
+      <section className="border-t border-[var(--border)] pt-6">
+        <div className="mb-3 flex items-center gap-2"><Award size={18} className="text-[var(--warning)]" /><h2 className="text-base font-semibold text-[var(--primary-strong)]">Recognition earned</h2></div>
         {awards.length === 0 ? (
           awardsError ? (
-            <p role="alert" className="text-sm text-red-700">
+            <p role="alert" className="text-sm text-[var(--error)]">
               Unable to load Bingo recognition: {awardsError}
             </p>
           ) : (
-            <p className="text-sm text-[#697178]">
+            <p className="text-sm text-[var(--muted)]">
               Complete a line or streak on this card to earn badges.
             </p>
           )
@@ -328,10 +328,10 @@ export default function StudentBingoPage() {
             {awards.map((a) => (
               <li
                 key={a.id}
-                className="flex items-center justify-between border border-[#e2e5e7] bg-white px-4 py-3 text-sm"
+                className="flex items-center justify-between border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm"
               >
-                <span className="flex items-center gap-2 font-medium text-[#0c2238]"><Sparkles size={16} className="text-[#c18a2e]" />{a.org_badges?.name ?? "Badge"}</span>
-                <span className="font-semibold text-[#a46618]">+{a.points_awarded}</span>
+                <span className="flex items-center gap-2 font-medium text-[var(--foreground)]"><Sparkles size={16} className="text-[var(--warning)]" />{a.org_badges?.name ?? "Badge"}</span>
+                <span className="font-semibold text-[var(--warning)]">+{a.points_awarded}</span>
               </li>
             ))}
           </ul>

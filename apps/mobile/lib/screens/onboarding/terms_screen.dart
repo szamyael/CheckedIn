@@ -140,7 +140,10 @@ class _TermsSectionBlock extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('•  ', style: TextStyle(color: StudentUi.muted)),
+                Text(
+                  '•  ',
+                  style: TextStyle(color: StudentUi.of(context).muted),
+                ),
                 Expanded(
                   child: Text(b, style: Theme.of(context).textTheme.bodySmall),
                 ),

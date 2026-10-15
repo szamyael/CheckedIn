@@ -215,10 +215,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
             children: [
-              const Text(
+              Text(
                 'STUDENT RECORD',
                 style: TextStyle(
-                  color: StudentUi.muted,
+                  color: StudentUi.of(context).muted,
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.4,
@@ -392,7 +392,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.surface,
-                          border: Border.all(color: StudentUi.border),
+                          border: Border.all(
+                            color: StudentUi.of(context).border,
+                          ),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Column(
@@ -508,11 +510,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 16),
               const Row(
                 children: [
-                  Icon(
-                    TablerIcons.award,
-                    color: Color(0xFFA46618),
-                    size: 19,
-                  ),
+                  Icon(TablerIcons.award, color: Color(0xFFA46618), size: 19),
                   SizedBox(width: 8),
                   Text(
                     'Rewards & recognition',
@@ -616,7 +614,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   : TablerIcons.circleCheck,
                               color: h.isPending
                                   ? Colors.amber.shade800
-                                  : StudentUi.teal,
+                                  : StudentUi.of(context).accent,
                             ),
                             title: Text(h.eventTitle),
                             subtitle: Text(

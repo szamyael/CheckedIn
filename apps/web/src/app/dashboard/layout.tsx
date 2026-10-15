@@ -5,7 +5,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { DashboardNav, type DashboardNavItem } from "@/components/DashboardNav";
 import { DashboardRealtimeSync } from "@/components/DashboardRealtimeSync";
 import { SessionTimeoutGuard } from "@/components/SessionTimeoutGuard";
-import { BrandLogo } from "@/components/BrandLogo";
+import { BrandLogo, BrandMark } from "@/components/BrandLogo";
 import { ThemePanelButton } from "@/components/ThemePanelButton";
 import type { UserRole } from "@/lib/types";
 
@@ -83,7 +83,12 @@ export default async function DashboardLayout({
       <a className="skip-to-content" href="#dashboard-content">Skip to content</a>
       <aside className="dashboard-sidebar sticky top-0 z-40 flex w-full flex-col border-b border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] lg:h-dvh lg:w-64 lg:shrink-0 lg:border-b-0 lg:border-r">
         <div className="dashboard-sidebar-brand flex items-center justify-between gap-4 border-b border-[var(--border)] px-4 py-3 sm:px-6 lg:block lg:px-5 lg:py-6">
-          <BrandLogo variant="transparent" className="max-h-10 w-full max-w-36 lg:max-h-12 lg:max-w-[156px]" />
+          <div className="dashboard-sidebar-brand-logo">
+            <BrandLogo variant="transparent" className="max-h-10 w-full max-w-36 lg:max-h-12 lg:max-w-[156px]" />
+          </div>
+          <div className="dashboard-sidebar-brand-mark">
+            <BrandMark size={40} />
+          </div>
           <div className="flex items-center gap-2 text-xs text-[var(--muted)] lg:mt-5">
             <span className="hidden h-7 w-7 place-items-center border border-[var(--border)] bg-[var(--surface-muted)] lg:grid">
               <span className="h-2 w-2 rounded-full bg-[var(--accent)]" />

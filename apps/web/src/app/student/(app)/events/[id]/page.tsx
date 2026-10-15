@@ -44,7 +44,7 @@ export default function StudentEventDetailPage() {
 
   return (
     <div className="space-y-4">
-      <Link href="/student/events" className="text-sm text-teal-600">
+      <Link href="/student/events" className="text-sm text-[var(--primary)]">
         ← Events
       </Link>
       <StudentPageTitle

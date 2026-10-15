@@ -2,9 +2,7 @@
 
 import { useRouter } from "next/navigation";
 
-export type StudentAccountDecision =
-  | { status: "needs_reregistration"; reason: string | null }
-  | { status: "suspended"; reason: string | null };
+export type StudentAccountDecision = { status: string; reason: string | null };
 
 export function StudentAccountDecisionDialog({
   decision,
@@ -17,6 +15,10 @@ export function StudentAccountDecisionDialog({
   if (!decision) return null;
 
   const needsReregistration = decision.status === "needs_reregistration";
+  const statusLabel = decision.status.replaceAll("_", " ");
+  const title = needsReregistration
+    ? "Registration needs changes"
+    : `Account ${statusLabel.charAt(0).toUpperCase()}${statusLabel.slice(1)}`;
 
   return (
     <div
@@ -25,38 +27,39 @@ export function StudentAccountDecisionDialog({
       aria-labelledby="account-decision-title"
       className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/60 p-4"
     >
-      <section className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-        <p className={`text-xs font-semibold tracking-[0.14em] ${needsReregistration ? "text-amber-700" : "text-red-700"}`}>
+      <section className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 text-[var(--foreground)] shadow-2xl">
+        <p className={`text-xs font-semibold tracking-[0.14em] ${needsReregistration ? "text-[var(--warning)]" : "text-[var(--error)]"}`}>
           ACCOUNT STATUS
         </p>
-        <h2 id="account-decision-title" className="mt-2 text-xl font-semibold text-slate-950">
-          {needsReregistration ? "Registration needs changes" : "Account banned"}
-        </h2>
-        <p className="mt-3 text-sm leading-6 text-slate-700">
+        <h2 id="account-decision-title" className="mt-2 text-xl font-semibold text-[var(--primary-strong)]">{title}</h2>
+        <p className="mt-3 text-sm leading-6 text-[var(--foreground)]">
           {needsReregistration
             ? "An administrator has asked you to register again. Review the reason and submit your application again."
-            : "An administrator has banned this account. Contact the administration if you believe this decision was made in error."}
+            : `Your account is currently ${statusLabel}, so you cannot sign in.`}
         </p>
-        <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Admin reason</p>
-          <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-800">
+        <div className="mt-4 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Account status details</p>
+          <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-[var(--foreground)]">
             {decision.reason?.trim() || "No reason was provided."}
           </p>
         </div>
+        <p className="mt-4 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-3 text-sm leading-6 text-[var(--foreground)]">
+          If you have concerns, please visit your Department&apos;s Organization Office to address your account status.
+        </p>
         <div className="mt-5 flex justify-end gap-2">
           {needsReregistration ? (
             <>
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                className="min-h-11 rounded-lg border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--surface-muted)]"
               >
                 Close
               </button>
               <button
                 type="button"
                 onClick={() => router.push("/student/register?resubmit=1")}
-                className="rounded-lg bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800"
+                className="min-h-11 rounded-lg bg-[var(--action-background)] px-4 py-2.5 text-sm font-semibold text-[var(--action-foreground)] hover:brightness-95"
               >
                 Register again
               </button>
@@ -65,7 +68,7 @@ export function StudentAccountDecisionDialog({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-900"
+              className="min-h-11 rounded-lg bg-[var(--action-background)] px-4 py-2.5 text-sm font-semibold text-[var(--action-foreground)] hover:brightness-95"
             >
               Close
             </button>

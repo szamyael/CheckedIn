@@ -114,7 +114,7 @@ export default function AttendanceLocationPage() {
   return (
     <div className="flex min-h-[60vh] flex-col">
       <StudentStepIndicator current={2} />
-      <MapPin className="mx-auto h-16 w-16 text-teal-600" />
+      <MapPin className="mx-auto h-16 w-16 text-[var(--primary)]" />
       <h1 className="mt-4 text-center text-xl font-bold text-[var(--text-strong)]">
         Verify your location
       </h1>

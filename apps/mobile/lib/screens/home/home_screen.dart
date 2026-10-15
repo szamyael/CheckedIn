@@ -70,6 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: FutureBuilder<_HomeData>(
         future: _future,
         builder: (context, snapshot) {
+          final colors = Theme.of(context).colorScheme;
           final data = snapshot.data;
           final stats = data?.stats ?? <String, dynamic>{};
           final firstName = data?.firstName ?? '…';
@@ -116,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       label: 'Points',
                       value: '${stats['reward_points'] ?? 0}',
                       icon: TablerIcons.stars,
-                      accent: const Color(0xFFA46618),
+                      accent: colors.tertiary,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -143,8 +144,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: TablerIcons.layoutGrid,
                 title: 'Your Bingo progress',
                 description: 'See what participation can unlock next.',
-                accent: const Color(0xFFA46618),
-                background: const Color(0xFFFFFAF0),
+                accent: colors.tertiary,
+                background: colors.tertiaryContainer,
                 onTap: widget.onOpenBingo,
               ),
               const SizedBox(height: 26),
@@ -155,13 +156,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 onViewAll: widget.onOpenNotifications,
               ),
               const SizedBox(height: 22),
-              const StudentInfoBanner(
+              StudentInfoBanner(
                 message:
                     'For check-in, scan the event QR first. We will guide you through location, OTP, and selfie verification if required.',
                 icon: TablerIcons.infoCircle,
-                background: Color(0xFFEEF1F0),
-                border: StudentUi.border,
-                foreground: StudentUi.muted,
+                background: colors.surfaceContainerHighest,
+                border: colors.outline,
+                foreground: colors.onSurfaceVariant,
               ),
             ],
           );
@@ -200,7 +201,9 @@ class _CampusPass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
+    final colors = Theme.of(context).colorScheme;
+    final primary = colors.primary;
+    final foreground = colors.onPrimary;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -222,10 +225,10 @@ class _CampusPass extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'YOUR CAMPUS PASS',
             style: TextStyle(
-              color: Color(0xFFD7E2EC),
+              color: foreground,
               fontSize: 11,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.4,
@@ -241,8 +244,8 @@ class _CampusPass extends StatelessWidget {
                   children: [
                     Text(
                       name,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: foreground,
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
                         letterSpacing: -0.3,
@@ -251,17 +254,14 @@ class _CampusPass extends StatelessWidget {
                     const SizedBox(height: 5),
                     Text(
                       '$program$_yearLabel',
-                      style: const TextStyle(
-                        color: Color(0xFFD7E2EC),
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: foreground, fontSize: 13),
                     ),
                     const SizedBox(height: 20),
                     Text(
                       'STUDENT ID · $studentId',
-                      style: const TextStyle(
-                        color: Color(0xFFD7E2EC),
-                        fontSize: 10,
+                      style: TextStyle(
+                        color: foreground,
+                        fontSize: 11,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 1,
                       ),
@@ -277,23 +277,23 @@ class _CampusPass extends StatelessWidget {
                   width: 92,
                   height: 92,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
+                    color: foreground.withValues(alpha: 0.1),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.3),
+                      color: foreground.withValues(alpha: 0.3),
                     ),
                     borderRadius: BorderRadius.circular(18),
                   ),
-                  child: const Column(
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(TablerIcons.qrcode, color: Colors.white, size: 38),
-                      SizedBox(height: 5),
+                      Icon(TablerIcons.qrcode, color: foreground, size: 38),
+                      const SizedBox(height: 5),
                       Text(
                         'SCAN TO CHECK IN',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 9,
+                          color: foreground,
+                          fontSize: 10,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -353,7 +353,7 @@ class _StatTile extends StatelessWidget {
             label,
             style: TextStyle(
               color: Theme.of(context).textTheme.bodySmall?.color,
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
           ),

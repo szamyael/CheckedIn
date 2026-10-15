@@ -8,8 +8,8 @@ export const metadata: Metadata = {
   title: "CheckedIn — Event Attendance",
   description: "QR attendance system for Admin, Faculty, and Organizations",
   icons: {
-    icon: "/logos/logo.png",
-    apple: "/logos/logo.png",
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
   },
 };
 

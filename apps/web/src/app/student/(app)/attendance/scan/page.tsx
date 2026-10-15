@@ -147,7 +147,7 @@ export default function AttendanceScanPage() {
   if (result) {
     return (
       <div className="space-y-4 text-center">
-        <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full text-3xl ${result.blocked ? "bg-amber-100 text-amber-700" : "bg-teal-100 text-teal-600"}`}>
+        <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full text-3xl ${result.blocked ? "bg-[color-mix(in_srgb,var(--warning)_16%,var(--surface))] text-[var(--warning)]" : "bg-[color-mix(in_srgb,var(--success)_16%,var(--surface))] text-[var(--success)]"}`}>
           {result.blocked ? <AlertTriangle className="h-8 w-8" aria-hidden="true" /> : <Check className="h-8 w-8" aria-hidden="true" />}
         </div>
         <h1 className="text-xl font-bold">{result.title}</h1>

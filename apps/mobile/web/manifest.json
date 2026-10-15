@@ -1,11 +1,11 @@
 {
-    "name": "checkedin_mobile",
-    "short_name": "checkedin_mobile",
+    "name": "CheckedIn",
+    "short_name": "CheckedIn",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#12366A",
+    "theme_color": "#12366A",
+    "description": "University event check-in and attendance.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

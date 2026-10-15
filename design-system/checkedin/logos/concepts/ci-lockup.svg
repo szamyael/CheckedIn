@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 256" width="800" height="256" role="img" aria-labelledby="title">
+  <title id="title">CheckedIn C-I concept lockup</title>
+  <g transform="translate(5 0)">
+    <path d="M160 72A78 78 0 1 0 160 184" fill="none" stroke="#111111" stroke-width="22" stroke-linecap="round"/>
+    <path d="M204 112V182" fill="none" stroke="#111111" stroke-width="20" stroke-linecap="round"/>
+    <circle cx="204" cy="77" r="14" fill="#111111"/>
+  </g>
+  <text x="270" y="164" fill="#111111" font-family="Arial, sans-serif" font-size="76" font-weight="700" letter-spacing="-3">CheckedIn</text>
+</svg>

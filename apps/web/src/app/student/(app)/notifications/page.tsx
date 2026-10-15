@@ -115,13 +115,13 @@ export default function StudentNotificationsPage() {
         <button
           type="button"
           onClick={() => void markAll()}
-          className="text-xs font-medium text-teal-600"
+          className="text-xs font-medium text-[var(--primary)]"
         >
           Mark all read
         </button>
       </div>
       {readError && (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-sm text-[var(--error)]">
           {readError}
         </p>
       )}
@@ -136,8 +136,8 @@ export default function StudentNotificationsPage() {
                 onClick={() => void markRead(n.id)}
                 className={`w-full rounded-2xl border px-3 py-3 text-left ${
                   n.read_at
-                    ? "border-slate-200 bg-white"
-                    : "border-teal-200 bg-teal-50"
+                    ? "border-[var(--border)] bg-[var(--surface)]"
+                    : "border-[color-mix(in_srgb,var(--primary)_38%,var(--border))] bg-[var(--primary-soft)]"
                 }`}
               >
                 <p className="text-sm font-semibold">{n.title}</p>

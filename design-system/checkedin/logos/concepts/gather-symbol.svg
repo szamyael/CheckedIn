@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="title">
+  <title id="title">CheckedIn Gather concept symbol</title>
+  <path d="M128 78L78 164.6M128 78L178 164.6M92 183H164" fill="none" stroke="#111111" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="128" cy="60" r="24" fill="#111111"/>
+  <circle cx="68" cy="183" r="24" fill="#111111"/>
+  <circle cx="188" cy="183" r="24" fill="#111111"/>
+</svg>

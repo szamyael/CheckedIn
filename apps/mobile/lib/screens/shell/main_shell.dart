@@ -145,20 +145,7 @@ class _MainShellState extends State<MainShell> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const AppLogo(size: 34),
-            const SizedBox(width: 9),
-            Text(
-              'CheckedIn',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.4,
-              ),
-            ),
-          ],
-        ),
+        title: const AppBrand(),
         centerTitle: false,
         titleSpacing: 16,
         bottom: PreferredSize(
@@ -211,9 +198,13 @@ class _MainShellState extends State<MainShell> {
                       icon: networkOffline
                           ? TablerIcons.wifiOff
                           : TablerIcons.userOff,
-                      background: StudentUi.slateBg,
-                      border: StudentUi.border,
-                      foreground: StudentUi.muted,
+                      background: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                      border: Theme.of(context).colorScheme.outline,
+                      foreground: Theme.of(
+                        context,
+                      ).colorScheme.onSurfaceVariant,
                       action: offlineAuth && !networkOffline
                           ? TextButton(
                               onPressed: _signInOnline,
@@ -249,23 +240,32 @@ class _MainShellState extends State<MainShell> {
           Expanded(
             child: AnimatedSwitcher(
               duration: reduceMotion
-                  ? Duration.zero
+                  ? const Duration(milliseconds: 140)
                   : const Duration(milliseconds: 260),
               reverseDuration: reduceMotion
-                  ? Duration.zero
+                  ? const Duration(milliseconds: 120)
                   : const Duration(milliseconds: 180),
               switchInCurve: Curves.easeOutCubic,
               switchOutCurve: Curves.easeInCubic,
-              transitionBuilder: (child, animation) => FadeTransition(
-                opacity: animation,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0.018, 0),
-                    end: Offset.zero,
-                  ).animate(animation),
-                  child: child,
-                ),
-              ),
+              transitionBuilder: (child, animation) {
+                final fade = CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeOutCubic,
+                );
+                if (reduceMotion) {
+                  return FadeTransition(opacity: fade, child: child);
+                }
+                return FadeTransition(
+                  opacity: fade,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0.018, 0),
+                      end: Offset.zero,
+                    ).animate(fade),
+                    child: child,
+                  ),
+                );
+              },
               child: KeyedSubtree(key: ValueKey(_index), child: pages[_index]),
             ),
           ),

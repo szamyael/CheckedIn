@@ -2,10 +2,10 @@ import type { ReactNode } from "react";
 import { Camera, Check, MapPin, QrCode, ShieldCheck } from "@/lib/icons";
 
 export const studentInputClass =
-  "w-full rounded-lg border border-[#e2e5e7] bg-white px-3 py-3 text-sm text-[#202428] outline-none focus:border-[#17324d] focus:ring-2 focus:ring-[#c18a2e]/25";
+  "w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm text-[var(--foreground)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--accent)]/25";
 
 export const studentPrimaryButtonClass =
-  "min-h-11 w-full rounded-lg bg-[var(--action-background)] py-3 text-sm font-semibold text-white hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:opacity-60";
+  "min-h-11 w-full rounded-lg bg-[var(--action-background)] py-3 text-sm font-semibold text-[var(--action-foreground)] hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:opacity-60";
 
 export const studentSecondaryButtonClass =
   "block min-h-11 w-full rounded-lg border border-[var(--border)] py-2.5 text-center text-sm font-medium text-[var(--foreground)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2";
@@ -64,8 +64,8 @@ export function StudentPageTitle({
 }) {
   return (
     <div>
-      <h1 className="text-xl font-bold tracking-tight text-[#0c2238]">{title}</h1>
-      {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
+      <h1 className="text-xl font-bold tracking-tight text-[var(--primary-strong)]">{title}</h1>
+      {subtitle && <p className="mt-1 text-sm text-[var(--muted)]">{subtitle}</p>}
     </div>
   );
 }
@@ -80,7 +80,7 @@ export function StudentCard({
   onClick?: () => void;
 }) {
   const base =
-    "rounded-lg border border-[#e2e5e7] bg-white p-4 shadow-sm " + className;
+    "rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-soft)] " + className;
   if (onClick) {
     return (
       <button type="button" onClick={onClick} className={`${base} text-left`}>
@@ -93,7 +93,7 @@ export function StudentCard({
 
 export function StudentErrorBanner({ message }: { message: string }) {
   return (
-    <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-[var(--error)]">
+    <p role="alert" className="rounded-lg border border-[color-mix(in_srgb,var(--error)_35%,var(--border))] bg-[color-mix(in_srgb,var(--error)_12%,var(--surface))] px-3 py-2 text-sm text-[var(--error)]">
       {message}
     </p>
   );
@@ -107,14 +107,12 @@ export function StudentInfoBanner({
   tone?: "amber" | "slate" | "teal";
 }) {
   const tones = {
-    amber: "border-amber-200 bg-amber-50 text-[#a46618]",
-    slate: "border-[#e2e5e7] bg-[#eef1f0] text-[#3f484f]",
-    teal: "border-[#b9d8d0] bg-[#edf7f2] text-[#237a57]",
+    amber: "border-[color-mix(in_srgb,var(--warning)_38%,var(--border))] bg-[color-mix(in_srgb,var(--warning)_12%,var(--surface))] text-[var(--warning)]",
+    slate: "border-[var(--border)] bg-[var(--surface-muted)] text-[var(--foreground)]",
+    teal: "border-[color-mix(in_srgb,var(--primary)_38%,var(--border))] bg-[var(--primary-soft)] text-[var(--primary-strong)]",
   };
   return (
-    <div role="status"
-      className={`rounded-lg border px-3 py-2 text-sm ${tones[tone]}`}
-    >
+    <div role="status" className={`rounded-lg border px-3 py-2 text-sm ${tones[tone]}`}>
       {message}
     </div>
   );
@@ -122,7 +120,7 @@ export function StudentInfoBanner({
 
 export function StudentEmptyState({ message }: { message: string }) {
   return (
-    <div className="rounded-lg border border-dashed border-[#cbd2d4] p-8 text-center text-sm text-[#697178]">
+    <div className="rounded-lg border border-dashed border-[var(--border)] p-8 text-center text-sm text-[var(--muted)]">
       {message}
     </div>
   );

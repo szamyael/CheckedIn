@@ -1,0 +1,37 @@
+{
+  "brand": "CheckedIn",
+  "tagline": "University event check-in and attendance",
+  "brief": "A web and mobile campus platform that helps faculty and organization members run events and students check in with QR codes and verified attendance.",
+  "adjectives": ["welcoming", "reliable", "clear"],
+  "criteria": "Recognisable as a campus-event identity, legible at app-icon size, and usable in one colour.",
+  "industry": "education",
+  "mockups": ["website", "badge", "app-icon", "social", "sticker", "signage"],
+  "brand_color": "#12366A",
+  "tile_color": "#12366A",
+  "greyscale": false,
+  "final": true,
+  "concepts": [
+    {
+      "name": "The Threshold",
+      "symbol": "checkedin-symbol-color.svg",
+      "lockup": "checkedin-horizontal-color.svg",
+      "stacked": "checkedin-stacked-color.svg",
+      "avatar": "checkedin-app-icon.svg",
+      "symbol_on_tile": "checkedin-app-icon.svg",
+      "stacked_on_tile": "checkedin-stacked-color.svg",
+      "lockup_on_tile": "checkedin-horizontal-on-blue.svg",
+      "idea": "An attendee arrives through an open event threshold.",
+      "rationale": [
+        "Signals showing up and participating, not just scanning technology.",
+        "The simplified arch and dot remain distinct in small app and web contexts.",
+        "Blue and teal retain continuity with the existing CheckedIn identity."
+      ]
+    }
+  ],
+  "recommendation": "The Threshold connects a real attendee to an open event entrance, with a compact symbol and a wordmark that works across the web and mobile app.",
+  "next_steps": [
+    "Use the horizontal lockup in app headers.",
+    "Use the Threshold symbol in mobile launchers and browser tabs.",
+    "Keep the approved one-colour and reversed masters for print and dark backgrounds."
+  ]
+}

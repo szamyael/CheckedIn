@@ -30,7 +30,7 @@ class PermissionBlockedPanel extends StatelessWidget {
                     ? TablerIcons.camera
                     : TablerIcons.mapPin,
                 size: 40,
-                color: StudentUi.teal,
+                color: StudentUi.of(context).accent,
               ),
               const SizedBox(height: 12),
               Text(

@@ -76,7 +76,7 @@ export default function EditStudentProfilePage() {
 
   return (
     <div className="space-y-4">
-      <Link href="/student/profile" className="text-sm text-teal-600">
+      <Link href="/student/profile" className="text-sm text-[var(--primary)]">
         ← Profile
       </Link>
       <StudentPageTitle

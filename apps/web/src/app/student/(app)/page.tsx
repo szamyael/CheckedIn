@@ -86,7 +86,7 @@ export default function StudentHomePage() {
           <p className="mt-7 text-xs font-semibold tracking-[0.12em] text-[var(--muted)]">ATTENDANCE</p><h2 className="mt-2 text-lg font-semibold text-[var(--text-strong)]">Scan event QR</h2><p className="mt-2 text-sm leading-6 text-[var(--muted)]">Check in to an event with a secure QR scan and transparent verification.</p>
         </Link>
         <Link href="/student/bingo" className="group rounded-2xl border border-[var(--accent)]/40 bg-[var(--surface)] p-5 shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[var(--shadow-card)]">
-          <div className="flex items-start justify-between"><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100 text-amber-800"><Sparkles size={20} aria-hidden="true" /></div><ChevronRight size={19} className="text-[var(--muted)] transition-transform group-hover:translate-x-0.5" aria-hidden="true" /></div>
+          <div className="flex items-start justify-between"><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--warning)_16%,var(--surface))] text-[var(--warning)]"><Sparkles size={20} aria-hidden="true" /></div><ChevronRight size={19} className="text-[var(--muted)] transition-transform group-hover:translate-x-0.5" aria-hidden="true" /></div>
           <p className="mt-7 text-xs font-semibold tracking-[0.12em] text-[var(--muted)]">ENGAGEMENT</p><h2 className="mt-2 text-lg font-semibold text-[var(--text-strong)]">Your Bingo progress</h2><p className="mt-2 text-sm leading-6 text-[var(--muted)]">Check your published cards and see what participation can unlock next.</p>
         </Link>
       </section>

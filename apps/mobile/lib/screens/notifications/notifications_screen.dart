@@ -94,7 +94,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           Icon(
                             _iconForType(n.type),
                             size: 18,
-                            color: n.isUnread ? StudentUi.teal : StudentUi.muted,
+                            color: n.isUnread
+                                ? StudentUi.of(context).accent
+                                : StudentUi.of(context).muted,
                           ),
                           const SizedBox(width: 8),
                           Expanded(
@@ -115,7 +117,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         fmt.format(n.createdAt.toLocal()),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               fontSize: 11,
-                              color: StudentUi.muted,
+                              color: StudentUi.of(context).muted,
                             ),
                       ),
                     ],

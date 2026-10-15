@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 
 import 'app_logo.dart';
 
-/// Shared visual tokens aligned with the web student portal.
+/// Shared colors derived from the active application theme.
 class StudentUi {
-  static const border = Color(0xFFD8D4C9);
-  static const teal = Color(0xFF3A6658);
-  static const tealSoft = Color(0xFFE4E9DF);
-  static const tealBorder = Color(0xFFBCC8BA);
-  static const tealText = Color(0xFF213B34);
-  static const muted = Color(0xFF657069);
-  static const amberBg = Color(0xFFFFF7E7);
-  static const amberBorder = Color(0xFFEFD49C);
-  static const amberText = Color(0xFF79530F);
-  static const slateBg = Color(0xFFEBE8DF);
+  final ColorScheme _colors;
+
+  StudentUi.of(BuildContext context) : _colors = Theme.of(context).colorScheme;
+
+  Color get border => _colors.outline;
+  Color get accent => _colors.primary;
+  Color get accentSoft => _colors.primaryContainer;
+  Color get accentText => _colors.onPrimaryContainer;
+  Color get muted => _colors.onSurfaceVariant;
+  Color get neutralBackground => _colors.surfaceContainerHighest;
 }
 
 class StudentStepIndicator extends StatelessWidget {
@@ -36,6 +36,7 @@ class StudentStepIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ui = StudentUi.of(context);
     return Semantics(
       label: 'Check-in progress, step $current of $total',
       child: Row(
@@ -52,27 +53,27 @@ class StudentStepIndicator extends StatelessWidget {
                     CircleAvatar(
                       radius: 18,
                       backgroundColor: complete
-                          ? StudentUi.teal
+                          ? ui.accent
                           : active
-                          ? StudentUi.tealSoft
-                          : StudentUi.slateBg,
+                          ? ui.accentSoft
+                          : ui.neutralBackground,
                       child: Icon(
                         complete ? Icons.check : _icons[index],
                         size: 17,
                         color: complete
-                            ? Colors.white
+                            ? Theme.of(context).colorScheme.onPrimary
                             : active
-                            ? StudentUi.tealText
-                            : StudentUi.muted,
+                            ? ui.accentText
+                            : ui.muted,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       _labels[index],
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: 11,
                         fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                        color: active ? StudentUi.tealText : StudentUi.muted,
+                        color: active ? ui.accentText : ui.muted,
                       ),
                     ),
                   ],
@@ -86,7 +87,7 @@ class StudentStepIndicator extends StatelessWidget {
                         left: 6,
                         right: 6,
                       ),
-                      color: step < current ? StudentUi.teal : StudentUi.border,
+                      color: step < current ? ui.accent : ui.border,
                     ),
                   ),
               ],
@@ -172,11 +173,12 @@ class StudentEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ui = StudentUi.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
       child: Column(
         children: [
-          Icon(icon, size: 48, color: StudentUi.muted),
+          Icon(icon, size: 48, color: ui.muted),
           const SizedBox(height: 16),
           Text(
             message,
@@ -216,23 +218,27 @@ class StudentErrorBanner extends StatelessWidget {
 class StudentInfoBanner extends StatelessWidget {
   final String message;
   final IconData icon;
-  final Color background;
-  final Color border;
-  final Color foreground;
+  final Color? background;
+  final Color? border;
+  final Color? foreground;
   final Widget? action;
 
   const StudentInfoBanner({
     super.key,
     required this.message,
     required this.icon,
-    this.background = StudentUi.amberBg,
-    this.border = StudentUi.amberBorder,
-    this.foreground = StudentUi.amberText,
+    this.background,
+    this.border,
+    this.foreground,
     this.action,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final background = this.background ?? colors.tertiaryContainer;
+    final border = this.border ?? colors.outlineVariant;
+    final foreground = this.foreground ?? colors.onTertiaryContainer;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -289,6 +295,7 @@ class StudentTealCallout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -296,16 +303,16 @@ class StudentTealCallout extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
         child: Ink(
           decoration: BoxDecoration(
-            color: StudentUi.tealSoft,
+            color: colors.primaryContainer,
             borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: StudentUi.tealBorder),
+            border: Border.all(color: colors.outline),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Text(
             actionLabel == null ? message : '$message\n$actionLabel',
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: StudentUi.tealText,
+            style: TextStyle(
+              color: colors.onPrimaryContainer,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),

@@ -239,6 +239,8 @@ export default async function ReportsPage({
               baseFilename={`attendance-${mode}`}
               eventTitle={reportTitle}
               includeEvent={includeEvent}
+              compact
+              exportLabel="Export event attendees"
             />
           </div>
         </>

@@ -39,8 +39,8 @@ flutter_launcher_icons:
   android: true
   ios: true
   image_path: assets/images/logo.png
-  adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: assets/images/logo.png
+  adaptive_icon_background: "#12366A"
+  adaptive_icon_foreground: assets/images/launcher-foreground.png
 
 flutter:
   uses-material-design: true
@@ -49,3 +49,5 @@ flutter:
     - assets/audio/checkdin.mp3.mp3
     - assets/images/logo.png
     - assets/images/Checkedin_logo_without_background.png
+    - assets/images/checkedin-horizontal.png
+    - assets/images/launcher-foreground.png

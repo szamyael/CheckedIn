@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 256" width="800" height="256" role="img" aria-labelledby="title">
+  <title id="title">CheckedIn Gather concept lockup</title>
+  <g transform="translate(0 0)">
+    <path d="M128 78L78 164.6M128 78L178 164.6M92 183H164" fill="none" stroke="#111111" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="128" cy="60" r="24" fill="#111111"/>
+    <circle cx="68" cy="183" r="24" fill="#111111"/>
+    <circle cx="188" cy="183" r="24" fill="#111111"/>
+  </g>
+  <text x="270" y="164" fill="#111111" font-family="Arial, sans-serif" font-size="76" font-weight="700" letter-spacing="-3">CheckedIn</text>
+</svg>

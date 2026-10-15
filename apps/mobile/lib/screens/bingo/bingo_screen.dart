@@ -88,10 +88,10 @@ class _BingoScreenState extends State<BingoScreen> {
         : ListView(
             padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
             children: [
-              const Text(
+              Text(
                 'EVENT BINGO',
                 style: TextStyle(
-                  color: StudentUi.muted,
+                  color: StudentUi.of(context).muted,
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.4,
@@ -108,12 +108,12 @@ class _BingoScreenState extends State<BingoScreen> {
                 )
               else ...[
                 if (_cards.length > 1) ...[
-                  const Text(
+                  Text(
                     'Choose a bingo card',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF0C2238),
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -156,14 +156,14 @@ class _BingoScreenState extends State<BingoScreen> {
                     _board!.title,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontSize: 27,
-                      color: const Color(0xFF0C2238),
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 5),
                   Text(
                     '${_board!.completedCellIds.length} / ${_board!.cells.length} completed | ${_board!.seasonLabel}',
-                    style: const TextStyle(
-                      color: StudentUi.muted,
+                    style: TextStyle(
+                      color: StudentUi.of(context).muted,
                       fontSize: 13,
                     ),
                   ),
@@ -174,7 +174,7 @@ class _BingoScreenState extends State<BingoScreen> {
                         child: _Metric(
                           label: 'Event streak',
                           value: '${_board!.streak}',
-                          color: const Color(0xFF17324D),
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -182,7 +182,7 @@ class _BingoScreenState extends State<BingoScreen> {
                         child: _Metric(
                           label: 'Lines complete',
                           value: '${_board!.completedLines.length}',
-                          color: const Color(0xFFA46618),
+                          color: Theme.of(context).colorScheme.tertiary,
                         ),
                       ),
                     ],
@@ -192,7 +192,7 @@ class _BingoScreenState extends State<BingoScreen> {
                     aspectRatio: 1,
                     child: Container(
                       padding: const EdgeInsets.all(2),
-                      color: const Color(0xFF17324D),
+                      color: Theme.of(context).colorScheme.outline,
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
@@ -219,8 +219,10 @@ class _BingoScreenState extends State<BingoScreen> {
                               return Container(
                                 padding: const EdgeInsets.all(8),
                                 color: done
-                                    ? const Color(0xFFFFF6DF)
-                                    : Colors.white,
+                                    ? Theme.of(
+                                        context,
+                                      ).colorScheme.tertiaryContainer
+                                    : Theme.of(context).colorScheme.surface,
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
@@ -235,17 +237,23 @@ class _BingoScreenState extends State<BingoScreen> {
                                         fontSize: 11,
                                         fontWeight: FontWeight.w600,
                                         color: done
-                                            ? const Color(0xFF7C5311)
-                                            : const Color(0xFF3F484F),
+                                            ? Theme.of(
+                                                context,
+                                              ).colorScheme.onTertiaryContainer
+                                            : Theme.of(
+                                                context,
+                                              ).colorScheme.onSurface,
                                       ),
                                     ),
                                     if (done)
-                                      const Padding(
+                                      Padding(
                                         padding: EdgeInsets.only(top: 5),
                                         child: Icon(
                                           TablerIcons.circleCheck,
                                           size: 17,
-                                          color: Color(0xFFA46618),
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.tertiary,
                                         ),
                                       ),
                                   ],
@@ -257,6 +265,7 @@ class _BingoScreenState extends State<BingoScreen> {
                             child: CustomPaint(
                               painter: _CompletedLinesPainter(
                                 lines: _board!.completedLines,
+                                color: Theme.of(context).colorScheme.tertiary,
                               ),
                             ),
                           ),
@@ -265,18 +274,18 @@ class _BingoScreenState extends State<BingoScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const Row(
+                  Row(
                     children: [
                       Icon(
                         TablerIcons.award,
                         size: 19,
-                        color: Color(0xFFA46618),
+                        color: Theme.of(context).colorScheme.tertiary,
                       ),
                       SizedBox(width: 8),
                       Text(
                         'Recognition earned',
                         style: TextStyle(
-                          color: Color(0xFF0C2238),
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                         ),
@@ -285,9 +294,9 @@ class _BingoScreenState extends State<BingoScreen> {
                   ),
                   const SizedBox(height: 10),
                   if (_board!.awards.isEmpty)
-                    const Text(
+                    Text(
                       'Complete a line or streak on this card to earn badges.',
-                      style: TextStyle(color: StudentUi.muted),
+                      style: TextStyle(color: StudentUi.of(context).muted),
                     )
                   else
                     ..._board!.awards.map(
@@ -308,13 +317,14 @@ class _BingoScreenState extends State<BingoScreen> {
 
 class _CompletedLinesPainter extends CustomPainter {
   final List<List<int>> lines;
+  final Color color;
 
-  const _CompletedLinesPainter({required this.lines});
+  const _CompletedLinesPainter({required this.lines, required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xBFA46618)
+      ..color = color.withValues(alpha: 0.75)
       ..strokeWidth = 3
       ..strokeCap = StrokeCap.round;
 
@@ -337,7 +347,7 @@ class _CompletedLinesPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _CompletedLinesPainter oldDelegate) =>
-      lines != oldDelegate.lines;
+      lines != oldDelegate.lines || color != oldDelegate.color;
 }
 
 class _Metric extends StatelessWidget {
@@ -353,8 +363,8 @@ class _Metric extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(14),
     decoration: BoxDecoration(
-      color: Colors.white,
-      border: Border.all(color: StudentUi.border),
+      color: Theme.of(context).colorScheme.surface,
+      border: Border.all(color: StudentUi.of(context).border),
     ),
     child: Column(
       children: [
@@ -369,7 +379,7 @@ class _Metric extends StatelessWidget {
         const SizedBox(height: 3),
         Text(
           label,
-          style: const TextStyle(fontSize: 11, color: StudentUi.muted),
+          style: TextStyle(fontSize: 12, color: StudentUi.of(context).muted),
         ),
       ],
     ),
@@ -384,12 +394,16 @@ class _AwardRow extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
     decoration: BoxDecoration(
-      color: Colors.white,
-      border: Border.all(color: StudentUi.border),
+      color: Theme.of(context).colorScheme.surface,
+      border: Border.all(color: StudentUi.of(context).border),
     ),
     child: Row(
       children: [
-        const Icon(TablerIcons.stars, color: Color(0xFFC18A2E), size: 18),
+        Icon(
+          TablerIcons.stars,
+          color: Theme.of(context).colorScheme.tertiary,
+          size: 18,
+        ),
         const SizedBox(width: 10),
         Expanded(
           child: Text(
@@ -399,8 +413,8 @@ class _AwardRow extends StatelessWidget {
         ),
         Text(
           '+$points',
-          style: const TextStyle(
-            color: Color(0xFFA46618),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.tertiary,
             fontWeight: FontWeight.w700,
           ),
         ),

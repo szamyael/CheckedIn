@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
-import { normalizeProgram } from "@/lib/org-membership";
-
-type MembershipAction = "activate" | "disable";
+import {
+  membershipActionChanges,
+  normalizeProgram,
+  type MembershipAction,
+} from "@/lib/org-membership";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -20,20 +22,23 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json() as { action?: MembershipAction; studentIds?: unknown };
-  if (body.action !== "activate" && body.action !== "disable") {
-    return NextResponse.json({ error: 'action must be "activate" or "disable"' }, { status: 400 });
+  const actions: MembershipAction[] = ["mark_paid", "mark_unpaid", "activate", "disable"];
+  if (!body.action || !actions.includes(body.action)) {
+    return NextResponse.json({ error: "Choose a valid membership action" }, { status: 400 });
   }
   const requestedIds = Array.isArray(body.studentIds)
     ? [...new Set(body.studentIds.filter((id): id is string => typeof id === "string" && id.length > 0))]
     : [];
-
+  if (requestedIds.length === 0) {
+    return NextResponse.json({ error: "Select at least one student" }, { status: 400 });
+  }
   const { data: staff } = await supabase
     .from("staff_profiles")
     .select("organization_id")
     .eq("id", user.id)
     .maybeSingle();
   const organizationId = staff?.organization_id;
-  if (!organizationId && profile.role !== "admin") {
+  if (!organizationId) {
     return NextResponse.json({ error: "Your account is not assigned to an organization" }, { status: 403 });
   }
 
@@ -48,21 +53,34 @@ export async function POST(request: Request) {
   if (mappingError) return NextResponse.json({ error: mappingError.message }, { status: 400 });
   const mappedPrograms = new Set((mappings ?? []).map((mapping) => normalizeProgram(mapping.program)));
 
-  let studentQuery = admin
+  const studentQuery = admin
     .from("students")
     .select("id, program")
-    .in("id", requestedIds.length ? requestedIds : ["00000000-0000-0000-0000-000000000000"]);
-  if (requestedIds.length === 0) {
-    studentQuery = admin.from("students").select("id, program");
-  }
+    .in("id", requestedIds);
   const { data: students, error: studentError } = await studentQuery;
   if (studentError) return NextResponse.json({ error: studentError.message }, { status: 400 });
   const mappedStudentIds = (students ?? [])
     .filter((student) => mappedPrograms.has(normalizeProgram(student.program)))
     .map((student) => student.id);
+  if (mappedStudentIds.length !== requestedIds.length) {
+    return NextResponse.json({ error: "One or more students are not mapped to your organization" }, { status: 403 });
+  }
+
+  const now = new Date().toISOString();
+  const changes = membershipActionChanges(body.action, now);
+  if (body.action === "mark_paid" || body.action === "mark_unpaid") {
+    const { data: updated, error } = await admin.rpc("record_organization_students_payment", {
+      p_organization_id: organizationId,
+      p_student_ids: mappedStudentIds,
+      p_paid: body.action === "mark_paid",
+      p_updated_by: user.id,
+    });
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    return NextResponse.json({ success: true, updated });
+  }
 
   let eligibleIds = mappedStudentIds;
-  if (body.action === "activate" && mappedStudentIds.length > 0) {
+  if (body.action === "activate") {
     const { data: paid, error: paidError } = await admin
       .from("organization_memberships")
       .select("student_id")
@@ -71,14 +89,21 @@ export async function POST(request: Request) {
       .in("student_id", mappedStudentIds);
     if (paidError) return NextResponse.json({ error: paidError.message }, { status: 400 });
     eligibleIds = (paid ?? []).map((membership) => membership.student_id);
+    if (eligibleIds.length === 0) {
+      return NextResponse.json({ error: "Mark the student as paid before activating the account" }, { status: 400 });
+    }
   }
 
-  if (eligibleIds.length === 0) return NextResponse.json({ success: true, updated: 0 });
-  const updates = body.action === "activate"
-    ? { status: "active", disabled_at: null, account_status_reason: null }
-    : { status: "disabled", disabled_at: new Date().toISOString(), account_status_reason: "Membership disabled by organization" };
-  const { error } = await admin.from("users").update(updates).in("id", eligibleIds).eq("role", "student");
+  const { data: updatedUsers, error } = await admin
+    .from("users")
+    .update(changes.userUpdate!)
+    .in("id", eligibleIds)
+    .eq("role", "student")
+    .select("id");
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (!updatedUsers?.length) {
+    return NextResponse.json({ error: "No student accounts were updated" }, { status: 404 });
+  }
 
-  return NextResponse.json({ success: true, updated: eligibleIds.length });
+  return NextResponse.json({ success: true, updated: updatedUsers.length });
 }

@@ -345,17 +345,10 @@ class AuthService extends ChangeNotifier {
       final reason = profile?['account_status_reason'] as String?;
       if (status == 'needs_reregistration') {
         _registrationResubmissionAllowed = true;
-        throw StudentAccountDecisionException(status, reason);
+      } else {
+        await signOut();
       }
-      await signOut();
-      if (status == 'suspended') {
-        throw StudentAccountDecisionException(status, reason);
-      }
-      throw Exception(
-        status == 'pending'
-            ? "Your account is still under review. Contact your program's organization to settle your account status."
-            : "Your account is suspended. Contact your program's organization to settle your account status.",
-      );
+      throw StudentAccountDecisionException(status, reason);
     }
 
     await _client
@@ -395,11 +388,7 @@ class AuthService extends ChangeNotifier {
     }
 
     if (creds.accountStatus != 'active') {
-      throw Exception(
-        creds.accountStatus == 'pending'
-            ? "Your account is still under review. Contact your program's organization to settle your account status."
-            : "Your account is suspended. Contact your program's organization to settle your account status.",
-      );
+      throw StudentAccountDecisionException(creds.accountStatus, null);
     }
 
     // Prefer a still-valid persisted Supabase session when present.

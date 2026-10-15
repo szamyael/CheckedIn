@@ -2,7 +2,17 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-export type ThemeName = "navy";
+const themeNames = [
+  "navy",
+  "violet",
+  "orange",
+  "maroon",
+  "army-green",
+  "black",
+  "grey",
+] as const;
+
+export type ThemeName = (typeof themeNames)[number];
 export type ThemeMode = "light" | "dark" | "system";
 
 type ThemeContextValue = {
@@ -17,6 +27,18 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 const themeKey = "checkedin-color-theme";
 const modeKey = "checkedin-theme-mode";
 
+function isThemeName(value: string | null): value is ThemeName {
+  return themeNames.some((theme) => theme === value);
+}
+
+function readInitialTheme(): ThemeName {
+  if (typeof window === "undefined") return "navy";
+  const saved = localStorage.getItem(themeKey);
+  if (isThemeName(saved)) return saved;
+  localStorage.setItem(themeKey, "navy");
+  return "navy";
+}
+
 function resolveMode(mode: ThemeMode) {
   return mode === "system"
     ? window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
@@ -24,13 +46,7 @@ function resolveMode(mode: ThemeMode) {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeName>(() => {
-    if (typeof window === "undefined") return "navy";
-    const saved = localStorage.getItem(themeKey);
-    // Legacy palettes intentionally converge on the single CheckedIn palette.
-    if (saved !== "navy") localStorage.setItem(themeKey, "navy");
-    return "navy";
-  });
+  const [theme, setThemeState] = useState<ThemeName>(readInitialTheme);
   const [mode, setModeState] = useState<ThemeMode>(() => {
     if (typeof window === "undefined") return "light";
     const saved = localStorage.getItem(modeKey) as ThemeMode | null;

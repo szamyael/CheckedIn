@@ -134,6 +134,8 @@ class _EventTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fmt = DateFormat('MMM d, yyyy • h:mm a');
+    final colors = Theme.of(context).colorScheme;
+    final ui = StudentUi.of(context);
     return StudentCard(
       padding: const EdgeInsets.all(16),
       onTap: onTap,
@@ -144,12 +146,12 @@ class _EventTile extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer,
+              color: colors.primaryContainer,
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(
               TablerIcons.calendarEvent,
-              color: Theme.of(context).colorScheme.primary,
+              color: colors.primary,
             ),
           ),
           const SizedBox(width: 12),
@@ -161,17 +163,17 @@ class _EventTile extends StatelessWidget {
                     event.title,
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: Theme.of(context).colorScheme.onSurface,
+                      color: colors.onSurface,
                     ),
                   ),
                 ),
                 if (event.isAttendanceOpen)
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.only(left: 6),
                     child: Text(
                       'LIVE',
                       style: TextStyle(
-                        color: Color(0xFF237A57),
+                        color: colors.primary,
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                       ),
@@ -179,10 +181,29 @@ class _EventTile extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 5), Text(event.venueName, style: const TextStyle(color: StudentUi.muted, fontSize: 13)), const SizedBox(height: 3), Text(fmt.format(event.startsAt.toLocal()), style: const TextStyle(color: StudentUi.muted, fontSize: 12)),
-            const SizedBox(height: 8), Text(event.isAttendanceOpen ? 'Attendance is open' : 'Check-in opens ${fmt.format(event.attendanceStartsAt.toLocal())}', style: TextStyle(color: event.isAttendanceOpen ? const Color(0xFF237A57) : StudentUi.muted, fontSize: 12, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 5),
+            Text(
+              event.venueName,
+              style: TextStyle(color: ui.muted, fontSize: 13),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              fmt.format(event.startsAt.toLocal()),
+              style: TextStyle(color: ui.muted, fontSize: 12),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              event.isAttendanceOpen
+                  ? 'Attendance is open'
+                  : 'Check-in opens ${fmt.format(event.attendanceStartsAt.toLocal())}',
+              style: TextStyle(
+                color: event.isAttendanceOpen ? colors.primary : ui.muted,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ])),
-          const Icon(TablerIcons.chevronRight, color: StudentUi.muted),
+          Icon(TablerIcons.chevronRight, color: ui.muted),
         ],
       ),
     );
@@ -195,10 +216,10 @@ class _EventsHeader extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      const Text(
+      Text(
         'CAMPUS CALENDAR',
         style: TextStyle(
-          color: StudentUi.muted,
+          color: StudentUi.of(context).muted,
           fontSize: 11,
           fontWeight: FontWeight.w700,
           letterSpacing: 1.4,
@@ -210,9 +231,12 @@ class _EventsHeader extends StatelessWidget {
         style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 27),
       ),
       const SizedBox(height: 4),
-      const Text(
+      Text(
         'Find an event and scan the organizer QR when attendance opens.',
-        style: TextStyle(color: StudentUi.muted, fontSize: 13),
+        style: TextStyle(
+          color: StudentUi.of(context).muted,
+          fontSize: 13,
+        ),
       ),
     ],
   );
@@ -280,7 +304,7 @@ class _MonthCalendar extends StatelessWidget {
                   border: Border.all(
                     color: isToday
                         ? Theme.of(context).colorScheme.primary
-                        : StudentUi.border,
+                        : StudentUi.of(context).border,
                   ),
                   borderRadius: BorderRadius.circular(8),
                 ),
