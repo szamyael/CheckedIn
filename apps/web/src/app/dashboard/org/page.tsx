@@ -73,7 +73,7 @@ export default async function OrgDashboard() {
         eyebrow="ORGANIZATION OPERATIONS"
         title={organization?.name ? `${organization.name} workspace` : "Organization overview"}
         description="Create trustworthy event experiences, manage QR attendance, and recognize student participation."
-        actions={<Link href="/dashboard/events" className="inline-flex min-h-10 items-center gap-2 bg-[var(--primary)] px-4 text-sm font-semibold text-white hover:bg-[var(--primary-strong)]"><CalendarPlus className="h-4 w-4" /> Create event</Link>}
+        actions={<Link href="/dashboard/events" className="inline-flex min-h-10 items-center gap-2 bg-[var(--primary)] px-4 text-sm font-semibold text-white hover:bg-[var(--action-background)]"><CalendarPlus className="h-4 w-4" /> Create event</Link>}
       />
 
       <div className="grid grid-cols-2 gap-px border border-[var(--border)] bg-[var(--border)] sm:grid-cols-3">

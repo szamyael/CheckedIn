@@ -7,8 +7,10 @@ import { PermissionBlockedCard } from "@/components/student/PermissionBlockedCar
 import {
   StudentErrorBanner,
   StudentPageTitle,
+  StudentStepIndicator,
   studentPrimaryButtonClass,
 } from "@/components/student/StudentUi";
+import { Check, AlertTriangle } from "@/lib/icons";
 import { useLoader } from "@/components/LoaderProvider";
 import type { CheckInMeta } from "@/lib/student/api";
 import { isPermissionErrorMessage } from "@/lib/student/browser-permissions";
@@ -146,7 +148,7 @@ export default function AttendanceScanPage() {
     return (
       <div className="space-y-4 text-center">
         <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full text-3xl ${result.blocked ? "bg-amber-100 text-amber-700" : "bg-teal-100 text-teal-600"}`}>
-          {result.blocked ? "!" : "✓"}
+          {result.blocked ? <AlertTriangle className="h-8 w-8" aria-hidden="true" /> : <Check className="h-8 w-8" aria-hidden="true" />}
         </div>
         <h1 className="text-xl font-bold">{result.title}</h1>
         <p className="text-sm text-slate-600">{result.body}</p>
@@ -188,6 +190,7 @@ export default function AttendanceScanPage() {
   return (
     <div className="space-y-4">
       <StudentPageTitle title="Scan Event QR" />
+      <StudentStepIndicator current={1} />
       {cameraBlocked ? (
         <PermissionBlockedCard
           permission="camera"
@@ -208,7 +211,7 @@ export default function AttendanceScanPage() {
         />
       )}
       {error && !cameraBlocked && <StudentErrorBanner message={error} />}
-      <p className="text-center text-xs text-slate-500">
+      <p className="text-center text-xs text-[var(--muted)]">
         Point your camera at the event QR. Scan once to check in, or again after
         check-in, choose a temporary break, or check out for the day.
       </p>

@@ -1,122 +1,44 @@
 import 'package:flutter/material.dart';
 
-enum AppColorTheme { navy, forest, burgundy, indigo, slate }
+enum AppColorTheme { navy }
 
 extension AppColorThemeDetails on AppColorTheme {
-  String get label => switch (this) {
-    AppColorTheme.navy => 'Campus',
-    AppColorTheme.forest => 'Forest',
-    AppColorTheme.burgundy => 'Burgundy',
-    AppColorTheme.indigo => 'Indigo',
-    AppColorTheme.slate => 'Slate',
-  };
+  String get label => 'CheckedIn';
 
-  String get description => switch (this) {
-    AppColorTheme.navy => 'Campus-ready',
-    AppColorTheme.forest => 'Grounded',
-    AppColorTheme.burgundy => 'Classic',
-    AppColorTheme.indigo => 'Focused',
-    AppColorTheme.slate => 'Neutral',
-  };
+  String get description => 'Indigo, cyan & emerald';
 
-  Color get primary => switch (this) {
-    AppColorTheme.navy => const Color(0xFF3A6658),
-    AppColorTheme.forest => const Color(0xFF486C4D),
-    AppColorTheme.burgundy => const Color(0xFF80515A),
-    AppColorTheme.indigo => const Color(0xFF59677E),
-    AppColorTheme.slate => const Color(0xFF536A69),
-  };
+  Color get primary => const Color(0xFF31578A);
 
-  Color get primaryDark => switch (this) {
-    AppColorTheme.navy => const Color(0xFFA6BBA6),
-    AppColorTheme.forest => const Color(0xFFAABD9F),
-    AppColorTheme.burgundy => const Color(0xFFD0A7A5),
-    AppColorTheme.indigo => const Color(0xFFAAB7C2),
-    AppColorTheme.slate => const Color(0xFFA5BCB4),
-  };
+  Color get primaryDark => const Color(0xFF8FB3E3);
 
-  Color get primaryStrong => switch (this) {
-    AppColorTheme.navy => const Color(0xFF213B34),
-    AppColorTheme.forest => const Color(0xFF2D4532),
-    AppColorTheme.burgundy => const Color(0xFF50363B),
-    AppColorTheme.indigo => const Color(0xFF343E50),
-    AppColorTheme.slate => const Color(0xFF354746),
-  };
+  Color get primaryStrong => const Color(0xFF203C69);
 
-  Color get primarySoft => switch (this) {
-    AppColorTheme.navy => const Color(0xFFE4E9DF),
-    AppColorTheme.forest => const Color(0xFFE3E9DC),
-    AppColorTheme.burgundy => const Color(0xFFEEE3DF),
-    AppColorTheme.indigo => const Color(0xFFE3E5E7),
-    AppColorTheme.slate => const Color(0xFFE1E8E3),
-  };
+  Color get primarySoft => const Color(0xFFE6EEF9);
 
-  Color get accent => switch (this) {
-    AppColorTheme.navy => const Color(0xFFBD704A),
-    AppColorTheme.forest => const Color(0xFFB7774E),
-    AppColorTheme.burgundy => const Color(0xFFBD7653),
-    AppColorTheme.indigo => const Color(0xFFB87250),
-    AppColorTheme.slate => const Color(0xFFAC7551),
-  };
+  Color get accent => const Color(0xFF087F8C);
 
-  Color get background => switch (this) {
-    AppColorTheme.navy => const Color(0xFFF2EFE7),
-    AppColorTheme.forest => const Color(0xFFF1EFE5),
-    AppColorTheme.burgundy => const Color(0xFFF3ECE6),
-    AppColorTheme.indigo => const Color(0xFFEFEEE8),
-    AppColorTheme.slate => const Color(0xFFEEEFEA),
-  };
+  Color get background => const Color(0xFFF7F9FC);
 
-  Color get backgroundDark => switch (this) {
-    AppColorTheme.navy => const Color(0xFF1B211D),
-    AppColorTheme.forest => const Color(0xFF1C221C),
-    AppColorTheme.burgundy => const Color(0xFF241E1D),
-    AppColorTheme.indigo => const Color(0xFF1D2023),
-    AppColorTheme.slate => const Color(0xFF1C2221),
-  };
+  Color get backgroundDark => const Color(0xFF111A2B);
 
-  Color get surfaceDark => switch (this) {
-    AppColorTheme.navy => const Color(0xFF242B26),
-    AppColorTheme.forest => const Color(0xFF252D25),
-    AppColorTheme.burgundy => const Color(0xFF302725),
-    AppColorTheme.indigo => const Color(0xFF272C31),
-    AppColorTheme.slate => const Color(0xFF252C2B),
-  };
+  Color get surfaceDark => const Color(0xFF192640);
 
-  Color get surfaceMutedDark => switch (this) {
-    AppColorTheme.navy => const Color(0xFF2F3831),
-    AppColorTheme.forest => const Color(0xFF303A30),
-    AppColorTheme.burgundy => const Color(0xFF3B302E),
-    AppColorTheme.indigo => const Color(0xFF333A40),
-    AppColorTheme.slate => const Color(0xFF303938),
-  };
+  Color get surfaceMutedDark => const Color(0xFF223452);
 
-  Color get borderDark => switch (this) {
-    AppColorTheme.navy => const Color(0xFF465047),
-    AppColorTheme.forest => const Color(0xFF495449),
-    AppColorTheme.burgundy => const Color(0xFF574542),
-    AppColorTheme.indigo => const Color(0xFF4A535A),
-    AppColorTheme.slate => const Color(0xFF47514E),
-  };
+  Color get borderDark => const Color(0xFF354A6A);
 
-  Color get primarySoftDark => switch (this) {
-    AppColorTheme.navy => const Color(0xFF344239),
-    AppColorTheme.forest => const Color(0xFF354335),
-    AppColorTheme.burgundy => const Color(0xFF493432),
-    AppColorTheme.indigo => const Color(0xFF364047),
-    AppColorTheme.slate => const Color(0xFF34423D),
-  };
+  Color get primarySoftDark => const Color(0xFF29456D);
 }
 
 class AppTheme {
   static ThemeData build(AppColorTheme selected, Brightness brightness) {
     final dark = brightness == Brightness.dark;
     final background = dark ? selected.backgroundDark : selected.background;
-    final surface = dark ? selected.surfaceDark : const Color(0xFFFAF8F2);
-    final border = dark ? selected.borderDark : const Color(0xFFD8D4C9);
-    final text = dark ? const Color(0xFFE9E7DD) : const Color(0xFF28332E);
-    final secondary = dark ? const Color(0xFFC6C8BE) : const Color(0xFF48554E);
-    final muted = dark ? const Color(0xFFB6B8AE) : const Color(0xFF657069);
+    final surface = dark ? selected.surfaceDark : const Color(0xFFFFFFFF);
+    final border = dark ? selected.borderDark : const Color(0xFFD9E1EC);
+    final text = dark ? const Color(0xFFE6EDF7) : const Color(0xFF172033);
+    final secondary = dark ? const Color(0xFFC4D0E0) : const Color(0xFF40516A);
+    final muted = dark ? const Color(0xFFA7B5C8) : const Color(0xFF5F6E82);
     final primary = dark ? selected.primaryDark : selected.primary;
     final scheme =
         ColorScheme.fromSeed(
@@ -190,7 +112,7 @@ class AppTheme {
       dividerTheme: DividerThemeData(color: border, thickness: 1),
       dialogTheme: DialogThemeData(
         backgroundColor: surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         titleTextStyle: TextStyle(
           color: text,
           fontSize: 20,
@@ -213,10 +135,11 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: surface,
-        elevation: 0,
+        elevation: 1,
+        shadowColor: Colors.black26,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           side: BorderSide(color: border),
         ),
       ),
@@ -226,19 +149,19 @@ class AppTheme {
         filled: true,
         fillColor: surface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: primary, width: 1.6),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: scheme.error),
         ),
         contentPadding: const EdgeInsets.symmetric(
@@ -272,7 +195,9 @@ class AppTheme {
           backgroundColor: primary,
           foregroundColor: dark ? background : Colors.white,
           minimumSize: const Size.fromHeight(52),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
         ),
       ),
@@ -281,7 +206,9 @@ class AppTheme {
           foregroundColor: dark ? text : selected.primaryStrong,
           side: BorderSide(color: border),
           minimumSize: const Size.fromHeight(48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           textStyle: const TextStyle(fontWeight: FontWeight.w600),
         ),
       ),

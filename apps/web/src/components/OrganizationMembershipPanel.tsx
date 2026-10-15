@@ -74,28 +74,29 @@ export function OrganizationMembershipPanel({ students }: { students: StudentMem
   const years = [...new Set(students.map((student) => student.year_level).filter((year): year is number => year != null))].sort((a, b) => a - b);
 
   return (
-    <section className="space-y-4">
+    <section className="dashboard-membership-panel dashboard-section space-y-5 rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-soft)] sm:p-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <h2 className="text-lg font-semibold text-[var(--primary-strong)]">Membership</h2>
+          <p className="text-[10px] font-bold tracking-[0.18em] text-[var(--primary)]">STUDENT ACCESS</p>
+          <h2 className="mt-1 text-xl font-semibold text-[var(--primary-strong)]">Membership</h2>
           <p className="mt-1 text-sm text-[var(--muted)]">Activate paid students and disable mapped student accounts. Students outside your mapped programs are excluded.</p>
         </div>
-        <button type="button" onClick={downloadReport} className="border border-[var(--primary)] px-3 py-2 text-sm font-semibold text-[var(--primary)] hover:bg-[var(--primary-soft)]">Generate paid report</button>
+        <button type="button" onClick={downloadReport} className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[var(--primary)] px-3 py-2 text-sm font-semibold text-[var(--primary)] hover:bg-[var(--primary-soft)]">Generate paid report</button>
       </div>
-      <div className="flex flex-wrap gap-3">
-        <select aria-label="Filter by section" value={section} onChange={(event) => setSection(event.target.value)} className="border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm">
+      <div className="dashboard-membership-toolbar flex flex-wrap gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-3">
+        <select aria-label="Filter by section" value={section} onChange={(event) => setSection(event.target.value)} className="min-h-10 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm">
           <option value="">All sections</option>
           {sections.map((value) => <option key={value} value={value ?? ""}>{value}</option>)}
         </select>
-        <select aria-label="Filter by year level" value={yearLevel} onChange={(event) => setYearLevel(event.target.value)} className="border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm">
+        <select aria-label="Filter by year level" value={yearLevel} onChange={(event) => setYearLevel(event.target.value)} className="min-h-10 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm">
           <option value="">All year levels</option>
           {years.map((value) => <option key={value} value={value}>Year {value}</option>)}
         </select>
-        <button type="button" onClick={() => void update("activate")} className="bg-teal-700 px-3 py-2 text-sm font-semibold text-white hover:bg-teal-800">Activate all paid ({filtered.filter((student) => student.paid_at).length})</button>
-        <button type="button" onClick={() => void update("disable")} className="bg-red-700 px-3 py-2 text-sm font-semibold text-white hover:bg-red-800">Disable all ({filtered.length})</button>
+        <button type="button" onClick={() => void update("activate")} className="min-h-10 rounded-xl bg-teal-700 px-3 py-2 text-sm font-semibold text-white hover:bg-teal-800">Activate all paid ({filtered.filter((student) => student.paid_at).length})</button>
+        <button type="button" onClick={() => void update("disable")} className="min-h-10 rounded-xl bg-red-700 px-3 py-2 text-sm font-semibold text-white hover:bg-red-800">Disable all ({filtered.length})</button>
       </div>
       {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
-      <div className="overflow-x-auto border border-[var(--border)] bg-[var(--surface)]">
+      <div className="table-scroll overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-[var(--border)] bg-[var(--surface-muted)]"><tr>{["Student", "Program/Course", "Year", "Section", "Paid", "Account", "Action"].map((heading) => <th key={heading} className="px-4 py-3 font-semibold">{heading}</th>)}</tr></thead>
           <tbody>

@@ -142,7 +142,7 @@ export function StudentShell({
                         active ? "text-[var(--primary-strong)]" : "text-[#697178]"
                       }`}
                     >
-                      <span className={`grid h-8 w-10 place-items-center transition-colors ${href === "/student/attendance/scan" ? "bg-[var(--primary-strong)] text-[var(--surface)]" : active ? "text-[var(--accent)]" : ""}`}>
+                      <span className={`grid h-8 w-10 place-items-center transition-colors ${href === "/student/attendance/scan" ? "bg-[var(--action-background)] text-[var(--action-foreground)]" : active ? "text-[var(--accent)]" : ""}`}>
                         <Icon className="h-[19px] w-[19px]" strokeWidth={active ? 2 : 1.6} aria-hidden="true" />
                       </span>
                       {label}

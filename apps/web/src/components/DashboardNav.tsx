@@ -68,7 +68,7 @@ export function DashboardNav({ items }: { items: DashboardNavItem[] }) {
               aria-label={label}
               title={label}
               aria-current={active ? "page" : undefined}
-              className={`dashboard-nav-item flex min-h-11 shrink-0 items-center gap-3 px-3 text-xs font-medium text-[var(--muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)] sm:text-sm lg:min-h-12 lg:px-3 ${
+              className={`dashboard-nav-item flex min-h-10 shrink-0 items-center gap-3 px-3 text-xs font-medium text-[var(--muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)] sm:text-sm lg:min-h-10 lg:px-3 ${
                 active ? "bg-[var(--primary-soft)] text-[var(--primary-strong)]" : ""
               }`}
             >

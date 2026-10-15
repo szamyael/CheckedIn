@@ -132,7 +132,9 @@ class _SelfieScreenState extends State<SelfieScreen> {
       _error = null;
     });
     UniversalLoaderController.instance.show(
-      widget.offlineSubmission ? 'Saving offline attendance…' : 'Submitting check-in…',
+      widget.offlineSubmission
+          ? 'Saving offline attendance…'
+          : 'Submitting check-in…',
     );
 
     try {
@@ -169,8 +171,7 @@ class _SelfieScreenState extends State<SelfieScreen> {
       }
 
       final result = submission.serverResult!;
-      final eventTitle =
-          (result['event'] as Map?)?['title'] ?? 'Event';
+      final eventTitle = (result['event'] as Map?)?['title'] ?? 'Event';
       final eventId = (result['event'] as Map?)?['id'] as String?;
       final badges = result['badges'] as List? ?? [];
       final points = result['points_awarded'];
@@ -273,10 +274,10 @@ class _SelfieScreenState extends State<SelfieScreen> {
             TextButton(
               onPressed: () {
                 Navigator.of(ctx).pop();
-                context.push('/events/feedback', extra: {
-                  'event_id': eventId,
-                  'event_title': eventTitle,
-                });
+                context.push(
+                  '/events/feedback',
+                  extra: {'event_id': eventId, 'event_title': eventTitle},
+                );
               },
               child: const Text('Leave feedback'),
             ),
@@ -302,23 +303,28 @@ class _SelfieScreenState extends State<SelfieScreen> {
             child: _cameraReady && _controller != null
                 ? CameraPreview(_controller!)
                 : _cameraBlocked
-                    ? PermissionBlockedPanel(
-                        permission: AppPermission.camera,
-                        onRetry: () {
-                          setState(() {
-                            _cameraBlocked = false;
-                            _error = null;
-                          });
-                          _ensureCamera();
-                        },
-                      )
-                    : const Center(child: CircularProgressIndicator()),
+                ? PermissionBlockedPanel(
+                    permission: AppPermission.camera,
+                    onRetry: () {
+                      setState(() {
+                        _cameraBlocked = false;
+                        _error = null;
+                      });
+                      _ensureCamera();
+                    },
+                  )
+                : const Center(child: CircularProgressIndicator()),
           ),
           Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                StudentStepIndicator(
+                  current: widget.offlineSubmission ? 3 : 4,
+                  total: widget.offlineSubmission ? 3 : 4,
+                ),
+                const SizedBox(height: 16),
                 Text(
                   widget.offlineSubmission
                       ? 'Step 2 of 2 — Live selfie. This offline attendance will be reviewed by staff using the scan time and selfie.'
@@ -333,11 +339,13 @@ class _SelfieScreenState extends State<SelfieScreen> {
                 const SizedBox(height: 16),
                 FilledButton(
                   onPressed: _submitting ? null : _captureAndSubmit,
-                  child: Text(_submitting
-                      ? 'Saving…'
-                      : widget.offlineSubmission
-                          ? 'Capture & save for review'
-                          : 'Capture & Check In'),
+                  child: Text(
+                    _submitting
+                        ? 'Saving…'
+                        : widget.offlineSubmission
+                        ? 'Capture & save for review'
+                        : 'Capture & Check In',
+                  ),
                 ),
               ],
             ),

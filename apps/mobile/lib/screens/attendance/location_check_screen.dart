@@ -144,6 +144,8 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const StudentStepIndicator(current: 2),
+            const SizedBox(height: 20),
             Icon(
               TablerIcons.mapPin,
               size: 72,
@@ -151,7 +153,7 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
             ),
             const SizedBox(height: 16),
             const StudentPageTitle(
-              title: 'Step 1 of 3 — Location',
+              title: 'Verify your location',
               subtitle:
                   'You must be inside the event geofence before OTP or selfie. If verification fails, check-in stops here.',
             ),
@@ -182,8 +184,12 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
             const Spacer(),
             FilledButton(
               onPressed: _checking ? null : _verifyLocation,
-              child: Text(
-                _checking ? 'Verifying location…' : 'Verify My Location',
+              child: Semantics(
+                button: true,
+                label: 'Verify my location',
+                child: Text(
+                  _checking ? 'Verifying location…' : 'Verify My Location',
+                ),
               ),
             ),
           ],

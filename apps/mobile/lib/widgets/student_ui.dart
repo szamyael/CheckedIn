@@ -16,6 +16,88 @@ class StudentUi {
   static const slateBg = Color(0xFFEBE8DF);
 }
 
+class StudentStepIndicator extends StatelessWidget {
+  final int current;
+  final int total;
+
+  const StudentStepIndicator({
+    super.key,
+    required this.current,
+    this.total = 4,
+  });
+
+  static const _labels = ['Scan', 'Location', 'OTP', 'Selfie'];
+  static const _icons = [
+    Icons.qr_code_2,
+    Icons.location_on_outlined,
+    Icons.verified_user_outlined,
+    Icons.camera_alt_outlined,
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: 'Check-in progress, step $current of $total',
+      child: Row(
+        children: List.generate(total, (index) {
+          final step = index + 1;
+          final complete = step < current;
+          final active = step == current;
+          return Expanded(
+            child: Row(
+              children: [
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircleAvatar(
+                      radius: 18,
+                      backgroundColor: complete
+                          ? StudentUi.teal
+                          : active
+                          ? StudentUi.tealSoft
+                          : StudentUi.slateBg,
+                      child: Icon(
+                        complete ? Icons.check : _icons[index],
+                        size: 17,
+                        color: complete
+                            ? Colors.white
+                            : active
+                            ? StudentUi.tealText
+                            : StudentUi.muted,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _labels[index],
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                        color: active ? StudentUi.tealText : StudentUi.muted,
+                      ),
+                    ),
+                  ],
+                ),
+                if (step < total)
+                  Expanded(
+                    child: Container(
+                      height: 1,
+                      margin: const EdgeInsets.only(
+                        bottom: 18,
+                        left: 6,
+                        right: 6,
+                      ),
+                      color: step < current ? StudentUi.teal : StudentUi.border,
+                    ),
+                  ),
+              ],
+            ),
+          );
+        }),
+      ),
+    );
+  }
+}
+
 class StudentPageTitle extends StatelessWidget {
   final String title;
   final String? subtitle;

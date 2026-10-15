@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { loadFlow, saveFlow } from "@/lib/student/attendance-flow";
+import { StudentErrorBanner, StudentStepIndicator, studentInputClass, studentPrimaryButtonClass } from "@/components/student/StudentUi";
 
 export default function AttendanceOtpPage() {
   const router = useRouter();
@@ -41,16 +42,15 @@ export default function AttendanceOtpPage() {
 
   return (
     <div className="flex min-h-[60vh] flex-col space-y-4">
-      <h1 className="text-xl font-bold">Step 2 of 3 — OTP</h1>
-      <p className="text-sm text-slate-600">{title}</p>
+      <StudentStepIndicator current={3} />
+      <h1 className="text-xl font-bold text-[var(--text-strong)]">Attendance OTP</h1>
+      <p className="text-sm text-[var(--muted)]">{title}</p>
       {error && (
-        <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          {error} Enter the latest OTP announced at the event, then continue.
-        </p>
+        <StudentErrorBanner message={`${error} Enter the latest OTP announced at the event, then continue.`} />
       )}
       {requiresOtp ? (
         <>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-[var(--muted)]">
             Enter the attendance OTP shown by your instructor.
           </p>
           <input
@@ -59,12 +59,13 @@ export default function AttendanceOtpPage() {
             onChange={(e) =>
               setCode(e.target.value.replace(/\D/g, "").slice(0, 8))
             }
-            placeholder="OTP code"
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-center text-lg tracking-widest"
+            aria-label="Attendance OTP"
+            placeholder="Enter OTP code"
+            className={`${studentInputClass} text-center text-lg tracking-widest`}
           />
         </>
       ) : (
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-[var(--muted)]">
           This event does not require an OTP. Continue to selfie verification.
         </p>
       )}
@@ -72,7 +73,7 @@ export default function AttendanceOtpPage() {
         type="button"
         onClick={continueNext}
         disabled={requiresOtp && code.trim().length < 4}
-        className="mt-auto rounded-xl bg-teal-600 py-3 text-sm font-semibold text-white disabled:opacity-50"
+        className={`${studentPrimaryButtonClass} mt-auto`}
       >
         Continue
       </button>

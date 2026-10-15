@@ -520,25 +520,23 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
 
   return (
     <div className="space-y-7">
-      <header className="relative isolate overflow-hidden rounded-3xl bg-[var(--primary-strong)] p-6 text-white shadow-[var(--shadow-card)] sm:p-8">
-        <div className="absolute -right-12 -top-20 -z-10 h-64 w-64 rounded-full bg-white/5" />
-        <div className="absolute -bottom-32 right-1/4 -z-10 h-64 w-64 rounded-full bg-[var(--accent)]/10" />
-        <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
-          <div className="max-w-2xl">
-            <p className="text-[11px] font-bold tracking-[0.18em] text-white/65">PARTICIPATION &amp; RECOGNITION</p>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight !text-white sm:text-4xl">Bingo &amp; Badges</h1>
-            <p className="mt-3 text-sm leading-6 text-white/75">
+      <header className="relative isolate flex min-h-[220px] items-end justify-between gap-5 overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5 pb-16 shadow-[var(--shadow-card)] sm:min-h-[240px] sm:p-7 sm:pb-16">
+        <div className="relative z-10 max-w-[62%]">
+            <p className="text-[11px] font-bold tracking-[0.18em] text-[var(--primary)]">PARTICIPATION &amp; RECOGNITION</p>
+            <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--primary-strong)] sm:text-4xl">Bingo &amp; Badges</h1>
+            <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
               Build event challenges, publish cards for students, and celebrate every milestone.
             </p>
-          </div>
+        </div>
+        <div className="absolute bottom-5 left-5 z-10 sm:left-7">
           <button
             type="button"
             onClick={() => void createNewCard()}
-            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-4 text-sm font-semibold text-[var(--primary-strong)] shadow-sm transition hover:bg-[var(--primary-soft)]"
+            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--primary-strong)] shadow-sm transition hover:bg-[var(--surface-muted)]"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
             New bingo card
-          </button>
+        </button>
         </div>
       </header>
 
@@ -674,7 +672,7 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
 
             <div className="mt-6 flex flex-wrap gap-2 border-t border-[var(--border)] pt-5">
               {!isReadOnly && (
-                <button type="button" onClick={() => void saveCard()} className="inline-flex min-h-10 items-center justify-center rounded-xl bg-[var(--primary)] px-4 text-sm font-semibold text-white hover:bg-[var(--primary-strong)]">Save changes</button>
+                <button type="button" onClick={() => void saveCard()} className="inline-flex min-h-10 items-center justify-center rounded-xl bg-[var(--primary)] px-4 text-sm font-semibold text-white hover:bg-[var(--action-background)]">Save changes</button>
               )}
               {selectedCard.status !== "draft" && !isReadOnly && (
                 <button type="button" onClick={() => void changeCardStatus("draft")} className="min-h-10 rounded-xl border border-amber-300 px-3 text-sm font-medium text-amber-800 hover:bg-amber-50">Save as draft</button>

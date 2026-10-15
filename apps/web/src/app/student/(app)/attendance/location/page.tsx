@@ -3,6 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MapPin } from "@/lib/icons";
+import {
+  StudentErrorBanner,
+  StudentStepIndicator,
+  studentPrimaryButtonClass,
+} from "@/components/student/StudentUi";
 import { PermissionBlockedCard } from "@/components/student/PermissionBlockedCard";
 import { useLoader } from "@/components/LoaderProvider";
 import type { CheckInMeta } from "@/lib/student/api";
@@ -108,19 +113,16 @@ export default function AttendanceLocationPage() {
 
   return (
     <div className="flex min-h-[60vh] flex-col">
+      <StudentStepIndicator current={2} />
       <MapPin className="mx-auto h-16 w-16 text-teal-600" />
-      <h1 className="mt-4 text-center text-xl font-bold">
-        Step 1 of 3 — Location
+      <h1 className="mt-4 text-center text-xl font-bold text-[var(--text-strong)]">
+        Verify your location
       </h1>
-      <p className="mt-2 text-center text-sm text-slate-600">
+      <p className="mt-2 text-center text-sm text-[var(--muted)]">
         You must be inside the event geofence before OTP or selfie.
       </p>
-      {error && (
-        <p className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">
-          {error}
-        </p>
-      )}
-      {hint && <p className="mt-2 text-center text-xs text-red-500">{hint}</p>}
+      {error && <div className="mt-4"><StudentErrorBanner message={error} /></div>}
+      {hint && <p className="mt-2 text-center text-xs text-[var(--error)]">{hint}</p>}
       {locationBlocked && (
         <div className="mt-4">
           <PermissionBlockedCard permission="location" onRetry={() => void verify()} />
@@ -129,7 +131,7 @@ export default function AttendanceLocationPage() {
       <button
         type="button"
         onClick={() => void verify()}
-        className="mt-auto rounded-xl bg-teal-600 py-3 text-sm font-semibold text-white"
+        className={`${studentPrimaryButtonClass} mt-auto`}
       >
         Verify My Location
       </button>

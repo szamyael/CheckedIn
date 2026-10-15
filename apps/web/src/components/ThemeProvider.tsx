@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-export type ThemeName = "navy" | "forest" | "burgundy" | "indigo" | "slate";
+export type ThemeName = "navy";
 export type ThemeMode = "light" | "dark" | "system";
 
 type ThemeContextValue = {
@@ -26,8 +26,10 @@ function resolveMode(mode: ThemeMode) {
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<ThemeName>(() => {
     if (typeof window === "undefined") return "navy";
-    const saved = localStorage.getItem(themeKey) as ThemeName | null;
-    return ["navy", "forest", "burgundy", "indigo", "slate"].includes(saved ?? "") ? saved! : "navy";
+    const saved = localStorage.getItem(themeKey);
+    // Legacy palettes intentionally converge on the single CheckedIn palette.
+    if (saved !== "navy") localStorage.setItem(themeKey, "navy");
+    return "navy";
   });
   const [mode, setModeState] = useState<ThemeMode>(() => {
     if (typeof window === "undefined") return "light";

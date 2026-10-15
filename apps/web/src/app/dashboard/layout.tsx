@@ -81,8 +81,8 @@ export default async function DashboardLayout({
   return (
     <div className="dashboard-workspace min-h-dvh bg-[var(--background)] text-[var(--foreground)] lg:flex">
       <a className="skip-to-content" href="#dashboard-content">Skip to content</a>
-      <aside className="dashboard-sidebar sticky top-0 z-40 flex w-full flex-col border-b border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] lg:h-dvh lg:w-72 lg:shrink-0 lg:border-b-0 lg:border-r">
-        <div className="flex items-center justify-between gap-4 border-b border-[var(--border)] px-4 py-3 sm:px-6 lg:block lg:px-5 lg:py-6">
+      <aside className="dashboard-sidebar sticky top-0 z-40 flex w-full flex-col border-b border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] lg:h-dvh lg:w-64 lg:shrink-0 lg:border-b-0 lg:border-r">
+        <div className="dashboard-sidebar-brand flex items-center justify-between gap-4 border-b border-[var(--border)] px-4 py-3 sm:px-6 lg:block lg:px-5 lg:py-6">
           <BrandLogo variant="transparent" className="max-h-10 w-full max-w-36 lg:max-h-12 lg:max-w-[156px]" />
           <div className="flex items-center gap-2 text-xs text-[var(--muted)] lg:mt-5">
             <span className="hidden h-7 w-7 place-items-center border border-[var(--border)] bg-[var(--surface-muted)] lg:grid">
@@ -116,7 +116,7 @@ export default async function DashboardLayout({
         <SessionTimeoutGuard />
         <header className="dashboard-topbar flex min-h-[68px] items-center justify-between border-b border-[var(--border)] bg-[var(--surface)] px-4 sm:px-6 lg:sticky lg:top-0 lg:z-30 lg:min-h-[73px] lg:px-10">
           <div>
-            <p className="font-serif text-lg leading-none tracking-tight text-[var(--primary-strong)]">CheckedIn</p>
+            <p className="font-sans text-lg leading-none tracking-tight text-[var(--primary-strong)]">CheckedIn</p>
             <p className="mt-1 text-[11px] capitalize text-[var(--muted)]">
               {role.replace("_", " ")} / Campus operations
             </p>

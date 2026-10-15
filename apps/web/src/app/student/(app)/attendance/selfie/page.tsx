@@ -13,6 +13,8 @@ import {
 } from "@/lib/student/attendance-flow";
 import { createClient } from "@/lib/supabase/client";
 import { getLocationVerificationError } from "@/lib/student/location-verification";
+import { Check } from "@/lib/icons";
+import { StudentStepIndicator, studentPrimaryButtonClass } from "@/components/student/StudentUi";
 
 export default function AttendanceSelfiePage() {
   const router = useRouter();
@@ -173,8 +175,8 @@ export default function AttendanceSelfiePage() {
   if (success) {
     return (
       <div className="space-y-4 text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-teal-100 text-3xl text-teal-600">
-          ✓
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--primary-soft)] text-[var(--success)]">
+          <Check className="h-8 w-8" aria-hidden="true" />
         </div>
         <h1 className="text-xl font-bold">Checked in</h1>
         <p className="text-sm text-slate-600">{success.title}</p>
@@ -189,7 +191,7 @@ export default function AttendanceSelfiePage() {
             onClick={() =>
               router.push(`/student/feedback/${success.eventId}`)
             }
-            className="w-full rounded-xl border border-slate-200 py-3 text-sm font-medium"
+            className="min-h-11 w-full rounded-xl border border-[var(--border)] py-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
           >
             Leave feedback
           </button>
@@ -197,7 +199,7 @@ export default function AttendanceSelfiePage() {
         <button
           type="button"
           onClick={() => router.push("/student")}
-          className="w-full rounded-xl bg-teal-600 py-3 text-sm font-semibold text-white"
+          className={studentPrimaryButtonClass}
         >
           Back to home
         </button>
@@ -207,8 +209,9 @@ export default function AttendanceSelfiePage() {
 
   return (
     <div className="flex min-h-[60vh] flex-col space-y-4">
-      <h1 className="text-xl font-bold">Step 3 of 3 — Selfie</h1>
-      <p className="text-sm text-slate-600">
+      <StudentStepIndicator current={4} />
+      <h1 className="text-xl font-bold text-[var(--text-strong)]">Live selfie</h1>
+      <p className="text-sm text-[var(--muted)]">
         Take a live selfie to complete check-in
         {flow?.eventTitle ? ` for ${flow.eventTitle}.` : "."}
       </p>
@@ -218,6 +221,7 @@ export default function AttendanceSelfiePage() {
             ref={videoRef}
             playsInline
             muted
+            aria-label="Live camera preview for selfie"
             className="aspect-[3/4] w-full object-cover"
           />
         ) : (
@@ -233,7 +237,7 @@ export default function AttendanceSelfiePage() {
         )}
       </div>
       {error && !cameraBlocked && (
-        <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">
+        <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-sm text-[var(--error)]">
           {error}
         </p>
       )}
@@ -241,7 +245,7 @@ export default function AttendanceSelfiePage() {
         type="button"
         disabled={cameraBlocked}
         onClick={() => void submit()}
-        className="mt-auto rounded-xl bg-teal-600 py-3 text-sm font-semibold text-white"
+        className={`${studentPrimaryButtonClass} disabled:opacity-50`}
       >
         Capture &amp; Submit
       </button>

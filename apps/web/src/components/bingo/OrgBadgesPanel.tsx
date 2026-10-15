@@ -287,7 +287,7 @@ export function OrgBadgesPanel({
             setEditingId(null);
             setError(null);
           }}
-          className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-[var(--primary)] px-4 text-sm font-semibold text-white hover:bg-[var(--primary-strong)]"
+          className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-[var(--primary)] px-4 text-sm font-semibold text-white hover:bg-[var(--action-background)]"
         >
           <Award className="h-4 w-4" aria-hidden="true" />
           New badge
@@ -303,7 +303,7 @@ export function OrgBadgesPanel({
             aria-pressed={filter === key}
             className={`min-h-9 rounded-full px-3.5 py-1.5 text-xs font-semibold capitalize transition ${
               filter === key
-                ? "bg-[var(--primary-strong)] text-white"
+                ? "bg-[var(--action-background)] text-white"
                 : "border border-[var(--border)] text-[var(--muted)] hover:bg-[var(--surface-muted)]"
             }`}
           >
@@ -393,7 +393,7 @@ export function OrgBadgesPanel({
             <button
               type="button"
               onClick={() => void createBadge()}
-              className="min-h-10 rounded-xl bg-[var(--primary)] px-4 text-sm font-semibold text-white hover:bg-[var(--primary-strong)]"
+              className="min-h-10 rounded-xl bg-[var(--primary)] px-4 text-sm font-semibold text-white hover:bg-[var(--action-background)]"
             >
               Create
             </button>

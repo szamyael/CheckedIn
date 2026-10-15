@@ -18,7 +18,7 @@ export function ThemePanelButton() {
 
   return (
     <div ref={panelRef} className="relative">
-      <button type="button" onClick={() => setOpen((current) => !current)} className="flex h-10 w-10 items-center justify-center rounded-lg text-[var(--primary)] hover:bg-[var(--primary-soft)]" aria-label={open ? "Close appearance settings" : "Open appearance settings"} aria-expanded={open}>
+      <button type="button" onClick={() => setOpen((current) => !current)} className="flex h-10 w-10 items-center justify-center rounded-lg text-[var(--primary)] hover:bg-[var(--primary-soft)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]" aria-label={open ? "Close appearance settings" : "Open appearance settings"} aria-expanded={open}>
         {open ? <X size={20} aria-hidden="true" /> : <Palette size={20} aria-hidden="true" />}
       </button>
       {open && (

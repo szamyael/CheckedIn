@@ -55,7 +55,7 @@ export default function StudentHomePage() {
         <Link href="/student/events" className="hidden min-h-11 items-center gap-1 rounded-xl px-3 text-sm font-semibold text-[var(--primary-strong)] transition hover:bg-[var(--primary-soft)] sm:inline-flex">View events <ChevronRight size={16} aria-hidden="true" /></Link>
       </header>
 
-      <section className="student-campus-pass relative overflow-hidden rounded-[1.75rem] border border-[var(--primary-strong)] bg-[var(--primary-strong)] p-6 text-white shadow-[0_18px_42px_rgba(12,34,56,0.16)] sm:p-8">
+      <section className="student-campus-pass relative overflow-hidden rounded-[1.75rem] border border-[var(--action-background)] bg-[var(--action-background)] p-6 text-white shadow-[0_18px_42px_rgba(12,34,56,0.16)] sm:p-8">
         <div className="absolute -right-12 -top-14 h-48 w-48 rounded-full border border-white/10" />
         <div className="absolute -bottom-20 right-20 h-40 w-40 rounded-full border border-white/10" />
         <div className="relative flex flex-col justify-between gap-6 sm:flex-row sm:items-end">

@@ -89,18 +89,22 @@ class _QrScanScreenState extends State<QrScanScreen> {
       appBar: AppBar(title: const Text('Scan Event QR')),
       body: Column(
         children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(24, 20, 24, 12),
+            child: StudentStepIndicator(current: 1),
+          ),
           Expanded(
             child: _cameraReady
                 ? MobileScanner(onDetect: _onDetect)
                 : _cameraBlocked
-                    ? PermissionBlockedPanel(
-                        permission: AppPermission.camera,
-                        onRetry: () {
-                          setState(() => _cameraBlocked = false);
-                          _ensureCamera();
-                        },
-                      )
-                    : const Center(child: CircularProgressIndicator()),
+                ? PermissionBlockedPanel(
+                    permission: AppPermission.camera,
+                    onRetry: () {
+                      setState(() => _cameraBlocked = false);
+                      _ensureCamera();
+                    },
+                  )
+                : const Center(child: CircularProgressIndicator()),
           ),
           Padding(
             padding: const EdgeInsets.all(24),
@@ -111,10 +115,13 @@ class _QrScanScreenState extends State<QrScanScreen> {
                     padding: const EdgeInsets.only(bottom: 12),
                     child: StudentErrorBanner(message: _error!),
                   ),
-                Text(
-                  'Point your camera at the event QR code. Offline scans collect an OTP, a live selfie, and the scan time for staff review; location is not requested offline.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodySmall,
+                Semantics(
+                  liveRegion: true,
+                  child: Text(
+                    'Point your camera at the event QR code. Offline scans collect an OTP, a live selfie, and the scan time for staff review; location is not requested offline.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                 ),
               ],
             ),

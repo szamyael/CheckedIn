@@ -62,7 +62,8 @@ class _AttendanceOtpScreenState extends State<AttendanceOtpScreen> {
   void _continue() {
     if (!widget.locationVerified && !widget.offlineSubmission) return;
 
-    if ((widget.requiresOtp || widget.offlineSubmission) && _codeController.text.trim().isEmpty) {
+    if ((widget.requiresOtp || widget.offlineSubmission) &&
+        _codeController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Enter the OTP announced at the event.')),
       );
@@ -105,7 +106,16 @@ class _AttendanceOtpScreenState extends State<AttendanceOtpScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            StudentPageTitle(title: widget.offlineSubmission ? 'Step 1 of 2 — Offline OTP' : 'Step 2 of 3 — OTP'),
+            StudentStepIndicator(
+              current: widget.offlineSubmission ? 2 : 3,
+              total: widget.offlineSubmission ? 3 : 4,
+            ),
+            const SizedBox(height: 20),
+            StudentPageTitle(
+              title: widget.offlineSubmission
+                  ? 'Offline attendance OTP'
+                  : 'Attendance OTP',
+            ),
             const SizedBox(height: 8),
             Text(
               widget.offlineSubmission
@@ -121,15 +131,27 @@ class _AttendanceOtpScreenState extends State<AttendanceOtpScreen> {
             ],
             const SizedBox(height: 24),
             if (widget.offlineSubmission) ...[
-              const Text('Attendance action', style: TextStyle(fontWeight: FontWeight.w600)),
+              const Text(
+                'Attendance action',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
               const SizedBox(height: 8),
               SegmentedButton<OfflineAttendanceAction>(
                 segments: const [
-                  ButtonSegment(value: OfflineAttendanceAction.checkIn, label: Text('Time in'), icon: Icon(TablerIcons.login)),
-                  ButtonSegment(value: OfflineAttendanceAction.checkOut, label: Text('Time out'), icon: Icon(TablerIcons.logout)),
+                  ButtonSegment(
+                    value: OfflineAttendanceAction.checkIn,
+                    label: Text('Time in'),
+                    icon: Icon(TablerIcons.login),
+                  ),
+                  ButtonSegment(
+                    value: OfflineAttendanceAction.checkOut,
+                    label: Text('Time out'),
+                    icon: Icon(TablerIcons.logout),
+                  ),
                 ],
                 selected: {_offlineAction},
-                onSelectionChanged: (value) => setState(() => _offlineAction = value.first),
+                onSelectionChanged: (value) =>
+                    setState(() => _offlineAction = value.first),
               ),
               const SizedBox(height: 20),
             ],
@@ -139,12 +161,21 @@ class _AttendanceOtpScreenState extends State<AttendanceOtpScreen> {
                 labelText: 'Attendance OTP',
                 hintText: '6-digit code',
               ),
+              autofocus: true,
               keyboardType: TextInputType.number,
             ),
             const Spacer(),
             FilledButton(
               onPressed: _continue,
-              child: Text(widget.offlineSubmission ? 'Continue to live selfie' : 'Continue to selfie'),
+              child: Semantics(
+                button: true,
+                label: 'Continue to selfie',
+                child: Text(
+                  widget.offlineSubmission
+                      ? 'Continue to live selfie'
+                      : 'Continue to selfie',
+                ),
+              ),
             ),
           ],
         ),
