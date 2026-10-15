@@ -9,3 +9,12 @@ export function hasUsableCoordinates(
     && longitude >= -180
     && longitude <= 180;
 }
+
+export function getLocationVerificationError(
+  latitude: number,
+  longitude: number,
+): string | null {
+  return hasUsableCoordinates(latitude, longitude)
+    ? null
+    : "Invalid GPS coordinates. Please try again.";
+}
