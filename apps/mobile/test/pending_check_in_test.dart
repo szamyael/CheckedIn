@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:checkedin_mobile/models/pending_check_in.dart';
 import 'package:checkedin_mobile/services/attendance_service.dart';
+import 'package:checkedin_mobile/services/connectivity_service.dart';
 
 void main() {
   test('keeps the QR-scan device timezone offset in the offline queue', () {
@@ -48,5 +49,11 @@ void main() {
       AttendanceService.isRecoverableOtpError('QR code has expired'),
       isFalse,
     );
+  });
+
+  test('treats an HTTP response from Supabase as reachable internet', () {
+    expect(ConnectivityService.isReachableHttpStatus(401), isTrue);
+    expect(ConnectivityService.isReachableHttpStatus(204), isTrue);
+    expect(ConnectivityService.isReachableHttpStatus(500), isFalse);
   });
 }

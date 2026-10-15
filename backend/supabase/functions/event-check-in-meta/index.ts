@@ -146,16 +146,6 @@ Deno.serve(async (req) => {
 
     // Location verification gate — required before OTP / selfie.
     if (latitude != null && longitude != null) {
-      if (!Number.isFinite(accuracyM) || accuracyM! > 75) {
-        return new Response(
-          JSON.stringify({
-            error: "GPS accuracy is too low. Move to an open area and try again.",
-            location_ok: false,
-            accuracy_m: accuracyM ?? null,
-          }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-        );
-      }
       if (
         !Number.isFinite(latitude) ||
         !Number.isFinite(longitude) ||

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { Calendar, CalendarPlus, LayoutGrid, Radio, Trophy } from "@/lib/icons";
 import { DashboardPageHeader, DashboardSection, DashboardStat } from "@/components/DashboardUi";
+import { OrganizationMembershipPanel } from "@/components/OrganizationMembershipPanel";
 import { format } from "date-fns";
 
 export default async function OrgDashboard() {
@@ -40,6 +41,31 @@ export default async function OrgDashboard() {
   const { count: badgeCount } = organizationId
     ? await supabase.from("org_badges").select("*", { count: "exact", head: true }).eq("organization_id", organizationId)
     : { count: 0 };
+  const { data: mappedPrograms } = organizationId
+    ? await supabase.from("organization_programs").select("program").eq("organization_id", organizationId)
+    : { data: [] };
+  const mappedProgramKeys = new Set((mappedPrograms ?? []).map((mapping) => mapping.program.trim().toLowerCase()));
+  const { data: studentRows } = organizationId && mappedProgramKeys.size > 0
+    ? await supabase
+      .from("students")
+      .select("id, student_id, first_name, last_name, program, year_level, section, users!inner(status)")
+      .order("last_name")
+    : { data: [] };
+  const studentIds = (studentRows ?? []).map((student) => student.id);
+  const { data: membershipRows } = organizationId && studentIds.length > 0
+    ? await supabase
+      .from("organization_memberships")
+      .select("student_id, paid_at")
+      .eq("organization_id", organizationId)
+      .in("student_id", studentIds)
+    : { data: [] };
+  const paidByStudentId = new Map((membershipRows ?? []).map((membership) => [membership.student_id, membership.paid_at]));
+  const membershipStudents = (studentRows ?? []).filter((student) =>
+    mappedProgramKeys.has(student.program.trim().toLowerCase()),
+  ).map((student) => {
+    const userRow = Array.isArray(student.users) ? student.users[0] : student.users;
+    return { ...student, status: userRow?.status ?? "unknown", paid_at: paidByStudentId.get(student.id) ?? null };
+  });
 
   return (
     <div className="space-y-8">
@@ -68,6 +94,7 @@ export default async function OrgDashboard() {
               Create calendar events with QR codes
             </p>
           </div>
+
         </Link>
 
         <Link
@@ -83,6 +110,8 @@ export default async function OrgDashboard() {
           </div>
         </Link>
       </div>
+
+      {organizationId && <OrganizationMembershipPanel students={membershipStudents} />}
 
       <DashboardSection title="Upcoming events" description="Open a live monitor once the attendance window begins.">
         <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">

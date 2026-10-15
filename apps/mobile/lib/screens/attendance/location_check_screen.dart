@@ -26,7 +26,6 @@ class LocationCheckScreen extends StatefulWidget {
 }
 
 class _LocationCheckScreenState extends State<LocationCheckScreen> {
-  static const _maxAcceptedAccuracyMeters = 75.0;
   final _attendance = AttendanceService();
   bool _checking = false;
   String? _error;
@@ -42,8 +41,7 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
     if (!granted) {
       if (mounted) {
         setState(() {
-          _error =
-              'Location is required to verify you are at the event venue.';
+          _error = 'Location is required to verify you are at the event venue.';
         });
       }
       return;
@@ -60,11 +58,13 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
     try {
       final position = await _attendance.getCurrentPosition();
       if (!mounted) return;
-      if (!position.accuracy.isFinite ||
-          position.accuracy > _maxAcceptedAccuracyMeters) {
-        throw Exception(
-          'GPS accuracy is too low (${position.accuracy.round()}m). Move to an open area and try again.',
-        );
+      if (!position.latitude.isFinite ||
+          !position.longitude.isFinite ||
+          position.latitude < -90 ||
+          position.latitude > 90 ||
+          position.longitude < -180 ||
+          position.longitude > 180) {
+        throw Exception('Invalid GPS coordinates. Please try again.');
       }
       setState(() => _status = 'Verifying you are at the venue…');
 
@@ -82,7 +82,8 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
         final distance = meta['distance_m'];
         final allowed = meta['allowed_radius_m'];
         setState(() {
-          _error = (meta['error'] as String?) ??
+          _error =
+              (meta['error'] as String?) ??
               'Location check failed. Move closer to the venue and try again.';
           if (distance != null && allowed != null) {
             _distanceHint = 'Distance: ${distance}m (allowed: ${allowed}m)';
@@ -110,7 +111,8 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
       );
     } catch (e) {
       final message = e.toString().replaceFirst('Exception: ', '');
-      final isPermissionIssue = message.toLowerCase().contains('permission') ||
+      final isPermissionIssue =
+          message.toLowerCase().contains('permission') ||
           message.toLowerCase().contains('location services');
       if (isPermissionIssue && mounted) {
         await PermissionService.instance.showPermissionDeniedDialog(

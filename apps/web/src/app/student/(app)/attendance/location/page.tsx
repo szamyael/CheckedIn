@@ -12,8 +12,7 @@ import {
   isPermissionErrorMessage,
 } from "@/lib/student/browser-permissions";
 import { createClient } from "@/lib/supabase/client";
-
-const MAX_ACCEPTED_ACCURACY_METERS = 75;
+import { hasUsableCoordinates } from "@/lib/student/location-verification";
 
 function getPosition(): Promise<GeolocationPosition> {
   return new Promise((resolve, reject) => {
@@ -57,13 +56,8 @@ export default function AttendanceLocationPage() {
     showLoader("Verifying location…");
     try {
       const pos = await getPosition();
-      if (
-        !Number.isFinite(pos.coords.accuracy) ||
-        pos.coords.accuracy > MAX_ACCEPTED_ACCURACY_METERS
-      ) {
-        throw new Error(
-          `GPS accuracy is too low (${Math.round(pos.coords.accuracy)}m). Move to an open area and try again.`,
-        );
+      if (!hasUsableCoordinates(pos.coords.latitude, pos.coords.longitude)) {
+        throw new Error("Invalid GPS coordinates. Please try again.");
       }
       const supabase = createClient();
       const { data, error: fnError } = await supabase.functions.invoke(

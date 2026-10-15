@@ -140,7 +140,8 @@ class _MainShellState extends State<MainShell> {
       const ProfileScreen(),
     ];
 
-    final offline = _connectivity.isOffline || _auth.isOfflineMode;
+    final networkOffline = _connectivity.isOffline;
+    final offlineAuth = _auth.isOfflineMode;
 
     return Scaffold(
       appBar: AppBar(
@@ -197,22 +198,31 @@ class _MainShellState extends State<MainShell> {
       ),
       body: Column(
         children: [
-          if (offline || _offlineSync.pendingCount > 0)
+          if (networkOffline || offlineAuth || _offlineSync.pendingCount > 0)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
               child: Column(
                 children: [
-                  if (offline)
+                  if (networkOffline || offlineAuth)
                     StudentInfoBanner(
-                      message: _auth.isOfflineMode
-                          ? 'Offline mode — browsing cached data. Offline attendance saves on this device and syncs for staff review after you reconnect and sign in online.'
-                          : 'No internet — showing cached data. Offline attendance will sync for staff review when you reconnect.',
-                      icon: TablerIcons.wifiOff,
+                      message: networkOffline
+                          ? 'No internet — showing cached data. Offline attendance will sync for staff review when you reconnect.'
+                          : 'Offline sign-in session — reconnect your account online to sync attendance for staff review.',
+                      icon: networkOffline
+                          ? TablerIcons.wifiOff
+                          : TablerIcons.userOff,
                       background: StudentUi.slateBg,
                       border: StudentUi.border,
                       foreground: StudentUi.muted,
+                      action: offlineAuth && !networkOffline
+                          ? TextButton(
+                              onPressed: _signInOnline,
+                              child: const Text('Sign in online'),
+                            )
+                          : null,
                     ),
-                  if (offline && _offlineSync.pendingCount > 0)
+                  if ((networkOffline || offlineAuth) &&
+                      _offlineSync.pendingCount > 0)
                     const SizedBox(height: 8),
                   if (_offlineSync.pendingCount > 0)
                     StudentInfoBanner(
@@ -222,10 +232,14 @@ class _MainShellState extends State<MainShell> {
                       icon: _offlineSync.isSyncing
                           ? TablerIcons.refresh
                           : TablerIcons.cloudOff,
-                      action: (!_offlineSync.isSyncing && !_auth.isOfflineMode)
+                      action: !_offlineSync.isSyncing
                           ? TextButton(
-                              onPressed: () => _offlineSync.syncPending(),
-                              child: const Text('Sync now'),
+                              onPressed: offlineAuth
+                                  ? _signInOnline
+                                  : () => _offlineSync.syncPending(),
+                              child: Text(
+                                offlineAuth ? 'Sign in online' : 'Sync now',
+                              ),
                             )
                           : null,
                     ),
@@ -316,5 +330,10 @@ class _MainShellState extends State<MainShell> {
         ),
       ),
     );
+  }
+
+  Future<void> _signInOnline() async {
+    await _auth.signOut();
+    if (mounted) context.go('/login');
   }
 }

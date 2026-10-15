@@ -130,13 +130,6 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
-    if (!Number.isFinite(accuracy_m) || accuracy_m! > 75) {
-      return new Response(
-        JSON.stringify({ error: "GPS accuracy is too low. Move to an open area and try again." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
-
     const expectedSelfiePrefix = `${userId}/`;
     if (!selfie_path.startsWith(expectedSelfiePrefix)) {
       return new Response(

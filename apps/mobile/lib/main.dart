@@ -52,6 +52,18 @@ class CheckedInApp extends StatefulWidget {
 
 class _CheckedInAppState extends State<CheckedInApp> {
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(_AppLifecycleSync());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(_AppLifecycleSync.instance);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: AppearanceService.instance,
@@ -76,5 +88,24 @@ class _CheckedInAppState extends State<CheckedInApp> {
         ),
       ),
     );
+  }
+}
+
+class _AppLifecycleSync extends WidgetsBindingObserver {
+  _AppLifecycleSync._();
+  static final instance = _AppLifecycleSync._();
+
+  factory _AppLifecycleSync() => instance;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_refreshAndSync());
+    }
+  }
+
+  Future<void> _refreshAndSync() async {
+    await ConnectivityService.instance.refresh();
+    await OfflineSyncService.instance.syncPending();
   }
 }
