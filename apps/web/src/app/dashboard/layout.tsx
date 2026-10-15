@@ -76,6 +76,9 @@ export default async function DashboardLayout({
           { href: "/dashboard/settings", label: "Settings", icon: "settings" as const },
         ]
       : []),
+    ...(role === "admin" || role === "faculty" || role === "org_member"
+      ? [{ href: "/dashboard/profile", label: "Edit profile", icon: "profile" as const }]
+      : []),
   ] satisfies DashboardNavItem[];
 
   return (

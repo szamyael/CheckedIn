@@ -23,6 +23,11 @@ class AppNotification {
   final String type;
   final DateTime createdAt;
   final DateTime? readAt;
+  final String? senderName;
+  final String? senderRole;
+  final String? senderOrganizationName;
+  final String? senderAvatarPath;
+  final String? senderAvatarUrl;
 
   AppNotification({
     required this.id,
@@ -31,6 +36,11 @@ class AppNotification {
     required this.type,
     required this.createdAt,
     this.readAt,
+    this.senderName,
+    this.senderRole,
+    this.senderOrganizationName,
+    this.senderAvatarPath,
+    this.senderAvatarUrl,
   });
 
   factory AppNotification.fromJson(Map<String, dynamic> json) {
@@ -43,6 +53,10 @@ class AppNotification {
       readAt: json['read_at'] != null
           ? DateTime.parse(json['read_at'] as String)
           : null,
+      senderName: json['sender_name'] as String?,
+      senderRole: json['sender_role'] as String?,
+      senderOrganizationName: json['sender_organization_name'] as String?,
+      senderAvatarPath: json['sender_avatar_path'] as String?,
     );
   }
 
@@ -53,11 +67,15 @@ class AppNotification {
         'notification_type': type,
         'created_at': createdAt.toUtc().toIso8601String(),
         'read_at': readAt?.toUtc().toIso8601String(),
+        'sender_name': senderName,
+        'sender_role': senderRole,
+        'sender_organization_name': senderOrganizationName,
+        'sender_avatar_path': senderAvatarPath,
       };
 
   bool get isUnread => readAt == null;
 
-  AppNotification copyWith({DateTime? readAt}) {
+  AppNotification copyWith({DateTime? readAt, String? senderAvatarUrl}) {
     return AppNotification(
       id: id,
       title: title,
@@ -65,6 +83,11 @@ class AppNotification {
       type: type,
       createdAt: createdAt,
       readAt: readAt ?? this.readAt,
+      senderName: senderName,
+      senderRole: senderRole,
+      senderOrganizationName: senderOrganizationName,
+      senderAvatarPath: senderAvatarPath,
+      senderAvatarUrl: senderAvatarUrl ?? this.senderAvatarUrl,
     );
   }
 }
@@ -86,17 +109,16 @@ class NotificationService {
     try {
       final data = await _client
           .from('notifications')
-          .select('id, title, body, notification_type, read_at, created_at')
+          .select('id, title, body, notification_type, read_at, created_at, sender_name, sender_role, sender_organization_name, sender_avatar_path')
           .eq('user_id', userId)
           .order('created_at', ascending: false)
           .limit(limit);
 
-      final items = (data as List)
-          .map(
-            (n) =>
-                AppNotification.fromJson(Map<String, dynamic>.from(n as Map)),
-          )
-          .toList();
+      final items = await Future.wait((data as List).map((n) async {
+        final notification =
+            AppNotification.fromJson(Map<String, dynamic>.from(n as Map));
+        return _withSenderAvatar(notification);
+      }));
       await _cache.writeJson(
         CacheKeys.notifications,
         items.map((n) => n.toJson()).toList(),
@@ -107,8 +129,10 @@ class NotificationService {
     }
   }
 
-  Future<List<AppNotification>?> _cachedNotifications() {
-    return _cache.readJson(CacheKeys.notifications, (raw) {
+  Future<List<AppNotification>?> _cachedNotifications() async {
+    final items = await _cache.readJson<List<AppNotification>>(
+      CacheKeys.notifications,
+      (raw) {
       if (raw is! List) return <AppNotification>[];
       return raw
           .map(
@@ -116,7 +140,24 @@ class NotificationService {
                 AppNotification.fromJson(Map<String, dynamic>.from(n as Map)),
           )
           .toList();
-    });
+      },
+    );
+    if (items == null) return null;
+    return Future.wait(items.map(_withSenderAvatar));
+  }
+
+  Future<AppNotification> _withSenderAvatar(AppNotification notification) async {
+    final path = notification.senderAvatarPath;
+    if (path == null || path.isEmpty) return notification;
+    try {
+      final signed = await _client.storage
+          .from('profile-avatars')
+          .createSignedUrl(path, 3600);
+      return notification.copyWith(senderAvatarUrl: signed);
+    } catch (error) {
+      debugPrint('Failed to load notification sender avatar: $error');
+      return notification;
+    }
   }
 
   Future<int> fetchUnreadCount() async {
@@ -189,8 +230,10 @@ class NotificationService {
         column: 'user_id',
         value: userId ?? '',
       ),
-      callback: (payload) {
-        final notification = AppNotification.fromJson(payload.newRecord);
+      callback: (payload) async {
+        final notification = await _withSenderAvatar(
+          AppNotification.fromJson(payload.newRecord),
+        );
         if (playSound && AppearanceService.instance.notificationSoundEnabled) {
           NotificationSoundService.play().catchError((Object error) {
             debugPrint('Failed to play notification sound: $error');

@@ -5,6 +5,7 @@ import { Bell } from "@/lib/icons";
 import { createClient } from "@/lib/supabase/client";
 import { NotificationPopup, type NotificationPopupItem } from "@/components/NotificationPopup";
 import { NotificationSoundToggle } from "@/components/NotificationSoundToggle";
+import { NotificationSender } from "@/components/NotificationSender";
 import { playNotificationSound } from "@/lib/notification-sound";
 import {
   getUpdatedNotificationIds,
@@ -18,6 +19,10 @@ interface NotificationRow {
   notification_type: string;
   read_at: string | null;
   created_at: string;
+  sender_name: string | null;
+  sender_role: string | null;
+  sender_organization_name: string | null;
+  sender_avatar_path: string | null;
 }
 
 export function NotificationBell() {
@@ -33,7 +38,7 @@ export function NotificationBell() {
     const supabase = createClient();
     const { data } = await supabase
       .from("notifications")
-      .select("id, title, body, notification_type, read_at, created_at")
+      .select("id, title, body, notification_type, read_at, created_at, sender_name, sender_role, sender_organization_name, sender_avatar_path")
       .order("created_at", { ascending: false })
       .limit(20);
     setItems((data as NotificationRow[]) ?? []);
@@ -47,7 +52,7 @@ export function NotificationBell() {
       const supabase = createClient();
       const { data } = await supabase
         .from("notifications")
-        .select("id, title, body, notification_type, read_at, created_at")
+        .select("id, title, body, notification_type, read_at, created_at, sender_name, sender_role, sender_organization_name, sender_avatar_path")
         .order("created_at", { ascending: false })
         .limit(20);
 
@@ -190,6 +195,12 @@ export function NotificationBell() {
                     n.read_at ? "opacity-70" : "bg-blue-50/40"
                   }`}
                 >
+                  <NotificationSender
+                    name={n.sender_name}
+                    role={n.sender_role}
+                    organizationName={n.sender_organization_name}
+                    avatarPath={n.sender_avatar_path}
+                  />
                   <p className="text-sm font-medium text-slate-900">{n.title}</p>
                   <p className="mt-0.5 text-xs text-slate-600">{n.body}</p>
                   <p className="mt-1 text-[10px] text-slate-600">

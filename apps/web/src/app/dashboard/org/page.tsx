@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Calendar, CalendarPlus, LayoutGrid, Radio, Trophy } from "@/lib/icons";
 import { DashboardPageHeader, DashboardSection, DashboardStat } from "@/components/DashboardUi";
 import { OrganizationMembershipPanel } from "@/components/OrganizationMembershipPanel";
+import { BroadcastNotificationForm } from "@/components/BroadcastNotificationForm";
 import { format } from "date-fns";
 import { normalizeProgram } from "@/lib/org-membership";
 
@@ -119,6 +120,15 @@ export default async function OrgDashboard() {
       </div>
 
       {organizationId && <OrganizationMembershipPanel students={membershipStudents} loadError={membershipError} />}
+
+      {profile?.role === "org_member" && (
+        <DashboardSection
+          title="Broadcast to mapped students"
+          description="Announcements are delivered only to active students whose program is mapped to your organization."
+        >
+          <BroadcastNotificationForm audience="organization" />
+        </DashboardSection>
+      )}
 
       <DashboardSection title="Upcoming events" description="Open a live monitor once the attendance window begins.">
         <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">

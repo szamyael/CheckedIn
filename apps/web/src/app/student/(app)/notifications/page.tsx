@@ -8,6 +8,7 @@ import {
   requireNotificationUpdated,
 } from "@/lib/notification-read";
 import { StudentNotificationsReadContext } from "@/components/student/StudentAppLayout";
+import { NotificationSender } from "@/components/NotificationSender";
 import {
   StudentEmptyState,
   StudentPageTitle,
@@ -20,6 +21,10 @@ type Notif = {
   read_at: string | null;
   created_at: string;
   notification_type: string;
+  sender_name: string | null;
+  sender_role: string | null;
+  sender_organization_name: string | null;
+  sender_avatar_path: string | null;
 };
 
 export default function StudentNotificationsPage() {
@@ -35,7 +40,7 @@ export default function StudentNotificationsPage() {
     if (!user) return [];
     const { data } = await supabase
       .from("notifications")
-      .select("id, title, body, read_at, created_at, notification_type")
+      .select("id, title, body, read_at, created_at, notification_type, sender_name, sender_role, sender_organization_name, sender_avatar_path")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(50);
@@ -140,6 +145,12 @@ export default function StudentNotificationsPage() {
                     : "border-[color-mix(in_srgb,var(--primary)_38%,var(--border))] bg-[var(--primary-soft)]"
                 }`}
               >
+                <NotificationSender
+                  name={n.sender_name}
+                  role={n.sender_role}
+                  organizationName={n.sender_organization_name}
+                  avatarPath={n.sender_avatar_path}
+                />
                 <p className="text-sm font-semibold">{n.title}</p>
                 {n.body && (
                   <p className="mt-1 text-xs text-slate-600">{n.body}</p>

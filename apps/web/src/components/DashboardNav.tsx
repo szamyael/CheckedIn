@@ -13,6 +13,7 @@ import {
   Settings,
   Users,
   LayoutGrid,
+  UserRound,
 } from "@/lib/icons";
 
 const icons = {
@@ -23,6 +24,7 @@ const icons = {
   analytics: LineChart,
   settings: Settings,
   bingo: LayoutGrid,
+  profile: UserRound,
 } as const;
 
 export interface DashboardNavItem {

@@ -2,11 +2,16 @@
 
 import { X } from "@/lib/icons";
 import Link from "next/link";
+import { NotificationSender } from "@/components/NotificationSender";
 
 export interface NotificationPopupItem {
   id: string;
   title: string;
   body: string;
+  sender_name?: string | null;
+  sender_role?: string | null;
+  sender_organization_name?: string | null;
+  sender_avatar_path?: string | null;
 }
 
 export function NotificationPopup({
@@ -27,6 +32,14 @@ export function NotificationPopup({
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-teal-600">
             New notification
           </p>
+          <div className="mt-2">
+            <NotificationSender
+              name={item.sender_name}
+              role={item.sender_role}
+              organizationName={item.sender_organization_name}
+              avatarPath={item.sender_avatar_path}
+            />
+          </div>
           <p className="mt-1 text-sm font-semibold">{item.title}</p>
           {item.body && <p className="mt-1 text-xs text-slate-600">{item.body}</p>}
           {href && (

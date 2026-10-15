@@ -76,7 +76,45 @@ class _MainShellState extends State<MainShell> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text('${notification.title}\n${notification.body}'),
+          content: Row(
+            children: [
+              if (notification.senderName != null) ...[
+                CircleAvatar(
+                  radius: 16,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer,
+                  child: notification.senderAvatarUrl != null
+                      ? ClipOval(
+                          child: Image.network(
+                            notification.senderAvatarUrl!,
+                            width: 32,
+                            height: 32,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Text(
+                              _senderInitials(notification.senderName!),
+                              style: const TextStyle(fontSize: 10),
+                            ),
+                          ),
+                        )
+                      : Text(
+                          _senderInitials(notification.senderName!),
+                          style: const TextStyle(fontSize: 10),
+                        ),
+                ),
+                const SizedBox(width: 10),
+              ],
+              Expanded(
+                child: Text(
+                  notification.senderName == null
+                      ? '${notification.title}\n${notification.body}'
+                      : '${notification.senderName}: ${notification.title}\n${notification.body}',
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
           action: SnackBarAction(
             label: 'View',
             onPressed: () => context.push('/notifications'),
@@ -84,6 +122,14 @@ class _MainShellState extends State<MainShell> {
         ),
       );
   }
+
+  String _senderInitials(String name) => name
+      .trim()
+      .split(RegExp(r'\s+'))
+      .where((part) => part.isNotEmpty)
+      .take(2)
+      .map((part) => part[0].toUpperCase())
+      .join();
 
   @override
   Widget build(BuildContext context) {

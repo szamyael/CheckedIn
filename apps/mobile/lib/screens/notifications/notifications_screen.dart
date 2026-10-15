@@ -89,6 +89,56 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (n.senderName != null) ...[
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 18,
+                              backgroundColor: StudentUi.of(context).neutralBackground,
+                              child: n.senderAvatarUrl != null
+                                  ? ClipOval(
+                                      child: Image.network(
+                                        n.senderAvatarUrl!,
+                                        width: 36,
+                                        height: 36,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) =>
+                                            Text(_initials(n.senderName!)),
+                                      ),
+                                    )
+                                  : Text(_initials(n.senderName!)),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    n.senderName!,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  if (n.senderOrganizationName != null ||
+                                      n.senderRole != null)
+                                    Text(
+                                      [
+                                        n.senderOrganizationName,
+                                        _roleLabel(n.senderRole),
+                                      ].whereType<String>().join(' · '),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(fontSize: 11),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                      ],
                       Row(
                         children: [
                           Icon(
@@ -139,6 +189,27 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         return TablerIcons.calendarEvent;
       default:
         return TablerIcons.bell;
+    }
+  }
+
+  String _initials(String name) => name
+      .trim()
+      .split(RegExp(r'\s+'))
+      .where((part) => part.isNotEmpty)
+      .take(2)
+      .map((part) => part[0].toUpperCase())
+      .join();
+
+  String? _roleLabel(String? role) {
+    switch (role) {
+      case 'org_member':
+        return 'Organization member';
+      case 'admin':
+        return 'Administrator';
+      case 'faculty':
+        return 'Faculty';
+      default:
+        return role;
     }
   }
 }
