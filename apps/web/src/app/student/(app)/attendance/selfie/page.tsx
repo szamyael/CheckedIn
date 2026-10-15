@@ -12,7 +12,6 @@ import {
   type AttendanceFlowState,
 } from "@/lib/student/attendance-flow";
 import { createClient } from "@/lib/supabase/client";
-import { getLocationVerificationError } from "@/lib/student/location-verification";
 import { Check } from "@/lib/icons";
 import { StudentStepIndicator, studentPrimaryButtonClass } from "@/components/student/StudentUi";
 
@@ -73,6 +72,14 @@ export default function AttendanceSelfiePage() {
 
   async function submit() {
     if (!flow || !videoRef.current) return;
+    if (
+      !flow.locationVerified ||
+      flow.latitude == null ||
+      flow.longitude == null
+    ) {
+      router.replace("/student/attendance/location");
+      return;
+    }
     setError(null);
     showLoader("Submitting check-in…");
 
@@ -93,18 +100,6 @@ export default function AttendanceSelfiePage() {
         );
       });
 
-      const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 20000,
-        });
-      });
-      const locationError = getLocationVerificationError(
-        pos.coords.latitude,
-        pos.coords.longitude,
-      );
-      if (locationError) throw new Error(locationError);
-
       const supabase = createClient();
       const {
         data: { user },
@@ -119,9 +114,9 @@ export default function AttendanceSelfiePage() {
 
       const body: Record<string, unknown> = {
         qr_token: flow.qrToken,
-        latitude: pos.coords.latitude,
-        longitude: pos.coords.longitude,
-        accuracy_m: pos.coords.accuracy,
+        latitude: flow.latitude,
+        longitude: flow.longitude,
+        accuracy_m: flow.accuracyM ?? 0,
         selfie_path: path,
         capture_integrity: {
           live_camera_capture: true,

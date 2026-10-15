@@ -332,9 +332,8 @@ class AttendanceService {
     return Map<String, dynamic>.from(response.data as Map);
   }
 
-  Future<Map<String, dynamic>> buildCaptureIntegrity(File selfieFile) async {
+  Map<String, dynamic> _buildCaptureIntegrity(SelfieIntegrityResult analysis) {
     final guard = ScreenshotGuardService.instance;
-    final analysis = await SelfieIntegrityAnalyzer.analyze(selfieFile);
 
     return {
       ...guard.integrityPayload(),
@@ -368,7 +367,7 @@ class AttendanceService {
       );
     }
 
-    final captureIntegrity = await buildCaptureIntegrity(selfieFile);
+    final captureIntegrity = _buildCaptureIntegrity(analysis);
 
     if (await OfflineStorageService.instance.hasPendingForQrToken(
       qrToken,
@@ -456,7 +455,7 @@ class AttendanceService {
       eventId: eventId,
       otpCode: otpCode.trim(),
       deviceUtcOffsetMinutes: deviceUtcOffsetMinutes,
-      captureIntegrity: await buildCaptureIntegrity(selfieFile),
+      captureIntegrity: _buildCaptureIntegrity(analysis),
       action: action,
     );
     return CheckInSubmission.queuedOffline(pending);

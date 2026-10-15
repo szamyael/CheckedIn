@@ -375,12 +375,11 @@ class _SelfieScreenState extends State<SelfieScreen> {
         eventTitleHint: widget.eventTitle,
       );
     }
-    final position = await _attendance.getCurrentPosition();
     return _attendance.submitCheckIn(
       qrToken: widget.qrToken,
-      latitude: position.latitude,
-      longitude: position.longitude,
-      accuracyM: position.accuracy,
+      latitude: widget.latitude,
+      longitude: widget.longitude,
+      accuracyM: widget.accuracyM,
       selfieFile: selfieFile,
       otpCode: widget.otpCode,
       eventId: widget.eventId,
