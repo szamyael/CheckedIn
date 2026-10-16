@@ -157,6 +157,25 @@ class ProfileService {
     }
   }
 
+  Future<String?> fetchCampusPassToken() async {
+    if (AuthService.instance.isOfflineMode ||
+        _client.auth.currentUser == null) {
+      return null;
+    }
+    final token = await _client.rpc('get_my_campus_pass_token');
+    return token as String?;
+  }
+
+  Future<String?> createStudentAvatarUrl(String? path) async {
+    if (path == null ||
+        path.isEmpty ||
+        AuthService.instance.isOfflineMode ||
+        _client.auth.currentUser == null) {
+      return null;
+    }
+    return _client.storage.from('student-ids').createSignedUrl(path, 3600);
+  }
+
   Future<void> updateProfile({
     required String firstName,
     required String lastName,
@@ -306,7 +325,8 @@ class ProfileService {
     final userId = _userId;
     if (userId == null) return [];
 
-    if (AuthService.instance.isOfflineMode || _client.auth.currentUser == null) {
+    if (AuthService.instance.isOfflineMode ||
+        _client.auth.currentUser == null) {
       return await _cache.readJson(CacheKeys.profileBorders, (raw) {
             if (raw is! List) return <String>[];
             return raw.whereType<String>().toList();

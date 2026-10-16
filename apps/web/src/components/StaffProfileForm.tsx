@@ -18,10 +18,14 @@ export function StaffProfileForm({
   email,
   userId,
   profile,
+  isAdmin = false,
+  hasAdminPersonalCode = false,
 }: {
   email: string;
   userId: string;
   profile: ProfileFields | null;
+  isAdmin?: boolean;
+  hasAdminPersonalCode?: boolean;
 }) {
   const [firstName, setFirstName] = useState(profile?.first_name ?? "");
   const [middleName, setMiddleName] = useState(profile?.middle_name ?? "");
@@ -41,6 +45,11 @@ export function StaffProfileForm({
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingCredential, setSavingCredential] = useState(false);
   const [savingAvatar, setSavingAvatar] = useState(false);
+  const [adminPersonalCode, setAdminPersonalCode] = useState("");
+  const [confirmAdminPersonalCode, setConfirmAdminPersonalCode] = useState("");
+  const [adminCodeMessage, setAdminCodeMessage] = useState<string | null>(null);
+  const [adminCodeError, setAdminCodeError] = useState<string | null>(null);
+  const [savingAdminCode, setSavingAdminCode] = useState(false);
   const avatarInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -98,6 +107,36 @@ export function StaffProfileForm({
       setProfileError(error instanceof Error ? error.message : "Unable to save profile details.");
     } finally {
       setSavingProfile(false);
+    }
+  }
+
+  async function saveAdminPersonalCode(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setAdminCodeError(null);
+    setAdminCodeMessage(null);
+    if (!/^\d{6}$/.test(adminPersonalCode)) {
+      setAdminCodeError("Enter exactly six digits.");
+      return;
+    }
+    if (adminPersonalCode !== confirmAdminPersonalCode) {
+      setAdminCodeError("The codes do not match.");
+      return;
+    }
+
+    setSavingAdminCode(true);
+    try {
+      const { data, error } = await createClient().rpc("set_admin_personal_code", {
+        p_code: adminPersonalCode,
+      });
+      if (error) throw new Error(error.message);
+      if (data !== true) throw new Error("Your personal code could not be saved.");
+      setAdminPersonalCode("");
+      setConfirmAdminPersonalCode("");
+      setAdminCodeMessage("Admin account creation code saved.");
+    } catch (error) {
+      setAdminCodeError(error instanceof Error ? error.message : "Unable to save your personal code.");
+    } finally {
+      setSavingAdminCode(false);
     }
   }
 
@@ -344,6 +383,55 @@ export function StaffProfileForm({
         {credentialMessage && <p role="status" className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">{credentialMessage}</p>}
         {credentialError && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-800">{credentialError}</p>}
       </section>
+
+      {isAdmin && (
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-soft)] sm:p-7">
+          <h2 className="text-lg font-semibold text-[var(--primary-strong)]">Admin account creation code</h2>
+          <p className="mt-1 text-sm text-[var(--muted)]">
+            {hasAdminPersonalCode
+              ? "Your code is set. You’ll need to enter it whenever you create another admin account."
+              : "Create a six-digit personal code. You’ll need it to create another admin account."}
+          </p>
+          <form onSubmit={(event) => void saveAdminPersonalCode(event)} className="mt-4 max-w-lg space-y-4">
+            <label className="block text-sm font-medium">
+              {hasAdminPersonalCode ? "New six-digit code" : "Six-digit code"}
+              <input
+                type="password"
+                inputMode="numeric"
+                autoComplete="new-password"
+                pattern="[0-9]{6}"
+                maxLength={6}
+                minLength={6}
+                value={adminPersonalCode}
+                onChange={(event) => setAdminPersonalCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                required
+                className="mt-1.5 min-h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
+              />
+            </label>
+            <label className="block text-sm font-medium">
+              Confirm six-digit code
+              <input
+                type="password"
+                inputMode="numeric"
+                autoComplete="new-password"
+                pattern="[0-9]{6}"
+                maxLength={6}
+                minLength={6}
+                value={confirmAdminPersonalCode}
+                onChange={(event) => setConfirmAdminPersonalCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                required
+                className="mt-1.5 min-h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
+              />
+            </label>
+            {adminCodeError && <p role="alert" className="text-sm text-red-700">{adminCodeError}</p>}
+            {adminCodeMessage && <p role="status" className="text-sm text-emerald-700">{adminCodeMessage}</p>}
+            <button type="submit" disabled={savingAdminCode} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[var(--primary)] px-5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60">
+              {savingAdminCode && <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />}
+              {hasAdminPersonalCode ? "Update personal code" : "Save personal code"}
+            </button>
+          </form>
+        </section>
+      )}
     </div>
   );
 }

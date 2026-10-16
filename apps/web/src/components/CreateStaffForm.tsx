@@ -27,6 +27,7 @@ export function CreateStaffForm({ organizations }: { organizations: Organization
       email: form.get("email"),
       password: form.get("password"),
       role: form.get("role"),
+      admin_personal_code: form.get("admin_personal_code"),
       first_name: form.get("first_name"),
       last_name: form.get("last_name"),
       department: form.get("department") || null,
@@ -119,8 +120,27 @@ export function CreateStaffForm({ organizations }: { organizations: Organization
         >
           <option value="faculty">Faculty</option>
           <option value="org_member">Organization Member</option>
+          <option value="admin">Admin</option>
         </select>
       </div>
+
+      {role === "admin" && (
+        <div>
+          <label className="mb-1 block text-sm font-medium">Your personal six-digit admin code</label>
+          <input
+            name="admin_personal_code"
+            type="password"
+            inputMode="numeric"
+            pattern="[0-9]{6}"
+            minLength={6}
+            maxLength={6}
+            required
+            autoComplete="one-time-code"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          />
+          <p className="mt-1 text-xs text-slate-500">Set this in your admin profile if you haven’t created one yet.</p>
+        </div>
+      )}
 
       {role === "org_member" && (
         <div>

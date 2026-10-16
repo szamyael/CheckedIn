@@ -69,6 +69,17 @@ export default async function FacultyDashboard() {
         </Link>
 
         <Link
+          href="/dashboard/faculty/check-in"
+          className="group flex items-center gap-4 border border-[var(--border)] bg-[var(--surface)] p-5 transition-colors hover:border-[var(--primary)]"
+        >
+          <ClipboardCheck className="h-7 w-7 text-[var(--primary)]" />
+          <div>
+            <p className="font-semibold">Scan student pass</p>
+            <p className="text-sm text-slate-700">Check students in with their campus QR</p>
+          </div>
+        </Link>
+
+        <Link
           href="/dashboard/analytics"
           className="group flex items-center gap-4 border border-[var(--border)] bg-[var(--surface)] p-5 transition-colors hover:border-[var(--primary)]"
         >

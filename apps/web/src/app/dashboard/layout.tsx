@@ -69,6 +69,9 @@ export default async function DashboardLayout({
       ? [{ href: "/dashboard/reports", label: "Reports", icon: "reports" as const }]
       : []),
     ...(role === "admin" || role === "faculty"
+      ? [{ href: "/dashboard/faculty/check-in", label: "Student check-in", icon: "qrCode" as const }]
+      : []),
+    ...(role === "admin" || role === "faculty"
       ? [{ href: "/dashboard/analytics", label: "Analytics", icon: "analytics" as const }]
       : []),
     ...(role === "admin"

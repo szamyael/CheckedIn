@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 
 import '../../services/notification_service.dart';
@@ -48,11 +49,23 @@ class _HomeScreenState extends State<HomeScreen> {
         .where((notification) => notification.type == 'general')
         .take(3)
         .toList();
+    final passDetails = await Future.wait<String?>([
+      _profile.createStudentAvatarUrl(student?['profile_photo_url'] as String?),
+      _profile.fetchCampusPassToken(),
+    ]);
     return _HomeData(
       firstName: student?['first_name'] as String? ?? 'Student',
+      fullName: [
+        student?['first_name'],
+        student?['middle_name'],
+        student?['last_name'],
+      ].whereType<String>().where((part) => part.trim().isNotEmpty).join(' '),
       studentId: student?['student_id'] as String? ?? '—',
       program: student?['program'] as String? ?? 'Program not set',
       yearLevel: student?['year_level'] as int?,
+      section: student?['section'] as String?,
+      avatarUrl: passDetails[0],
+      campusPassToken: passDetails[1],
       stats: stats,
       announcements: announcements,
     );
@@ -95,10 +108,15 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 20),
               _CampusPass(
-                name: firstName,
+                name: data?.fullName.isNotEmpty == true
+                    ? data!.fullName
+                    : firstName,
                 studentId: data?.studentId ?? '—',
                 program: data?.program ?? 'Program not set',
                 yearLevel: data?.yearLevel,
+                section: data?.section,
+                avatarUrl: data?.avatarUrl,
+                campusPassToken: data?.campusPassToken,
                 onScan: widget.onScan,
               ),
               const SizedBox(height: 14),
@@ -134,13 +152,6 @@ class _HomeScreenState extends State<HomeScreen> {
               const _SectionLabel(label: 'NEXT STEPS'),
               const SizedBox(height: 10),
               _ActionRow(
-                icon: TablerIcons.scan,
-                title: 'Scan event QR',
-                description: 'Check in securely for an event.',
-                onTap: widget.onScan,
-              ),
-              const SizedBox(height: 10),
-              _ActionRow(
                 icon: TablerIcons.layoutGrid,
                 title: 'Your Bingo progress',
                 description: 'See what participation can unlock next.',
@@ -172,11 +183,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _CampusPass extends StatelessWidget {
+class _CampusPass extends StatefulWidget {
   final String name;
   final String studentId;
   final String program;
   final int? yearLevel;
+  final String? section;
+  final String? avatarUrl;
+  final String? campusPassToken;
   final VoidCallback onScan;
 
   const _CampusPass({
@@ -184,19 +198,85 @@ class _CampusPass extends StatelessWidget {
     required this.studentId,
     required this.program,
     required this.yearLevel,
+    required this.section,
+    required this.avatarUrl,
+    required this.campusPassToken,
     required this.onScan,
   });
 
+  @override
+  State<_CampusPass> createState() => _CampusPassState();
+}
+
+class _CampusPassState extends State<_CampusPass> {
+  bool _flipped = false;
+
   String get _yearLabel {
-    if (yearLevel == null) return '';
-    final suffix = yearLevel == 1
+    if (widget.yearLevel == null) return '';
+    final suffix = widget.yearLevel == 1
         ? 'st'
-        : yearLevel == 2
+        : widget.yearLevel == 2
         ? 'nd'
-        : yearLevel == 3
+        : widget.yearLevel == 3
         ? 'rd'
         : 'th';
-    return ' · $yearLevel$suffix Year';
+    return ' · ${widget.yearLevel}$suffix Year';
+  }
+
+  void _showFullScreenQr() {
+    final token = widget.campusPassToken;
+    if (token == null) return;
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => Dialog.fullscreen(
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Student QR code'),
+            leading: IconButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              icon: const Icon(Icons.close),
+              tooltip: 'Close full-screen QR code',
+            ),
+          ),
+          body: Center(
+            child: Container(
+              margin: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: QrImageView(
+                data: token,
+                version: QrVersions.auto,
+                size: MediaQuery.sizeOf(dialogContext).shortestSide * 0.72,
+                semanticsLabel: 'Student QR code for ${widget.name}',
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _avatar(double size) {
+    final initials = widget.name
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .map((part) => part[0])
+        .take(2)
+        .join()
+        .toUpperCase();
+    return CircleAvatar(
+      radius: size / 2,
+      backgroundImage: widget.avatarUrl == null
+          ? null
+          : NetworkImage(widget.avatarUrl!),
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+      child: widget.avatarUrl == null
+          ? Text(initials, style: const TextStyle(fontWeight: FontWeight.w700))
+          : null,
+    );
   }
 
   @override
@@ -204,109 +284,287 @@ class _CampusPass extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final primary = colors.primary;
     final foreground = colors.onPrimary;
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [primary, Color.lerp(primary, Colors.black, 0.24)!],
-        ),
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
+    return Semantics(
+      button: true,
+      toggled: _flipped,
+      label: _flipped ? 'Show campus pass' : 'Show student QR card',
+      child: InkWell(
+        onTap: () => setState(() => _flipped = !_flipped),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
-        boxShadow: [
-          BoxShadow(
-            color: primary.withValues(alpha: 0.16),
-            blurRadius: 28,
-            offset: Offset(0, 14),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'YOUR CAMPUS PASS',
-            style: TextStyle(
-              color: foreground,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.4,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
+        child: AnimatedSwitcher(
+          duration: Duration(milliseconds: reduceMotion ? 150 : 600),
+          transitionBuilder: (child, animation) {
+            if (reduceMotion) {
+              return FadeTransition(opacity: animation, child: child);
+            }
+            final rotation = Tween<double>(begin: 3.1416, end: 0).animate(
+              CurvedAnimation(parent: animation, curve: Curves.easeInOutCubic),
+            );
+            return AnimatedBuilder(
+              animation: rotation,
+              child: child,
+              builder: (context, child) => Transform(
+                alignment: Alignment.center,
+                transform: Matrix4.identity()
+                  ..setEntry(3, 2, 0.001)
+                  ..rotateY(rotation.value),
+                child: child,
+              ),
+            );
+          },
+          layoutBuilder: (currentChild, previousChildren) => Stack(
+            alignment: Alignment.center,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      style: TextStyle(
-                        color: foreground,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      '$program$_yearLabel',
-                      style: TextStyle(color: foreground, fontSize: 13),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'STUDENT ID · $studentId',
-                      style: TextStyle(
-                        color: foreground,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ],
+              ...previousChildren,
+              if (currentChild != null) currentChild,
+            ],
+          ),
+          child: _flipped
+              ? _studentCard(primary)
+              : _passFront(primary, foreground),
+        ),
+      ),
+    );
+  }
+
+  Widget _passFront(Color primary, Color foreground) => Container(
+    key: const ValueKey('campus-pass-front'),
+    width: double.infinity,
+    height: 260,
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [primary, Color.lerp(primary, Colors.black, 0.24)!],
+      ),
+      borderRadius: BorderRadius.circular(28),
+      border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+      boxShadow: [
+        BoxShadow(
+          color: primary.withValues(alpha: 0.16),
+          blurRadius: 28,
+          offset: const Offset(0, 14),
+        ),
+      ],
+    ),
+    child: Stack(
+      children: [
+        Positioned.fill(
+          right: 148,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'YOUR CAMPUS PASS',
+                style: TextStyle(
+                  color: foreground,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.4,
                 ),
               ),
-              const SizedBox(width: 14),
-              InkWell(
-                onTap: onScan,
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  width: 92,
-                  height: 92,
-                  decoration: BoxDecoration(
-                    color: foreground.withValues(alpha: 0.1),
-                    border: Border.all(
-                      color: foreground.withValues(alpha: 0.3),
-                    ),
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(TablerIcons.qrcode, color: foreground, size: 38),
-                      const SizedBox(height: 5),
-                      Text(
-                        'SCAN TO CHECK IN',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: foreground,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
+              const Spacer(),
+              Text(
+                widget.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: foreground,
+                  fontSize: 21,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                'STUDENT ID',
+                style: TextStyle(
+                  color: foreground.withValues(alpha: 0.72),
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1,
+                ),
+              ),
+              Text(
+                widget.studentId,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: foreground,
+                  fontSize: 21,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.6,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '${widget.program}$_yearLabel${widget.section == null ? '' : ' · ${widget.section}'}',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: foreground, fontSize: 13),
+              ),
+              const Spacer(),
+              Text(
+                'TAP CARD TO VIEW STUDENT ID',
+                style: TextStyle(
+                  color: foreground.withValues(alpha: 0.8),
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.8,
                 ),
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
+        ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: SizedBox(
+            width: 138,
+            height: 138,
+            child: TextButton(
+              onPressed: widget.onScan,
+              style: TextButton.styleFrom(
+                foregroundColor: foreground,
+                padding: const EdgeInsets.all(8),
+                backgroundColor: Colors.white.withValues(alpha: 0.12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: BorderSide(color: foreground.withValues(alpha: 0.3)),
+                ),
+              ),
+              child: const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(TablerIcons.qrcode, size: 48),
+                  SizedBox(height: 8),
+                  Text('Scan event QR', textAlign: TextAlign.center),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _studentCard(Color primary) => Container(
+    key: const ValueKey('campus-pass-qr'),
+    width: double.infinity,
+    height: 260,
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Theme.of(context).colorScheme.surface,
+      borderRadius: BorderRadius.circular(28),
+      border: Border.all(color: Theme.of(context).colorScheme.outline),
+      boxShadow: [
+        BoxShadow(
+          color: primary.withValues(alpha: 0.12),
+          blurRadius: 24,
+          offset: const Offset(0, 10),
+        ),
+      ],
+    ),
+    child: Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'STUDENT IDENTIFICATION',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                height: 1,
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+              const SizedBox(height: 12),
+              _avatar(48),
+              const SizedBox(height: 8),
+              Text(
+                widget.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                'STUDENT ID',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  letterSpacing: 1,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              Text(
+                widget.studentId,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.8,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '${widget.program} · ${widget.yearLevel == null ? 'Year not set' : 'Year ${widget.yearLevel}'}${widget.section == null ? '' : ' · ${widget.section}'}',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const Spacer(),
+              Text(
+                'TAP TO RETURN',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 10),
+        InkWell(
+          onTap: widget.campusPassToken == null ? null : _showFullScreenQr,
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            width: 138,
+            height: 138,
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: widget.campusPassToken == null
+                ? const Center(
+                    child: Text(
+                      'QR unavailable',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.black54, fontSize: 11),
+                    ),
+                  )
+                : QrImageView(
+                    data: widget.campusPassToken!,
+                    version: QrVersions.auto,
+                    size: 126,
+                    semanticsLabel: 'Tap to enlarge student QR code',
+                  ),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _StatTile extends StatelessWidget {
@@ -535,17 +793,25 @@ class _BulletinBoard extends StatelessWidget {
 
 class _HomeData {
   final String firstName;
+  final String fullName;
   final String studentId;
   final String program;
   final int? yearLevel;
+  final String? section;
+  final String? avatarUrl;
+  final String? campusPassToken;
   final Map<String, dynamic> stats;
   final List<AppNotification> announcements;
 
   _HomeData({
     required this.firstName,
+    required this.fullName,
     required this.studentId,
     required this.program,
     required this.yearLevel,
+    required this.section,
+    required this.avatarUrl,
+    required this.campusPassToken,
     required this.stats,
     required this.announcements,
   });

@@ -89,3 +89,46 @@ test("organization workspace exposes only organization-scoped broadcast delivery
   assert.match(migration, /v_organization_id IS NULL/);
   assert.match(migration, /op\.organization_id = v_organization_id/);
 });
+
+test("admins must set a private six-digit code before creating another admin", () => {
+  const migrationPath = fileURLToPath(new URL("../../../backend/supabase/migrations/081_admin_personal_creation_code.sql", import.meta.url));
+  assert.ok(existsSync(migrationPath), "admin personal-code migration should exist");
+  const migration = readFileSync(migrationPath, "utf8");
+  const profilePage = read("../src/app/dashboard/profile/page.tsx");
+  const profileForm = read("../src/components/StaffProfileForm.tsx");
+  const createForm = read("../src/components/CreateStaffForm.tsx");
+  const createRoute = read("../src/app/api/admin/create-staff/route.ts");
+
+  assert.match(migration, /CREATE TABLE public\.admin_personal_codes/);
+  assert.match(migration, /extensions\.crypt\(p_code, extensions\.gen_salt\('bf'\)\)/);
+  assert.match(migration, /p_code !~ '\^\[0-9\]\{6\}\$'/);
+  assert.match(migration, /failed_attempts/);
+  assert.match(migration, /locked_until/);
+  assert.match(migration, /REVOKE ALL ON TABLE public\.admin_personal_codes FROM PUBLIC, anon, authenticated/);
+  assert.match(profilePage, /has_admin_personal_code/);
+  assert.match(profileForm, /set_admin_personal_code/);
+  assert.match(profileForm, /adminPersonalCode/);
+  assert.match(createForm, /<option value="admin">Admin<\/option>/);
+  assert.match(createForm, /admin_personal_code/);
+  assert.match(createRoute, /role === "admin"[\s\S]*?admin_personal_code/);
+  assert.match(createRoute, /verify_admin_personal_code/);
+  assert.ok(
+    createRoute.indexOf("verify_admin_personal_code") < createRoute.indexOf("admin.auth.admin.createUser"),
+    "personal code must be verified before creating the authentication account",
+  );
+});
+
+test("student account actions only show valid next steps for each status", async () => {
+  const actionsPath = fileURLToPath(new URL("../src/lib/student-account-actions.ts", import.meta.url));
+  assert.ok(existsSync(actionsPath), "student account action rules should exist");
+  const { studentAccountActions } = await import("../src/lib/student-account-actions.ts");
+  assert.deepEqual(studentAccountActions("pending"), ["approve", "request_reregistration", "ban"]);
+  assert.deepEqual(studentAccountActions("active"), ["ban"]);
+  assert.deepEqual(studentAccountActions("suspended"), ["lift_ban"]);
+  assert.deepEqual(studentAccountActions("needs_reregistration"), ["ban"]);
+  assert.deepEqual(studentAccountActions("disabled"), []);
+
+  const component = read("../src/components/StudentActions.tsx");
+  assert.match(component, /studentAccountActions\(student\.status\)/);
+  assert.match(component, /actions\.includes\("lift_ban"\)[\s\S]*?setStatus\("active"\)[\s\S]*?Lift ban/);
+});

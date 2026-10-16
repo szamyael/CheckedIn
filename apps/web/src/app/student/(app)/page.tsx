@@ -1,15 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Award, CalendarDays, ChevronRight, Megaphone, QrCode, Sparkles, TicketCheck } from "@/lib/icons";
+import { QRCodeSVG } from "qrcode.react";
 import { createClient } from "@/lib/supabase/client";
 
 type StudentSummary = {
   name: string;
+  firstName: string;
   studentId: string;
   program: string;
   yearLevel: number | null;
+  section: string | null;
+  avatarUrl: string | null;
+  campusPassToken: string | null;
   attended: number;
   points: number;
   badges: number;
@@ -19,26 +25,59 @@ type BulletinItem = { id: string; title: string; body: string; created_at: strin
 
 export default function StudentHomePage() {
   const [summary, setSummary] = useState<StudentSummary>({
-    name: "Student", studentId: "—", program: "Program not set", yearLevel: null, attended: 0, points: 0, badges: 0,
+    name: "Student", firstName: "Student", studentId: "—", program: "Program not set", yearLevel: null, section: null, avatarUrl: null, campusPassToken: null, attended: 0, points: 0, badges: 0,
   });
   const [bulletins, setBulletins] = useState<BulletinItem[]>([]);
+  const [campusPassError, setCampusPassError] = useState<string | null>(null);
+  const [passFlipped, setPassFlipped] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const [qrExpanded, setQrExpanded] = useState(false);
+
+  useEffect(() => {
+    const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updateMotionPreference = () => setReducedMotion(motionPreference.matches);
+    updateMotionPreference();
+    motionPreference.addEventListener("change", updateMotionPreference);
+    return () => motionPreference.removeEventListener("change", updateMotionPreference);
+  }, []);
+
+  useEffect(() => {
+    if (!qrExpanded) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setQrExpanded(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [qrExpanded]);
 
   useEffect(() => {
     const supabase = createClient();
     async function load() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const [{ data: student }, { count: attended }, { count: badges }, { data: announcements }] = await Promise.all([
-        supabase.from("students").select("first_name, student_id, program, year_level, reward_points").eq("id", user.id).single(),
+      const [{ data: student }, { count: attended }, { count: badges }, { data: announcements }, { data: campusPassToken, error: campusPassTokenError }] = await Promise.all([
+        supabase.from("students").select("first_name, middle_name, last_name, student_id, program, year_level, section, reward_points, profile_photo_url").eq("id", user.id).single(),
         supabase.from("attendance_records").select("*", { count: "exact", head: true }).eq("student_id", user.id).in("status", ["checked_in", "late", "excused", "checked_out"]),
         supabase.from("student_achievements").select("*", { count: "exact", head: true }).eq("student_id", user.id),
         supabase.from("notifications").select("id, title, body, created_at").eq("user_id", user.id).eq("notification_type", "general").order("created_at", { ascending: false }).limit(3),
+        supabase.rpc("get_my_campus_pass_token"),
       ]);
+      if (campusPassTokenError) setCampusPassError("Campus pass QR could not be loaded. Please try again later.");
+      let avatarUrl: string | null = null;
+      if (student?.profile_photo_url) {
+        const { data: signedAvatar } = await supabase.storage.from("student-ids").createSignedUrl(student.profile_photo_url, 3600);
+        avatarUrl = signedAvatar?.signedUrl ?? null;
+      }
+      const firstName = student?.first_name ?? "Student";
       setSummary({
-        name: student?.first_name ?? "Student",
+        name: [student?.first_name, student?.middle_name, student?.last_name].filter(Boolean).join(" ") || "Student",
+        firstName,
         studentId: student?.student_id ?? "—",
         program: student?.program ?? "Program not set",
         yearLevel: student?.year_level ?? null,
+        section: student?.section ?? null,
+        avatarUrl,
+        campusPassToken: campusPassTokenError ? null : campusPassToken,
         attended: attended ?? 0,
         points: student?.reward_points ?? 0,
         badges: badges ?? 0,
@@ -55,21 +94,88 @@ export default function StudentHomePage() {
         <Link href="/student/events" className="hidden min-h-11 items-center gap-1 rounded-xl px-3 text-sm font-semibold text-[var(--primary-strong)] transition hover:bg-[var(--primary-soft)] sm:inline-flex">View events <ChevronRight size={16} aria-hidden="true" /></Link>
       </header>
 
-      <section className="student-campus-pass relative overflow-hidden rounded-[1.75rem] border border-[var(--action-background)] bg-[var(--action-background)] p-6 text-white shadow-[0_18px_42px_rgba(12,34,56,0.16)] sm:p-8">
-        <div className="absolute -right-12 -top-14 h-48 w-48 rounded-full border border-white/10" />
-        <div className="absolute -bottom-20 right-20 h-40 w-40 rounded-full border border-white/10" />
-        <div className="relative flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
-          <div>
-            <p className="text-xs font-semibold tracking-[0.14em] text-slate-300">YOUR CAMPUS PASS</p>
-            <h2 className="mt-8 text-2xl font-semibold tracking-tight sm:text-3xl">{summary.name}</h2>
-            <p className="mt-2 text-sm text-slate-300">{summary.program}{summary.yearLevel ? ` · ${summary.yearLevel}${summary.yearLevel === 1 ? "st" : summary.yearLevel === 2 ? "nd" : summary.yearLevel === 3 ? "rd" : "th"} Year` : ""}</p>
-            <p className="mt-5 font-mono text-xs tracking-[0.12em] text-slate-300">STUDENT ID · {summary.studentId}</p>
+      <section className="space-y-3">
+        <div className="relative h-[300px] w-full [perspective:1000px] sm:h-[320px]">
+          <div
+            className="relative h-full w-full transition-transform duration-700 [transform-style:preserve-3d] motion-reduce:transition-none"
+            style={{ transform: passFlipped && !reducedMotion ? "rotateY(180deg)" : undefined }}
+          >
+            <button
+              type="button"
+              aria-pressed={passFlipped}
+              aria-label="Show student identification"
+              aria-hidden={passFlipped}
+              disabled={passFlipped}
+              onClick={() => setPassFlipped(true)}
+              className={`absolute inset-0 flex w-full flex-col justify-between overflow-hidden rounded-[1.75rem] border border-[var(--action-background)] bg-[var(--action-background)] p-6 text-left text-white shadow-[0_18px_42px_rgba(12,34,56,0.16)] [backface-visibility:hidden] sm:p-8 ${reducedMotion && passFlipped ? "pointer-events-none opacity-0" : ""}`}
+            >
+              <span className="absolute -right-12 -top-14 h-48 w-48 rounded-full border border-white/10" />
+              <span className="absolute -bottom-20 right-20 h-40 w-40 rounded-full border border-white/10" />
+              <span className="relative max-w-[calc(100%-7rem)] sm:max-w-[calc(100%-9rem)]">
+                <span className="block text-xs font-semibold tracking-[0.14em] text-slate-300">YOUR CAMPUS PASS</span>
+                <span className="mt-2 block text-2xl font-semibold tracking-tight sm:text-3xl">{summary.name}</span>
+                <span className="mt-2 block text-xs font-semibold tracking-[0.1em] text-white/70">STUDENT ID</span>
+                <span className="mt-1 block font-mono text-xl font-bold tracking-[0.06em] text-white sm:text-2xl">{summary.studentId}</span>
+              </span>
+              <span className="relative flex flex-col gap-2 pr-28 text-sm text-slate-300 sm:pr-36">
+                <span>
+                  <span className="block">{summary.program}{summary.yearLevel ? ` · ${summary.yearLevel}${summary.yearLevel === 1 ? "st" : summary.yearLevel === 2 ? "nd" : summary.yearLevel === 3 ? "rd" : "th"} Year` : ""}</span>
+                  {summary.section && <span className="mt-1 block">Section · {summary.section}</span>}
+                  <span className="mt-3 block text-xs font-semibold tracking-wide text-white">TAP CARD TO VIEW STUDENT ID</span>
+                </span>
+              </span>
+            </button>
+            <div
+              aria-hidden={!passFlipped}
+              className={`absolute inset-0 overflow-hidden rounded-[1.75rem] border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--foreground)] shadow-[0_18px_42px_rgba(12,34,56,0.16)] ${reducedMotion ? "transform-none" : "[transform:rotateY(180deg)]"} [backface-visibility:hidden] transition-opacity duration-150 motion-reduce:transition-none sm:p-8 ${reducedMotion && !passFlipped ? "pointer-events-none opacity-0" : ""}`}
+            >
+              <button type="button" aria-label="Show campus pass front" disabled={!passFlipped} onClick={() => setPassFlipped(false)} className="absolute inset-0 z-0 cursor-pointer rounded-[1.75rem] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-5px] focus-visible:outline-[var(--primary)]" />
+              <div aria-hidden="true" className="pointer-events-none absolute right-5 top-5 z-[1] text-[var(--primary)]/10 sm:right-8 sm:top-7">
+                <QrCode size={100} strokeWidth={1} />
+              </div>
+              <span className="pointer-events-none absolute inset-y-0 left-5 right-36 z-[1] flex flex-col justify-center sm:left-8 sm:right-44">
+                <span className="block border-b border-[var(--border)] pb-2 text-xs font-semibold tracking-[0.14em] text-[var(--muted)]">STUDENT IDENTIFICATION</span>
+                <span className="mt-4 flex items-center gap-3">
+                  <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-full border border-[var(--border)] bg-[var(--surface-muted)] font-semibold text-[var(--primary-strong)]">
+                    {summary.avatarUrl ? <Image src={summary.avatarUrl} alt="" width={56} height={56} unoptimized className="h-full w-full object-cover" /> : summary.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase()}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-lg font-semibold">{summary.name}</span>
+                  </span>
+                </span>
+                <span className="mt-3 block text-xs font-semibold tracking-[0.14em] text-[var(--muted)]">STUDENT ID</span>
+                <span className="mt-1 block truncate font-mono text-xl font-bold tracking-[0.1em] text-[var(--primary-strong)]">{summary.studentId}</span>
+                <span className="mt-5 block text-sm leading-6 text-[var(--muted)]">{summary.program}{summary.yearLevel ? ` · Year ${summary.yearLevel}` : ""}{summary.section ? ` · ${summary.section}` : ""}</span>
+                <span className="mt-4 block text-xs font-medium text-[var(--primary)]">TAP CARD TO RETURN TO CAMPUS PASS</span>
+              </span>
+              <button
+                type="button"
+                aria-label="Enlarge student QR code"
+                disabled={!passFlipped || !summary.campusPassToken}
+                onClick={() => setQrExpanded(true)}
+                className="absolute right-5 top-1/2 z-10 grid h-28 w-28 -translate-y-1/2 place-items-center rounded-xl bg-white p-2 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] disabled:cursor-default sm:right-8 sm:h-32 sm:w-32"
+              >
+                {summary.campusPassToken
+                  ? <QRCodeSVG value={summary.campusPassToken} size={112} level="M" aria-label={`Student QR code for ${summary.name}`} className="h-full w-full" />
+                  : <span className="px-2 text-center text-xs text-[var(--muted)]">{campusPassError ?? "Student QR is not available."}</span>}
+              </button>
+            </div>
+            {!passFlipped && (
+              <Link href="/student/attendance/scan" aria-label="Scan event QR" className="absolute right-5 top-1/2 z-10 grid h-28 w-28 -translate-y-1/2 place-items-center rounded-xl border border-white/25 bg-white/10 p-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:right-8 sm:h-32 sm:w-32">
+                <span className="flex flex-col items-center gap-2"><QrCode size={40} aria-hidden="true" /><span>Scan event QR</span></span>
+              </Link>
+            )}
           </div>
-          <Link href="/student/attendance/scan" className="group flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl bg-white px-5 text-center text-sm font-bold text-[var(--primary-strong)] shadow-sm transition hover:-translate-y-0.5 hover:bg-[var(--primary-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--primary-strong)] sm:min-h-28 sm:w-36 sm:flex-col sm:gap-1 sm:px-4">
-            <QrCode size={26} strokeWidth={1.8} aria-hidden="true" className="sm:h-10 sm:w-10" />
-            <span>Scan to check in</span>
-          </Link>
         </div>
+        {qrExpanded && summary.campusPassToken && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-6" role="dialog" aria-modal="true" aria-label={`Student QR code for ${summary.name}`} onClick={() => setQrExpanded(false)}>
+            <button type="button" aria-label="Close full-screen QR code" onClick={() => setQrExpanded(false)} className="absolute right-5 top-5 grid h-11 w-11 place-items-center rounded-full bg-white/15 text-3xl leading-none text-white hover:bg-white/25">×</button>
+            <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+              <QRCodeSVG value={summary.campusPassToken} size={360} level="M" aria-hidden="true" className="h-auto w-full" />
+              <p className="mt-3 text-center text-sm font-medium text-slate-700">{summary.name} · {summary.studentId}</p>
+            </div>
+          </div>
+        )}
       </section>
 
       <section className="grid gap-3 sm:grid-cols-3">

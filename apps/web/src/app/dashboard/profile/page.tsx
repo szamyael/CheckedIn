@@ -21,6 +21,11 @@ export default async function ProfilePage() {
     redirect("/dashboard");
   }
 
+  const { data: hasAdminPersonalCode, error: codeError } = role === "admin"
+    ? await supabase.rpc("has_admin_personal_code")
+    : { data: false, error: null };
+  if (codeError) throw new Error(codeError.message);
+
   const { data: profile, error: profileError } = await supabase
     .from("staff_profiles")
     .select("first_name, middle_name, last_name, profile_photo_url")
@@ -39,6 +44,8 @@ export default async function ProfilePage() {
         email={user.email ?? userProfile.email ?? ""}
         userId={user.id}
         profile={profile}
+        isAdmin={role === "admin"}
+        hasAdminPersonalCode={hasAdminPersonalCode === true}
       />
     </div>
   );

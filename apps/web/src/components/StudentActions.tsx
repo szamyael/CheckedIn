@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAsyncAction } from "@/lib/useAsyncAction";
+import { studentAccountActions } from "@/lib/student-account-actions";
 
 type DecisionStatus = "suspended" | "needs_reregistration";
 
@@ -20,6 +21,7 @@ export function StudentActions({ student }: { student: StudentRow }) {
   const [decision, setDecision] = useState<DecisionStatus | null>(null);
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const actions = studentAccountActions(student.status);
 
   async function setStatus(
     status: "active" | "suspended" | "needs_reregistration",
@@ -59,38 +61,50 @@ export function StudentActions({ student }: { student: StudentRow }) {
 
   return (
     <div className="flex flex-wrap gap-2">
-      <button
-        type="button"
-        onClick={() => void setStatus("active")}
-        disabled={student.status === "active"}
-        className="text-xs font-medium text-teal-700 hover:underline disabled:cursor-default disabled:text-slate-400 disabled:no-underline"
-      >
-        Approve
-      </button>
-      <button
-        type="button"
-        onClick={() => {
-          setError(null);
-          setReason(student.account_status_reason ?? "");
-          setDecision("needs_reregistration");
-        }}
-        disabled={student.status !== "pending"}
-        className="text-xs font-medium text-amber-700 hover:underline disabled:cursor-not-allowed disabled:text-slate-400 disabled:no-underline"
-      >
-        Re-register
-      </button>
-      <button
-        type="button"
-        onClick={() => {
-          setError(null);
-          setReason(student.account_status_reason ?? "");
-          setDecision("suspended");
-        }}
-        disabled={student.status === "suspended"}
-        className="text-xs font-medium text-red-700 hover:underline disabled:cursor-default disabled:text-slate-400 disabled:no-underline"
-      >
-        Banned
-      </button>
+      {actions.includes("approve") && (
+        <button
+          type="button"
+          onClick={() => void setStatus("active")}
+          className="text-xs font-medium text-teal-700 hover:underline"
+        >
+          Approve
+        </button>
+      )}
+      {actions.includes("request_reregistration") && (
+        <button
+          type="button"
+          onClick={() => {
+            setError(null);
+            setReason(student.account_status_reason ?? "");
+            setDecision("needs_reregistration");
+          }}
+          className="text-xs font-medium text-amber-700 hover:underline"
+        >
+          Re-register
+        </button>
+      )}
+      {actions.includes("ban") && (
+        <button
+          type="button"
+          onClick={() => {
+            setError(null);
+            setReason(student.account_status_reason ?? "");
+            setDecision("suspended");
+          }}
+          className="text-xs font-medium text-red-700 hover:underline"
+        >
+          Ban
+        </button>
+      )}
+      {actions.includes("lift_ban") && (
+        <button
+          type="button"
+          onClick={() => void setStatus("active")}
+          className="text-xs font-medium text-teal-700 hover:underline"
+        >
+          Lift ban
+        </button>
+      )}
       {error && !decision && <p role="alert" className="basis-full text-xs text-red-700">{error}</p>}
       {decision && (
         <div

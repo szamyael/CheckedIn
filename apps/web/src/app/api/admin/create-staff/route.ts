@@ -23,15 +23,50 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { email, password, role, first_name, last_name, department, organization_id } =
-    body;
+  const {
+    email,
+    password,
+    role,
+    first_name,
+    last_name,
+    department,
+    organization_id,
+    admin_personal_code,
+  } = body;
 
   if (!email || !password || !role || !first_name || !last_name) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  if (!["faculty", "org_member"].includes(role)) {
+  if (!["faculty", "org_member", "admin"].includes(role)) {
     return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+  }
+
+  if (role === "admin") {
+    if (typeof admin_personal_code !== "string" || !/^\d{6}$/.test(admin_personal_code)) {
+      return NextResponse.json(
+        { error: "Enter your six-digit admin account creation code." },
+        { status: 400 },
+      );
+    }
+
+    const { data: codeIsValid, error: codeError } = await supabase.rpc(
+      "verify_admin_personal_code",
+      { p_code: admin_personal_code },
+    );
+    if (codeError) {
+      console.error("Could not verify admin account creation code", codeError.message);
+      return NextResponse.json(
+        { error: "Could not verify your admin code. Try again later." },
+        { status: 500 },
+      );
+    }
+    if (codeIsValid !== true) {
+      return NextResponse.json(
+        { error: "Invalid code, or verification is temporarily locked. Try again later." },
+        { status: 403 },
+      );
+    }
   }
 
   if (role === "org_member" && !organization_id) {
