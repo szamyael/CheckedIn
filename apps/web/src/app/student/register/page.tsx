@@ -338,14 +338,14 @@ export default function StudentRegisterPage() {
 
   if (!hydrated) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-white">
+      <div className="auth-theme flex min-h-dvh items-center justify-center bg-white">
         <div className="h-9 w-9 animate-spin rounded-full border-[3px] border-teal-500/30 border-t-teal-500" />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-white px-6 py-8">
+    <div className="auth-theme mx-auto flex min-h-dvh w-full max-w-md flex-col bg-white px-6 py-8">
       <div className="mb-6 flex justify-center">
         <BrandMark size={72} />
       </div>

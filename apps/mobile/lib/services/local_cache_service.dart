@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// Simple JSON file cache under the app documents directory.
@@ -9,10 +10,16 @@ class LocalCacheService {
   static final LocalCacheService instance = LocalCacheService._();
 
   Future<Directory> _dir() async {
-    final root = await getApplicationDocumentsDirectory();
-    final dir = Directory('${root.path}/checkedin_cache');
-    if (!await dir.exists()) await dir.create(recursive: true);
-    return dir;
+    try {
+      final root = await getApplicationDocumentsDirectory();
+      final dir = Directory('${root.path}/checkedin_cache');
+      if (!await dir.exists()) await dir.create(recursive: true);
+      return dir;
+    } on MissingPluginException {
+      final dir = Directory('${Directory.systemTemp.path}/checkedin_cache');
+      if (!await dir.exists()) await dir.create(recursive: true);
+      return dir;
+    }
   }
 
   Future<File> _file(String key) async {

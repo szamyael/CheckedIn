@@ -91,6 +91,20 @@ body {
   transition: background-color 320ms ease, color 320ms ease;
 }
 
+.landing-hero-backdrop {
+  background:
+    radial-gradient(
+      ellipse at 85% 10%,
+      color-mix(in srgb, var(--accent) 12%, transparent) 0%,
+      transparent 36%
+    ),
+    linear-gradient(180deg, var(--surface) 0%, var(--background) 100%);
+}
+
+.landing-visual-glow {
+  background: color-mix(in srgb, var(--accent) 20%, var(--background));
+}
+
 .route-transition {
   animation: route-enter 280ms cubic-bezier(0.2, 0.7, 0.25, 1) both;
 }
@@ -141,7 +155,7 @@ body {
 }
 
 .dashboard-workspace .dashboard-sidebar {
-  background: var(--dashboard-blue);
+  background: var(--action-background);
   border-color: transparent;
   box-shadow: 12px 0 40px rgb(36 8 76 / 20%);
 }
@@ -280,7 +294,7 @@ body {
 }
 
 .dashboard-workspace :is(button, a).text-red-700 {
-  color: #ff8790;
+  color: var(--error);
 }
 
 .dashboard-workspace .dashboard-stat-grid > section {
@@ -416,7 +430,7 @@ select {
 }
 
 :focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--accent) 70%, white);
+  outline: 3px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -626,7 +640,10 @@ select {
 .dashboard-workspace .bg-white { background-color: var(--surface) !important; }
 .dashboard-workspace :is([class~="bg-slate-50"], [class~="bg-slate-100"]) { background-color: var(--surface-muted) !important; }
 .dashboard-workspace [class~="bg-teal-50"] { background-color: var(--primary-soft) !important; }
-.dashboard-workspace :is([class~="bg-teal-600"], [class~="bg-teal-700"], [class~="bg-blue-600"], [class~="bg-blue-700"], [class~="bg-indigo-600"], [class~="bg-indigo-700"]) { background-color: var(--primary) !important; }
+.dashboard-workspace :is([class~="bg-teal-600"], [class~="bg-teal-700"], [class~="bg-blue-600"], [class~="bg-blue-700"], [class~="bg-indigo-600"], [class~="bg-indigo-700"]) {
+  background-color: var(--action-background) !important;
+  color: var(--action-foreground) !important;
+}
 .dashboard-workspace [class~="text-slate-900"],
 .dashboard-workspace [class~="text-slate-800"] { color: var(--text-strong) !important; }
 .dashboard-workspace [class~="text-slate-700"] { color: var(--foreground) !important; }
@@ -638,8 +655,10 @@ select {
 :root[data-mode="dark"] .dashboard-workspace label { color: var(--text-strong); }
 .dashboard-workspace :is([class~="border-slate-100"], [class~="border-slate-200"], [class~="border-slate-300"]) { border-color: var(--border) !important; }
 .dashboard-workspace :is([class~="border-teal-200"], [class~="border-teal-300"]) { border-color: color-mix(in srgb, var(--primary) 38%, var(--border)) !important; }
-.dashboard-workspace [class~="hover:bg-teal-700"]:hover { background-color: var(--primary-strong) !important; }
-.dashboard-workspace :is([class~="hover:bg-blue-700"], [class~="hover:bg-indigo-700"]):hover { background-color: var(--primary-strong) !important; }
+.dashboard-workspace :is([class~="hover:bg-teal-700"], [class~="hover:bg-blue-700"], [class~="hover:bg-indigo-700"]):hover {
+  background-color: color-mix(in srgb, var(--action-background) 88%, black) !important;
+  color: var(--action-foreground) !important;
+}
 .dashboard-workspace [class~="hover:bg-teal-50"]:hover { background-color: var(--primary-soft) !important; }
 .dashboard-workspace [class~="hover:border-teal-500"]:hover,
 .dashboard-workspace [class~="hover:border-teal-300"]:hover { border-color: var(--primary) !important; }
@@ -658,12 +677,18 @@ select {
 
 :root[data-mode="dark"] .dashboard-workspace :is(
   [class~="hover:bg-slate-700"],
-  [class~="hover:bg-slate-800"],
-  [class~="hover:bg-blue-700"],
-  [class~="hover:bg-indigo-700"],
-  [class~="hover:bg-teal-700"]
+  [class~="hover:bg-slate-800"]
 ):hover {
   background-color: var(--primary-strong) !important;
+  color: var(--action-foreground) !important;
+}
+
+:root[data-mode="dark"] .dashboard-workspace :is(
+  [class~="hover:bg-teal-700"],
+  [class~="hover:bg-blue-700"],
+  [class~="hover:bg-indigo-700"]
+):hover {
+  background-color: color-mix(in srgb, var(--action-background) 88%, black) !important;
   color: var(--action-foreground) !important;
 }
 
@@ -951,43 +976,6 @@ select {
   box-shadow: none;
 }
 
-.student-onboarding [class~="border-[#e2e5e7]"],
-.student-onboarding [class~="border-[#d9e2e9]"],
-.student-onboarding [class~="border-[#cbd5da]"] {
-  border-color: var(--border);
-}
-
-.student-onboarding [class~="bg-[#edf4f7]"],
-.student-onboarding [class~="bg-[#f1f3f3]"] {
-  background: var(--surface-muted);
-}
-
-.student-onboarding [class~="bg-[#d8e8ee]"],
-.student-onboarding [class~="bg-[#d8eee9]"],
-.student-onboarding [class~="bg-[#e8f4f1]"] {
-  background: var(--primary-soft);
-}
-
-.student-onboarding [class~="bg-[#edf0f1]"],
-.student-onboarding [class~="bg-[#d9dee1]"] {
-  background: var(--border);
-}
-
-.student-onboarding [class~="text-[#0f766e]"],
-.student-onboarding [class~="text-[#587080]"] {
-  color: var(--primary);
-}
-
-.student-onboarding [class~="text-[#202428]"],
-.student-onboarding [class~="text-[#3f484f]"] {
-  color: var(--foreground);
-}
-
-.student-onboarding [class~="text-[#697178]"],
-.student-onboarding [class~="text-[#8a949b]"] {
-  color: var(--muted);
-}
-
 .student-onboarding .rounded-xl,
 .student-onboarding .rounded-lg {
   border-radius: 0.35rem;
@@ -996,6 +984,87 @@ select {
 .student-portal {
   background: var(--background);
   color: var(--foreground);
+}
+
+.student-portal [aria-disabled="true"] {
+  background-color: var(--surface-muted) !important;
+  color: var(--muted) !important;
+}
+
+.auth-theme [class~="bg-white"],
+.student-portal [class~="bg-white"] {
+  background-color: var(--surface) !important;
+}
+
+.auth-theme :is([class~="bg-slate-50"], [class~="bg-slate-100"]),
+.student-portal :is([class~="bg-slate-50"], [class~="bg-slate-100"]) {
+  background-color: var(--surface-muted) !important;
+}
+
+.auth-theme :is([class~="border-slate-100"], [class~="border-slate-200"], [class~="border-slate-300"]),
+.student-portal :is([class~="border-slate-100"], [class~="border-slate-200"], [class~="border-slate-300"]) {
+  border-color: var(--border) !important;
+}
+
+.auth-theme :is([class~="text-slate-900"], [class~="text-slate-800"]),
+.student-portal :is([class~="text-slate-900"], [class~="text-slate-800"]) {
+  color: var(--text-strong) !important;
+}
+
+.auth-theme [class~="text-slate-700"],
+.student-portal [class~="text-slate-700"] {
+  color: var(--foreground) !important;
+}
+
+.auth-theme :is([class~="text-slate-600"], [class~="text-slate-500"], [class~="text-slate-400"]),
+.student-portal :is([class~="text-slate-600"], [class~="text-slate-500"], [class~="text-slate-400"]) {
+  color: var(--muted) !important;
+}
+
+.auth-theme :is([class~="bg-teal-600"], [class~="bg-teal-700"], [class~="bg-blue-600"], [class~="bg-blue-700"], [class~="bg-indigo-600"], [class~="bg-indigo-700"]),
+.student-portal :is([class~="bg-teal-600"], [class~="bg-teal-700"], [class~="bg-blue-600"], [class~="bg-blue-700"], [class~="bg-indigo-600"], [class~="bg-indigo-700"]) {
+  background-color: var(--action-background) !important;
+  color: var(--action-foreground) !important;
+}
+
+.auth-theme :is([class~="text-teal-600"], [class~="text-teal-700"], [class~="text-teal-800"], [class~="text-blue-600"], [class~="text-blue-700"]),
+.student-portal :is([class~="text-teal-600"], [class~="text-teal-700"], [class~="text-teal-800"], [class~="text-blue-600"], [class~="text-blue-700"]) {
+  color: var(--primary) !important;
+}
+
+.auth-theme :is([class~="bg-teal-50"]),
+.student-portal :is([class~="bg-teal-50"]) {
+  background-color: var(--primary-soft) !important;
+}
+
+.auth-theme :is([class~="text-emerald-700"], [class~="text-emerald-800"], [class~="text-green-700"], [class~="text-green-800"]),
+.student-portal :is([class~="text-emerald-700"], [class~="text-emerald-800"], [class~="text-green-700"], [class~="text-green-800"]) {
+  color: var(--success) !important;
+}
+
+.auth-theme :is([class~="bg-emerald-50"], [class~="bg-green-50"]),
+.student-portal :is([class~="bg-emerald-50"], [class~="bg-green-50"]) {
+  background-color: color-mix(in srgb, var(--success) 12%, var(--surface)) !important;
+}
+
+.auth-theme :is([class~="text-red-600"], [class~="text-red-700"]),
+.student-portal :is([class~="text-red-600"], [class~="text-red-700"]) {
+  color: var(--error) !important;
+}
+
+.auth-theme [class~="bg-red-50"],
+.student-portal [class~="bg-red-50"] {
+  background-color: color-mix(in srgb, var(--error) 12%, var(--surface)) !important;
+}
+
+.auth-theme input:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent) !important;
+}
+
+.auth-theme :is([class~="hover:bg-teal-700"], [class~="hover:bg-blue-700"], [class~="hover:bg-indigo-700"]):hover {
+  background-color: color-mix(in srgb, var(--action-background) 88%, black) !important;
+  color: var(--action-foreground) !important;
 }
 
 .student-portal .student-campus-pass h2 {
@@ -1283,7 +1352,7 @@ body,
 }
 
 .dashboard-workspace .dashboard-sidebar-brand img {
-  filter: none;
+  filter: brightness(0) invert(1);
 }
 
 .dashboard-workspace .dashboard-topbar {

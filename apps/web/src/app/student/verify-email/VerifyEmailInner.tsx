@@ -8,6 +8,12 @@ import { useLoader } from "@/components/LoaderProvider";
 import { EMAIL_OTP_LENGTH } from "@/lib/constants";
 import { formPlaceholders } from "@/lib/form-placeholders";
 import { createClient } from "@/lib/supabase/client";
+import {
+  StudentErrorBanner,
+  StudentInfoBanner,
+  studentInputClass,
+  studentPrimaryButtonClass,
+} from "@/components/student/StudentUi";
 
 export default function VerifyEmailInner() {
   const router = useRouter();
@@ -59,14 +65,14 @@ export default function VerifyEmailInner() {
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-white px-6 py-10">
+    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-[var(--surface)] px-6 py-10 text-[var(--foreground)]">
       <div className="mb-6 flex justify-center">
         <BrandMark size={72} />
       </div>
-      <h1 className="text-xl font-bold">Verify email</h1>
-      <p className="mt-2 text-sm text-slate-600">
+      <h1 className="text-xl font-bold text-[var(--primary-strong)]">Verify email</h1>
+      <p className="mt-2 text-sm text-[var(--muted)]">
         Enter the {EMAIL_OTP_LENGTH}-digit code sent to{" "}
-        <span className="font-medium text-slate-800">{email || "your email"}</span>
+        <span className="font-medium text-[var(--text-strong)]">{email || "your email"}</span>
         .
       </p>
       <form onSubmit={verify} className="mt-6 space-y-4">
@@ -77,14 +83,14 @@ export default function VerifyEmailInner() {
             setCode(e.target.value.replace(/\D/g, "").slice(0, EMAIL_OTP_LENGTH))
           }
           placeholder={formPlaceholders.verificationCode}
-          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-center text-xl tracking-[0.4em]"
+          className={`${studentInputClass} text-center text-xl tracking-[0.4em]`}
           required
         />
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        {message && <p className="text-sm text-teal-600">{message}</p>}
+        {error && <StudentErrorBanner message={error} />}
+        {message && <StudentInfoBanner message={message} tone="teal" />}
         <button
           type="submit"
-          className="w-full rounded-xl bg-teal-600 py-3 text-sm font-semibold text-white"
+          className={studentPrimaryButtonClass}
         >
           Verify
         </button>
@@ -92,13 +98,13 @@ export default function VerifyEmailInner() {
       <button
         type="button"
         onClick={() => void resend()}
-        className="mt-4 text-sm text-teal-600"
+        className="mt-4 text-sm font-medium text-[var(--primary)]"
       >
         Resend code
       </button>
       <Link
         href="/student/login"
-        className="mt-6 text-center text-sm text-slate-500"
+        className="mt-6 text-center text-sm text-[var(--muted)]"
       >
         Back to sign in
       </Link>

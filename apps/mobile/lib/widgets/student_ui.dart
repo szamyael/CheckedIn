@@ -4,14 +4,31 @@ import 'app_logo.dart';
 
 /// Shared colors derived from the active application theme.
 class StudentUi {
-  final ColorScheme _colors;
+  static const _successLight = Color(0xFF087A5C);
+  static const _successDark = Color(0xFF63D9AE);
 
-  StudentUi.of(BuildContext context) : _colors = Theme.of(context).colorScheme;
+  final ThemeData _theme;
+
+  StudentUi.of(BuildContext context) : _theme = Theme.of(context);
+
+  ColorScheme get _colors => _theme.colorScheme;
 
   Color get border => _colors.outline;
   Color get accent => _colors.primary;
   Color get accentSoft => _colors.primaryContainer;
   Color get accentText => _colors.onPrimaryContainer;
+  Color get actionBackground =>
+      _theme.filledButtonTheme.style?.backgroundColor?.resolve({}) ??
+      _colors.primary;
+  Color get actionForeground =>
+      _theme.filledButtonTheme.style?.foregroundColor?.resolve({}) ??
+      _colors.onPrimary;
+  Color get success =>
+      _theme.brightness == Brightness.dark ? _successDark : _successLight;
+  Color get successSurface =>
+      Color.alphaBlend(success.withValues(alpha: 0.12), _colors.surface);
+  Color get successBorder =>
+      Color.alphaBlend(success.withValues(alpha: 0.38), _colors.outline);
   Color get muted => _colors.onSurfaceVariant;
   Color get neutralBackground => _colors.surfaceContainerHighest;
 }
@@ -39,61 +56,71 @@ class StudentStepIndicator extends StatelessWidget {
     final ui = StudentUi.of(context);
     return Semantics(
       label: 'Check-in progress, step $current of $total',
-      child: Row(
-        children: List.generate(total, (index) {
-          final step = index + 1;
-          final complete = step < current;
-          final active = step == current;
-          return Expanded(
-            child: Row(
-              children: [
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircleAvatar(
-                      radius: 18,
-                      backgroundColor: complete
-                          ? ui.accent
-                          : active
-                          ? ui.accentSoft
-                          : ui.neutralBackground,
-                      child: Icon(
-                        complete ? Icons.check : _icons[index],
-                        size: 17,
-                        color: complete
-                            ? Theme.of(context).colorScheme.onPrimary
-                            : active
-                            ? ui.accentText
-                            : ui.muted,
+      child: LayoutBuilder(
+        builder: (context, constraints) => Stack(
+          children: [
+            if (total > 1)
+              Positioned(
+                left: constraints.maxWidth / (2 * total),
+                right: constraints.maxWidth / (2 * total),
+                top: 18,
+                child: Row(
+                  children: List.generate(
+                    total - 1,
+                    (index) => Expanded(
+                      child: Container(
+                        height: 1,
+                        color: index + 1 < current ? ui.accent : ui.border,
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _labels[index],
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                        color: active ? ui.accentText : ui.muted,
-                      ),
-                    ),
-                  ],
-                ),
-                if (step < total)
-                  Expanded(
-                    child: Container(
-                      height: 1,
-                      margin: const EdgeInsets.only(
-                        bottom: 18,
-                        left: 6,
-                        right: 6,
-                      ),
-                      color: step < current ? ui.accent : ui.border,
                     ),
                   ),
-              ],
+                ),
+              ),
+            Row(
+              children: List.generate(total, (index) {
+                final step = index + 1;
+                final complete = step < current;
+                final active = step == current;
+                return Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: complete
+                            ? ui.accent
+                            : active
+                            ? ui.accentSoft
+                            : ui.neutralBackground,
+                        child: Icon(
+                          complete ? Icons.check : _icons[index],
+                          size: 17,
+                          color: complete
+                              ? Theme.of(context).colorScheme.onPrimary
+                              : active
+                              ? ui.accentText
+                              : ui.muted,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _labels[index],
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: active
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          color: active ? ui.accentText : ui.muted,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
             ),
-          );
-        }),
+          ],
+        ),
       ),
     );
   }
@@ -110,12 +137,7 @@ class StudentPageTitle extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontFamily: 'serif'),
-        ),
+        Text(title, style: Theme.of(context).textTheme.titleLarge),
         if (subtitle != null) ...[
           const SizedBox(height: 4),
           Text(subtitle!, style: Theme.of(context).textTheme.bodySmall),

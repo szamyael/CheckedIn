@@ -61,17 +61,17 @@ class AppNotification {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'body': body,
-        'notification_type': type,
-        'created_at': createdAt.toUtc().toIso8601String(),
-        'read_at': readAt?.toUtc().toIso8601String(),
-        'sender_name': senderName,
-        'sender_role': senderRole,
-        'sender_organization_name': senderOrganizationName,
-        'sender_avatar_path': senderAvatarPath,
-      };
+    'id': id,
+    'title': title,
+    'body': body,
+    'notification_type': type,
+    'created_at': createdAt.toUtc().toIso8601String(),
+    'read_at': readAt?.toUtc().toIso8601String(),
+    'sender_name': senderName,
+    'sender_role': senderRole,
+    'sender_organization_name': senderOrganizationName,
+    'sender_avatar_path': senderAvatarPath,
+  };
 
   bool get isUnread => readAt == null;
 
@@ -102,23 +102,29 @@ class NotificationService {
     final userId = _userId;
     if (userId == null) return [];
 
-    if (AuthService.instance.isOfflineMode || _client.auth.currentUser == null) {
+    if (AuthService.instance.isOfflineMode ||
+        _client.auth.currentUser == null) {
       return await _cachedNotifications() ?? [];
     }
 
     try {
       final data = await _client
           .from('notifications')
-          .select('id, title, body, notification_type, read_at, created_at, sender_name, sender_role, sender_organization_name, sender_avatar_path')
+          .select(
+            'id, title, body, notification_type, read_at, created_at, sender_name, sender_role, sender_organization_name, sender_avatar_path',
+          )
           .eq('user_id', userId)
           .order('created_at', ascending: false)
           .limit(limit);
 
-      final items = await Future.wait((data as List).map((n) async {
-        final notification =
-            AppNotification.fromJson(Map<String, dynamic>.from(n as Map));
-        return _withSenderAvatar(notification);
-      }));
+      final items = await Future.wait(
+        (data as List).map((n) async {
+          final notification = AppNotification.fromJson(
+            Map<String, dynamic>.from(n as Map),
+          );
+          return _withSenderAvatar(notification);
+        }),
+      );
       await _cache.writeJson(
         CacheKeys.notifications,
         items.map((n) => n.toJson()).toList(),
@@ -133,20 +139,22 @@ class NotificationService {
     final items = await _cache.readJson<List<AppNotification>>(
       CacheKeys.notifications,
       (raw) {
-      if (raw is! List) return <AppNotification>[];
-      return raw
-          .map(
-            (n) =>
-                AppNotification.fromJson(Map<String, dynamic>.from(n as Map)),
-          )
-          .toList();
+        if (raw is! List) return <AppNotification>[];
+        return raw
+            .map(
+              (n) =>
+                  AppNotification.fromJson(Map<String, dynamic>.from(n as Map)),
+            )
+            .toList();
       },
     );
     if (items == null) return null;
     return Future.wait(items.map(_withSenderAvatar));
   }
 
-  Future<AppNotification> _withSenderAvatar(AppNotification notification) async {
+  Future<AppNotification> _withSenderAvatar(
+    AppNotification notification,
+  ) async {
     final path = notification.senderAvatarPath;
     if (path == null || path.isEmpty) return notification;
     try {
@@ -166,13 +174,12 @@ class NotificationService {
   }
 
   Future<void> markRead(String id) async {
-    if (AuthService.instance.isOfflineMode || _client.auth.currentUser == null) {
+    if (AuthService.instance.isOfflineMode ||
+        _client.auth.currentUser == null) {
       final items = await _cachedNotifications() ?? [];
       final updated = items
           .map(
-            (n) => n.id == id
-                ? n.copyWith(readAt: DateTime.now().toUtc())
-                : n,
+            (n) => n.id == id ? n.copyWith(readAt: DateTime.now().toUtc()) : n,
           )
           .toList();
       await _cache.writeJson(
@@ -192,7 +199,8 @@ class NotificationService {
     final userId = _userId;
     if (userId == null) return;
 
-    if (AuthService.instance.isOfflineMode || _client.auth.currentUser == null) {
+    if (AuthService.instance.isOfflineMode ||
+        _client.auth.currentUser == null) {
       final items = await _cachedNotifications() ?? [];
       final now = DateTime.now().toUtc();
       final updated = items.map((n) => n.copyWith(readAt: now)).toList();
@@ -214,7 +222,8 @@ class NotificationService {
     void Function(AppNotification notification) onInsert, {
     bool playSound = false,
   }) {
-    if (AuthService.instance.isOfflineMode || _client.auth.currentUser == null) {
+    if (AuthService.instance.isOfflineMode ||
+        _client.auth.currentUser == null) {
       return null;
     }
 
@@ -234,7 +243,9 @@ class NotificationService {
         final notification = await _withSenderAvatar(
           AppNotification.fromJson(payload.newRecord),
         );
-        if (playSound && AppearanceService.instance.notificationSoundEnabled) {
+        if (playSound &&
+            AppearanceService.instance.notificationSoundPreference ==
+                NotificationSoundPreference.checkedInMp3) {
           NotificationSoundService.play().catchError((Object error) {
             debugPrint('Failed to play notification sound: $error');
           });

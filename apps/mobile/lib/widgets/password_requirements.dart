@@ -1,34 +1,38 @@
 import 'package:flutter/material.dart';
 
+import 'student_ui.dart';
+
 class PasswordRequirements extends StatelessWidget {
   final String value;
 
   const PasswordRequirements({super.key, required this.value});
 
   List<Map<String, Object>> get _rules => [
-        {
-          'label': 'Special characters',
-          'met': RegExp(r'[^A-Za-z0-9]').hasMatch(value),
-        },
-        {
-          'label': 'At least 2 numbers',
-          'met': RegExp(r'\d').allMatches(value).length >= 2,
-        },
-        {'label': 'One uppercase', 'met': RegExp(r'[A-Z]').hasMatch(value)},
-        {'label': '8 password length', 'met': value.length >= 8},
-      ];
+    {
+      'label': 'Special characters',
+      'met': RegExp(r'[^A-Za-z0-9]').hasMatch(value),
+    },
+    {
+      'label': 'At least 2 numbers',
+      'met': RegExp(r'\d').allMatches(value).length >= 2,
+    },
+    {'label': 'One uppercase', 'met': RegExp(r'[A-Z]').hasMatch(value)},
+    {'label': '8 password length', 'met': value.length >= 8},
+  ];
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final studentUi = StudentUi.of(context);
     final rules = _rules;
     final strength = rules.where((rule) => rule['met'] == true).length;
     final labels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
     final colors = [
-      Theme.of(context).colorScheme.outlineVariant,
-      Colors.red,
-      Colors.orange,
-      Colors.blue,
-      Colors.green,
+      theme.colorScheme.outlineVariant,
+      theme.colorScheme.error,
+      theme.colorScheme.tertiary,
+      theme.colorScheme.secondary,
+      studentUi.success,
     ];
 
     return Padding(
@@ -46,16 +50,16 @@ class PasswordRequirements extends StatelessWidget {
                 labelStyle: TextStyle(
                   fontSize: 11,
                   color: met
-                      ? Colors.green.shade700
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                      ? studentUi.success
+                      : theme.colorScheme.onSurfaceVariant,
                 ),
                 backgroundColor: met
-                    ? Colors.green.shade50
-                    : Theme.of(context).colorScheme.surfaceContainerHighest,
+                    ? studentUi.successSurface
+                    : theme.colorScheme.surfaceContainerHighest,
                 side: BorderSide(
                   color: met
-                      ? Colors.green.shade200
-                      : Theme.of(context).colorScheme.outlineVariant,
+                      ? studentUi.successBorder
+                      : theme.colorScheme.outlineVariant,
                 ),
                 visualDensity: VisualDensity.compact,
                 padding: EdgeInsets.zero,
@@ -77,9 +81,7 @@ class PasswordRequirements extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: index < strength
                                 ? colors[strength]
-                                : Theme.of(context)
-                                    .colorScheme
-                                    .outlineVariant,
+                                : theme.colorScheme.outlineVariant,
                             borderRadius: BorderRadius.circular(99),
                           ),
                         ),
@@ -88,10 +90,7 @@ class PasswordRequirements extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  labels[strength],
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+                Text(labels[strength], style: theme.textTheme.bodySmall),
               ],
             ),
           ],

@@ -3,6 +3,7 @@ import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/permission_service.dart';
+import '../../services/push_notification_service.dart';
 import '../../widgets/app_logo.dart';
 import '../../widgets/student_ui.dart';
 import 'terms_screen.dart';
@@ -21,8 +22,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   bool _cameraGranted = false;
   bool _locationGranted = false;
+  bool _notificationsGranted = false;
   bool _requestingCamera = false;
   bool _requestingLocation = false;
+  bool _requestingNotifications = false;
+  String? _notificationPermissionError;
   bool _termsAccepted = false;
   bool _finishing = false;
 
@@ -70,13 +74,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _refreshPermissionStates() async {
-    final camera = await PermissionService.instance.isGranted(AppPermission.camera);
-    final location =
-        await PermissionService.instance.isGranted(AppPermission.location);
+    final camera = await PermissionService.instance.isGranted(
+      AppPermission.camera,
+    );
+    final location = await PermissionService.instance.isGranted(
+      AppPermission.location,
+    );
+    final notifications =
+        PushNotificationService.instance.hasNotificationPermission;
     if (mounted) {
       setState(() {
         _cameraGranted = camera;
         _locationGranted = location;
+        _notificationsGranted = notifications;
       });
     }
   }
@@ -106,6 +116,27 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           _locationGranted = granted;
         }
       });
+    }
+  }
+
+  Future<void> _requestNotificationPermission() async {
+    setState(() {
+      _requestingNotifications = true;
+      _notificationPermissionError = null;
+    });
+    try {
+      final granted = await PushNotificationService.instance
+          .requestPermission();
+      if (mounted) setState(() => _notificationsGranted = granted);
+    } catch (error) {
+      if (mounted) {
+        setState(
+          () => _notificationPermissionError =
+              'Could not request notification permission: $error',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _requestingNotifications = false);
     }
   }
 
@@ -156,11 +187,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                   const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
-                      border: Border.all(
-                        color: StudentUi.of(context).border,
-                      ),
+                      border: Border.all(color: StudentUi.of(context).border),
                       borderRadius: BorderRadius.circular(99),
                     ),
                     child: Text(
@@ -197,28 +229,38 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   if (index == _pages.length) _refreshPermissionStates();
                 },
                 children: [
-                  ..._pages.asMap().entries.map((entry) => SwipeAnimatedPage(
-                        controller: _pageController,
-                        index: entry.key,
-                        child: _WalkthroughPage(data: entry.value),
-                      )),
+                  ..._pages.asMap().entries.map(
+                    (entry) => SwipeAnimatedPage(
+                      controller: _pageController,
+                      index: entry.key,
+                      child: _WalkthroughPage(data: entry.value),
+                    ),
+                  ),
                   SwipeAnimatedPage(
                     controller: _pageController,
                     index: _pages.length,
                     child: _PermissionsPage(
                       cameraGranted: _cameraGranted,
                       locationGranted: _locationGranted,
+                      notificationsGranted: _notificationsGranted,
                       requestingCamera: _requestingCamera,
                       requestingLocation: _requestingLocation,
-                      onRequestCamera: () => _requestPermission(AppPermission.camera),
-                      onRequestLocation: () => _requestPermission(AppPermission.location),
+                      requestingNotifications: _requestingNotifications,
+                      notificationPermissionError: _notificationPermissionError,
+                      onRequestCamera: () =>
+                          _requestPermission(AppPermission.camera),
+                      onRequestLocation: () =>
+                          _requestPermission(AppPermission.location),
+                      onRequestNotifications: () =>
+                          _requestNotificationPermission(),
                     ),
                   ),
                   SwipeAnimatedPage(
                     controller: _pageController,
                     index: _pages.length + 1,
                     child: OnboardingTermsStep(
-                      onAcceptedChanged: (value) => setState(() => _termsAccepted = value),
+                      onAcceptedChanged: (value) =>
+                          setState(() => _termsAccepted = value),
                     ),
                   ),
                 ],
@@ -268,10 +310,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       isTermsPage
                           ? (_finishing ? 'Saving…' : 'I accept and continue')
                           : isPermissionPage
-                              ? 'Continue'
-                              : _page == 0
-                                  ? 'Start registration'
-                                  : 'Continue',
+                          ? 'Continue'
+                          : _page == 0
+                          ? 'Start registration'
+                          : 'Continue',
                     ),
                   ),
                   if (isPermissionPage) ...[
@@ -332,10 +374,8 @@ class _WalkthroughPage extends StatelessWidget {
             tween: Tween(begin: 0.88, end: 1),
             duration: const Duration(milliseconds: 420),
             curve: Curves.easeOutBack,
-            builder: (context, value, child) => Transform.scale(
-              scale: value,
-              child: child,
-            ),
+            builder: (context, value, child) =>
+                Transform.scale(scale: value, child: child),
             child: Container(
               width: double.infinity,
               height: 170,
@@ -370,7 +410,11 @@ class _WalkthroughPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: StudentUi.of(context).border),
                     ),
-                    child: Icon(data.icon, size: 36, color: Theme.of(context).colorScheme.primary),
+                    child: Icon(
+                      data.icon,
+                      size: 36,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   ),
                   Positioned(
                     bottom: 15,
@@ -435,18 +479,26 @@ class _WalkthroughPage extends StatelessWidget {
 class _PermissionsPage extends StatelessWidget {
   final bool cameraGranted;
   final bool locationGranted;
+  final bool notificationsGranted;
   final bool requestingCamera;
   final bool requestingLocation;
+  final bool requestingNotifications;
+  final String? notificationPermissionError;
   final VoidCallback onRequestCamera;
   final VoidCallback onRequestLocation;
+  final VoidCallback onRequestNotifications;
 
   const _PermissionsPage({
     required this.cameraGranted,
     required this.locationGranted,
+    required this.notificationsGranted,
     required this.requestingCamera,
     required this.requestingLocation,
+    required this.requestingNotifications,
+    required this.notificationPermissionError,
     required this.onRequestCamera,
     required this.onRequestLocation,
+    required this.onRequestNotifications,
   });
 
   @override
@@ -482,11 +534,25 @@ class _PermissionsPage extends StatelessWidget {
             loading: requestingLocation,
             onAllow: onRequestLocation,
           ),
+          const SizedBox(height: 12),
+          _PermissionCard(
+            icon: TablerIcons.bell,
+            title: 'Notifications',
+            description:
+                'Get alerts about campus events and important account updates.',
+            granted: notificationsGranted,
+            loading: requestingNotifications,
+            onAllow: onRequestNotifications,
+          ),
+          if (notificationPermissionError != null) ...[
+            const SizedBox(height: 12),
+            StudentErrorBanner(message: notificationPermissionError!),
+          ],
           const SizedBox(height: 16),
           const StudentInfoBanner(
             icon: TablerIcons.infoCircle,
             message:
-                'If you tap "Don\'t allow", we will ask again when you register, scan a QR code, or check in.',
+                'Camera and location can be requested again when needed. Notifications can be enabled later in your phone settings.',
           ),
         ],
       ),

@@ -101,8 +101,22 @@ export async function updateSession(request: NextRequest) {
     const role = profile?.role as string | undefined;
     const isStudent = role === "student";
 
-    // Approval is an access gate, not merely a check-in restriction. Clear an
-    // existing session before it can reach either application workspace.
+    if (
+      isStudent &&
+      profile?.status === "suspended" &&
+      !isPublicPath(path)
+    ) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/student/login";
+      const response = NextResponse.redirect(url);
+      supabaseResponse.cookies
+        .getAll()
+        .forEach((cookie) => response.cookies.set(cookie));
+      return response;
+    }
+
+    // Keep suspended students signed in only long enough to show their status
+    // dialog; other inactive accounts are cleared before reaching a workspace.
     if (profile && profile.status !== "active" && !isPublicPath(path)) {
       await supabase.auth.signOut();
       const url = request.nextUrl.clone();
@@ -140,6 +154,7 @@ export async function updateSession(request: NextRequest) {
 
     if (
       isStudent &&
+      profile?.status === "active" &&
       isStudentAuthPath(path) &&
       path !== "/student/verify-email" &&
       path !== "/student/register"

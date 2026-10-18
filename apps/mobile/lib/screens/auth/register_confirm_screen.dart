@@ -211,7 +211,7 @@ class _RegisterConfirmScreenState extends State<RegisterConfirmScreen> {
             decoration: InputDecoration(
               labelText: 'Student ID',
               filled: true,
-              fillColor: Colors.grey.shade100,
+              fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
             ),
             controller: TextEditingController(text: widget.draft.studentId),
           ),

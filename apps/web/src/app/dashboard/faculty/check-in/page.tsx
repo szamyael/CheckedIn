@@ -33,7 +33,7 @@ export default async function FacultyCheckInPage() {
       <DashboardPageHeader
         eyebrow="ATTENDANCE"
         title="Student check-in"
-        description="Scan the student QR on their campus pass to record attendance for an open event."
+        description="Scan student campus passes to check students in; scan a pass again to check the student out."
       />
       <CampusPassAttendanceScanner events={events ?? []} />
     </div>

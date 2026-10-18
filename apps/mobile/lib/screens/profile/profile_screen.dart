@@ -189,6 +189,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final studentUi = StudentUi.of(context);
     return RefreshIndicator(
       onRefresh: () async {
         setState(() => _future = _loadData());
@@ -225,21 +227,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Profile',
-                style: TextStyle(
-                  color: Color(0xFF0C2238),
-                  fontSize: 27,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: theme.textTheme.titleLarge?.copyWith(fontSize: 27),
               ),
               const SizedBox(height: 18),
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
+                  color: studentUi.actionBackground,
                   border: Border.all(
-                    color: Theme.of(context).colorScheme.primary,
+                    color: studentUi.actionBackground,
                   ),
                 ),
                 child: Column(
@@ -261,15 +259,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                               child: CircleAvatar(
                                 radius: 32,
-                                backgroundColor: const Color(0xFFE7EEF4),
+                                backgroundColor: studentUi.neutralBackground,
                                 backgroundImage: _avatarUrl != null
                                     ? NetworkImage(_avatarUrl!)
                                     : null,
                                 child: _avatarUrl == null
                                     ? Text(
                                         _initials(student),
-                                        style: const TextStyle(
-                                          color: Color(0xFF17324D),
+                                        style: TextStyle(
+                                          color: theme.colorScheme.primary,
                                           fontWeight: FontWeight.w700,
                                           fontSize: 20,
                                         ),
@@ -281,7 +279,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               right: -4,
                               bottom: -4,
                               child: Material(
-                                color: const Color(0xFFF0C46D),
+                                color: theme.colorScheme.tertiaryContainer,
                                 shape: const CircleBorder(),
                                 child: IconButton(
                                   onPressed: _showAvatarSourcePicker,
@@ -289,7 +287,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     TablerIcons.camera,
                                     size: 17,
                                   ),
-                                  color: const Color(0xFF17324D),
+                                  color: theme.colorScheme.onTertiaryContainer,
                                   tooltip: 'Update profile photo',
                                 ),
                               ),
@@ -309,8 +307,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         student['name_extension'] as String?,
                                   )
                                 : 'Student',
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(color: Colors.white),
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              color: studentUi.actionForeground,
+                            ),
                           ),
                         ),
                       ],
@@ -319,41 +318,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 12),
                       Text(
                         'ID: ${student['student_id']}',
-                        style: const TextStyle(color: Color(0xFFD7E2EC)),
+                        style: TextStyle(color: studentUi.actionForeground),
                       ),
                       Text(
                         'Program: ${student['program']}',
-                        style: const TextStyle(color: Color(0xFFD7E2EC)),
+                        style: TextStyle(color: studentUi.actionForeground),
                       ),
                       if (student['year_level'] != null)
                         Text(
                           'Year Level: ${student['year_level']}',
-                          style: const TextStyle(color: Color(0xFFD7E2EC)),
+                          style: TextStyle(color: studentUi.actionForeground),
                         ),
                       if (student['section'] != null)
                         Text(
                           'Section: ${student['section']}',
-                          style: const TextStyle(color: Color(0xFFD7E2EC)),
+                          style: TextStyle(color: studentUi.actionForeground),
                         ),
                       if (student['reward_points'] != null)
                         Text(
                           '${student['reward_points']} reward points',
-                          style: const TextStyle(
-                            color: Color(0xFFF0C46D),
+                          style: TextStyle(
+                            color: studentUi.actionForeground,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       const SizedBox(height: 8),
                       Text(
                         '${data.attendanceCount} events attended',
-                        style: const TextStyle(color: Color(0xFFD7E2EC)),
+                        style: TextStyle(color: studentUi.actionForeground),
                       ),
                       const SizedBox(height: 8),
                       OutlinedButton(
                         onPressed: _editProfile,
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side: const BorderSide(color: Color(0xFFB7C9D7)),
+                          foregroundColor: studentUi.actionForeground,
+                          side: BorderSide(
+                            color: studentUi.actionForeground.withValues(
+                              alpha: 0.65,
+                            ),
+                          ),
                         ),
                         child: const Text('Edit profile'),
                       ),
@@ -508,17 +511,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              const Row(
+              Row(
                 children: [
-                  Icon(TablerIcons.award, color: Color(0xFFA46618), size: 19),
+                  Icon(
+                    TablerIcons.award,
+                    color: theme.colorScheme.tertiary,
+                    size: 19,
+                  ),
                   SizedBox(width: 8),
                   Text(
                     'Rewards & recognition',
-                    style: TextStyle(
-                      color: Color(0xFF0C2238),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: theme.textTheme.titleMedium,
                   ),
                 ],
               ),
@@ -542,7 +545,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     a.badgeType == 'milestone'
                                         ? TablerIcons.trophy
                                         : TablerIcons.circleCheck,
-                                    color: Colors.amber.shade700,
+                                    color: theme.colorScheme.tertiary,
                                   )
                                 : ClipRRect(
                                     borderRadius: BorderRadius.circular(8),
@@ -553,7 +556,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       fit: BoxFit.cover,
                                       errorBuilder: (_, _, _) => Icon(
                                         TablerIcons.circleCheck,
-                                        color: Colors.amber.shade700,
+                                        color: theme.colorScheme.tertiary,
                                       ),
                                     ),
                                   ),
@@ -575,21 +578,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               const SizedBox(height: 16),
-              const Row(
+              Row(
                 children: [
                   Icon(
                     TablerIcons.calendarEvent,
-                    color: Color(0xFF17324D),
+                    color: theme.colorScheme.primary,
                     size: 19,
                   ),
                   SizedBox(width: 8),
                   Text(
                     'Attendance history',
-                    style: TextStyle(
-                      color: Color(0xFF0C2238),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: theme.textTheme.titleMedium,
                   ),
                 ],
               ),
@@ -613,7 +612,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ? TablerIcons.cloudUpload
                                   : TablerIcons.circleCheck,
                               color: h.isPending
-                                  ? Colors.amber.shade800
+                                  ? theme.colorScheme.tertiary
                                   : StudentUi.of(context).accent,
                             ),
                             title: Text(h.eventTitle),
@@ -623,9 +622,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   : fmt.format(h.checkedInAt.toLocal()),
                             ),
                             trailing: h.syncError != null
-                                ? const Icon(
+                                ? Icon(
                                     TablerIcons.alertCircle,
-                                    color: Colors.red,
+                                    color: theme.colorScheme.error,
                                     size: 20,
                                   )
                                 : null,

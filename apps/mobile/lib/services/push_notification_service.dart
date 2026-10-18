@@ -30,6 +30,7 @@ class PushNotificationService {
   }
 
   String? get pushSubscriptionId => OneSignal.User.pushSubscription.id;
+  bool get hasNotificationPermission => OneSignal.Notifications.permission;
 
   void addPushSubscriptionObserver(OnPushSubscriptionChangeObserver observer) {
     OneSignal.User.pushSubscription.addObserver(observer);

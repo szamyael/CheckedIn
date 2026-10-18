@@ -1,9 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Html5Qrcode } from "html5-qrcode";
-import { Calendar, CircleCheck, QrCode, RotateCw } from "@/lib/icons";
-import { normalizeCampusPassToken } from "@/lib/campus-pass.mjs";
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
+import { Calendar, CircleCheck, QrCode } from "@/lib/icons";
+import {
+  getNewCampusPassTokens,
+  normalizeCampusPassToken,
+  parseCampusPassScanResult,
+} from "@/lib/campus-pass.mjs";
 import { createClient } from "@/lib/supabase/client";
 
 type CheckInEvent = {
@@ -23,36 +27,18 @@ type ScanStudent = {
   section: string | null;
 };
 
-function parseScanResult(value: unknown): { success: true; student: ScanStudent } | { success: false; error: string } | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  const result = value as Record<string, unknown>;
-  if (result.success === false && typeof result.error === "string") {
-    return { success: false, error: result.error };
-  }
-  if (result.success !== true || !result.student || typeof result.student !== "object") return null;
+type ScanResult = {
+  action: "checked_in" | "checked_out";
+  student: ScanStudent;
+  scannedAt: number;
+};
 
-  const student = result.student as Record<string, unknown>;
-  if (
-    typeof student.name !== "string" ||
-    typeof student.student_id !== "string" ||
-    typeof student.program !== "string" ||
-    (student.year_level !== null && typeof student.year_level !== "number") ||
-    (student.section !== null && typeof student.section !== "string")
-  ) {
-    return null;
-  }
-
-  return {
-    success: true,
-    student: {
-      name: student.name,
-      student_id: student.student_id,
-      program: student.program,
-      year_level: student.year_level,
-      section: student.section,
-    },
-  };
-}
+type DetectedBarcode = { rawValue: string };
+type BarcodeDetectorApi = {
+  detect(source: ImageBitmapSource): Promise<DetectedBarcode[]>;
+};
+type BarcodeDetectorConstructor = new (options: { formats: string[] }) => BarcodeDetectorApi;
+type BarcodeDetectorWindow = Window & { BarcodeDetector?: BarcodeDetectorConstructor };
 
 function CampusPassCamera({
   onToken,
@@ -61,7 +47,9 @@ function CampusPassCamera({
   onToken: (token: string) => void;
   onError: (message: string) => void;
 }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [ready, setReady] = useState(false);
+  const [nativeScanner, setNativeScanner] = useState(false);
   const callbacks = useRef({ onToken, onError });
 
   useEffect(() => {
@@ -69,45 +57,153 @@ function CampusPassCamera({
   }, [onError, onToken]);
 
   useEffect(() => {
-    const scanner = new Html5Qrcode("campus-pass-qr-reader");
+    let scanner: Html5Qrcode | null = null;
+    let stream: MediaStream | null = null;
     let cancelled = false;
-    let handled = false;
+    let animationFrame: number | null = null;
+    let resetSeenTimer: ReturnType<typeof setTimeout> | null = null;
+    const seenTokens = new Set<string>();
+    const seenValues = new Set<string>();
 
-    const stop = () => {
-      if (scanner.isScanning) void scanner.stop().catch(() => undefined);
+    const clearSeen = () => {
+      seenTokens.clear();
+      seenValues.clear();
+      resetSeenTimer = null;
     };
 
-    void scanner.start(
-      { facingMode: "environment" },
-      { fps: 8, qrbox: { width: 240, height: 240 } },
-      (decoded) => {
-        if (handled || cancelled) return;
-        handled = true;
-        const token = normalizeCampusPassToken(decoded);
-        stop();
-        if (token) callbacks.current.onToken(token);
-        else callbacks.current.onError("That QR code is not a CheckedIn student campus pass.");
-      },
-      () => undefined,
-    ).then(() => {
-      if (cancelled) {
-        stop();
+    const handleDecodedValues = (values: string[]) => {
+      if (resetSeenTimer !== null) {
+        clearTimeout(resetSeenTimer);
+        resetSeenTimer = null;
+      }
+      if (values.length === 0) {
+        resetSeenTimer = setTimeout(clearSeen, 1200);
         return;
       }
-      setReady(true);
-    }).catch((error: Error) => {
-      if (!cancelled) callbacks.current.onError(error.message || "Allow camera access to scan a student pass.");
-    });
+
+      const newValues = values.filter((value) => {
+        if (seenValues.has(value)) return false;
+        seenValues.add(value);
+        return true;
+      });
+      const tokens = getNewCampusPassTokens(values, seenTokens);
+      for (const value of newValues) {
+        if (!normalizeCampusPassToken(value)) {
+          callbacks.current.onError("That QR code is not a CheckedIn student campus pass.");
+        }
+      }
+      for (const token of tokens) callbacks.current.onToken(token);
+    };
+
+    const stopScanner = () => {
+      if (scanner?.isScanning) void scanner.stop().catch(() => undefined);
+      stream?.getTracks().forEach((track) => track.stop());
+      if (videoRef.current) videoRef.current.srcObject = null;
+    };
+
+    const start = () => {
+      if (cancelled) return;
+      const BarcodeDetector = (window as BarcodeDetectorWindow).BarcodeDetector;
+      let detector: BarcodeDetectorApi | null = null;
+      if (BarcodeDetector) {
+        try {
+          detector = new BarcodeDetector({ formats: ["qr_code"] });
+        } catch {
+          detector = null;
+        }
+      }
+
+      if (detector) {
+        const activeDetector = detector;
+        setNativeScanner(true);
+        void (async () => {
+          try {
+            if (!navigator.mediaDevices?.getUserMedia) {
+              throw new Error("Camera access requires a secure browser connection.");
+            }
+            stream = await navigator.mediaDevices.getUserMedia({
+              audio: false,
+              video: { facingMode: { ideal: "environment" } },
+            });
+            if (cancelled) {
+              stream.getTracks().forEach((track) => track.stop());
+              return;
+            }
+
+            const video = videoRef.current;
+            if (!video) throw new Error("The camera preview is unavailable.");
+            video.srcObject = stream;
+            await video.play();
+            if (cancelled) return;
+            setReady(true);
+
+            let detecting = false;
+            const detectNextFrame = async () => {
+              if (cancelled) return;
+              if (!detecting && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+                detecting = true;
+                try {
+                  const barcodes = await activeDetector.detect(video);
+                  handleDecodedValues(barcodes.map((barcode) => barcode.rawValue));
+                } catch (error) {
+                  callbacks.current.onError(error instanceof Error ? error.message : "Unable to read the camera frame.");
+                } finally {
+                  detecting = false;
+                }
+              }
+              if (!cancelled) animationFrame = requestAnimationFrame(() => void detectNextFrame());
+            };
+            animationFrame = requestAnimationFrame(() => void detectNextFrame());
+          } catch (error) {
+            stopScanner();
+            if (!cancelled) {
+              callbacks.current.onError(error instanceof Error ? error.message : "Allow camera access to scan student passes.");
+            }
+          }
+        })();
+        return;
+      }
+
+      scanner = new Html5Qrcode("campus-pass-qr-reader", {
+        verbose: false,
+        formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+      });
+      void scanner.start(
+        { facingMode: "environment" },
+        { fps: 8 },
+        (decoded) => handleDecodedValues([decoded]),
+        () => handleDecodedValues([]),
+      ).then(() => {
+        if (cancelled) {
+          stopScanner();
+          return;
+        }
+        setReady(true);
+      }).catch((error: Error) => {
+        if (!cancelled) callbacks.current.onError(error.message || "Allow camera access to scan a student pass.");
+      });
+    };
+
+    queueMicrotask(start);
 
     return () => {
       cancelled = true;
-      stop();
+      if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+      if (resetSeenTimer !== null) clearTimeout(resetSeenTimer);
+      stopScanner();
     };
   }, []);
 
   return (
     <div className="overflow-hidden rounded-2xl bg-black">
-      <div id="campus-pass-qr-reader" className="min-h-[280px] w-full" />
+      <video
+        ref={videoRef}
+        className={nativeScanner ? "min-h-[280px] w-full object-cover" : "hidden"}
+        muted
+        playsInline
+        aria-label="Camera scanning student campus passes"
+      />
+      <div id="campus-pass-qr-reader" className={nativeScanner ? "hidden" : "min-h-[280px] w-full"} />
       {!ready && <p className="p-4 text-center text-sm text-white/70">Starting camera…</p>}
     </div>
   );
@@ -115,15 +211,14 @@ function CampusPassCamera({
 
 export function CampusPassAttendanceScanner({ events }: { events: CheckInEvent[] }) {
   const [eventId, setEventId] = useState("");
-  const [scanKey, setScanKey] = useState(0);
-  const [submitting, setSubmitting] = useState(false);
+  const [pendingScans, setPendingScans] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [student, setStudent] = useState<ScanStudent | null>(null);
+  const [scanResults, setScanResults] = useState<ScanResult[]>([]);
+  const submitting = pendingScans > 0;
 
   const scanToken = useCallback(async (token: string) => {
-    setSubmitting(true);
+    setPendingScans((count) => count + 1);
     setError(null);
-    setStudent(null);
     try {
       const { data, error: scanError } = await createClient().rpc("staff_scan_student_campus_pass", {
         p_event_id: eventId,
@@ -133,7 +228,7 @@ export function CampusPassAttendanceScanner({ events }: { events: CheckInEvent[]
         setError(scanError.message);
         return;
       }
-      const result = parseScanResult(data);
+      const result = parseCampusPassScanResult(data);
       if (!result) {
         setError("The check-in response was invalid. Please retry the scan.");
         return;
@@ -142,11 +237,11 @@ export function CampusPassAttendanceScanner({ events }: { events: CheckInEvent[]
         setError(result.error);
         return;
       }
-      setStudent(result.student);
+      setScanResults((current) => [{ ...result, scannedAt: Date.now() }, ...current]);
     } catch (error) {
       setError(error instanceof Error ? error.message : "Unable to record attendance. Please try again.");
     } finally {
-      setSubmitting(false);
+      setPendingScans((count) => Math.max(0, count - 1));
     }
   }, [eventId]);
 
@@ -167,7 +262,7 @@ export function CampusPassAttendanceScanner({ events }: { events: CheckInEvent[]
             disabled={submitting}
             onChange={(event) => {
               setEventId(event.target.value);
-              setStudent(null);
+              setScanResults([]);
               setError(null);
             }}
             className="mt-2 min-h-12 w-full border border-[var(--border)] bg-[var(--background)] px-3 text-sm"
@@ -187,8 +282,8 @@ export function CampusPassAttendanceScanner({ events }: { events: CheckInEvent[]
 
         {selectedEvent ? (
           <>
-            <CampusPassCamera key={scanKey} onToken={scanToken} onError={setScannerError} />
-            <p className="text-sm text-[var(--muted)]">Point the camera at the QR on the student’s campus pass. The server confirms event eligibility and prevents duplicate check-ins.</p>
+            <CampusPassCamera onToken={scanToken} onError={setScannerError} />
+            <p className="text-sm text-[var(--muted)]">Keep the camera pointed at student campus passes to scan one or more students. The first scan checks in; present that pass again after it leaves the camera view to check the student out.</p>
           </>
         ) : events.length ? (
           <div className="border border-dashed border-[var(--border)] p-8 text-center text-sm text-[var(--muted)]">
@@ -204,35 +299,33 @@ export function CampusPassAttendanceScanner({ events }: { events: CheckInEvent[]
       <aside aria-live="polite" className="border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-7">
         <div className="flex items-center gap-3">
           <span className="grid h-11 w-11 place-items-center bg-[var(--primary-soft)] text-[var(--primary)]">
-            {student ? <CircleCheck size={22} aria-hidden="true" /> : <QrCode size={22} aria-hidden="true" />}
+            {scanResults.length ? <CircleCheck size={22} aria-hidden="true" /> : <QrCode size={22} aria-hidden="true" />}
           </span>
           <div>
-            <h2 className="font-semibold text-[var(--text-strong)]">{student ? "Student checked in" : "Scan result"}</h2>
-            <p className="text-sm text-[var(--muted)]">{submitting ? "Recording attendance…" : selectedEvent?.title ?? "Select an event"}</p>
+            <h2 className="font-semibold text-[var(--text-strong)]">{scanResults.length ? "Scan results" : "Scan result"}</h2>
+            <p className="text-sm text-[var(--muted)]">
+              {submitting ? `Recording ${pendingScans} scan${pendingScans === 1 ? "" : "s"}…` : selectedEvent?.title ?? "Select an event"}
+            </p>
           </div>
         </div>
 
         {error && <p role="alert" className="mt-5 border border-[var(--error)]/30 bg-[var(--error)]/5 p-3 text-sm text-[var(--error)]">{error}</p>}
-        {student && (
-          <div className="mt-5 space-y-2 border-t border-[var(--border)] pt-4 text-sm">
-            <p className="text-lg font-semibold text-[var(--text-strong)]">{student.name}</p>
-            <p className="text-[var(--muted)]">Student ID · {student.student_id}</p>
-            <p className="text-[var(--muted)]">{student.program}{student.year_level ? ` · Year ${student.year_level}` : ""}{student.section ? ` · ${student.section}` : ""}</p>
+        {scanResults.map((result, index) => (
+          <div key={`${result.student.student_id}-${result.scannedAt}-${index}`} className="mt-5 space-y-2 border-t border-[var(--border)] pt-4 text-sm">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <p className="text-lg font-semibold text-[var(--text-strong)]">{result.student.name}</p>
+              <span className={`text-xs font-bold uppercase ${result.action === "checked_in" ? "text-[var(--success)]" : "text-[var(--muted)]"}`}>
+                {result.action === "checked_in" ? "Checked in" : "Checked out"}
+              </span>
+            </div>
+            <p className="font-semibold text-[var(--muted)]">Student ID · {result.student.student_id}</p>
+            <p className="text-[var(--muted)]">
+              {result.student.program}
+              {result.student.year_level ? ` · Year ${result.student.year_level}` : ""}
+              {result.student.section ? ` · ${result.student.section}` : ""}
+            </p>
           </div>
-        )}
-        {(student || error) && events.length > 0 && (
-          <button
-            type="button"
-            onClick={() => {
-              setStudent(null);
-              setError(null);
-              setScanKey((key) => key + 1);
-            }}
-            className="mt-5 inline-flex min-h-11 items-center gap-2 border border-[var(--border)] px-4 text-sm font-semibold text-[var(--primary-strong)] hover:bg-[var(--primary-soft)]"
-          >
-            <RotateCw size={16} aria-hidden="true" /> Scan another student
-          </button>
-        )}
+        ))}
       </aside>
     </div>
   );

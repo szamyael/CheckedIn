@@ -56,7 +56,7 @@ function ResetCodeForm() {
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-white px-6 py-10">
+    <div className="auth-theme mx-auto flex min-h-dvh w-full max-w-md flex-col bg-white px-6 py-10">
       <div className="mb-6 flex justify-center">
         <BrandMark size={72} />
       </div>

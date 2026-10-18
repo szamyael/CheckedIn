@@ -120,6 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final studentUi = StudentUi.of(context);
     return Scaffold(
       body: SafeArea(
         child: LayoutBuilder(
@@ -130,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   Container(
                     width: double.infinity,
-                    color: const Color(0xFF17324D),
+                    color: studentUi.actionBackground,
                     padding: const EdgeInsets.fromLTRB(24, 22, 24, 52),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,19 +142,19 @@ class _LoginScreenState extends State<LoginScreen> {
                               width: 48,
                               height: 48,
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: studentUi.actionForeground,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: const AppLogo(size: 42),
                             ),
                             const SizedBox(width: 12),
-                            const Column(
+                            Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   'CheckedIn',
                                   style: TextStyle(
-                                    color: Colors.white,
+                                    color: studentUi.actionForeground,
                                     fontSize: 18,
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -162,7 +163,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Text(
                                   'Campus attendance platform',
                                   style: TextStyle(
-                                    color: Color(0xFFD7E2EC),
+                                    color: studentUi.actionForeground.withValues(
+                                      alpha: 0.75,
+                                    ),
                                     fontSize: 12,
                                   ),
                                 ),
@@ -171,20 +174,22 @@ class _LoginScreenState extends State<LoginScreen> {
                           ],
                         ),
                         const SizedBox(height: 34),
-                        const Text(
+                        Text(
                           'STUDENT PORTAL',
                           style: TextStyle(
-                            color: Color(0xFFD7E2EC),
+                            color: studentUi.actionForeground.withValues(
+                              alpha: 0.85,
+                            ),
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 1.5,
                           ),
                         ),
                         const SizedBox(height: 10),
-                        const Text(
+                        Text(
                           'Your campus life,\nchecked in.',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: studentUi.actionForeground,
                             fontSize: 30,
                             fontWeight: FontWeight.w700,
                             height: 1.08,
@@ -192,10 +197,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        const Text(
+                        Text(
                           'Events, attendance, and rewards—all in one place.',
                           style: TextStyle(
-                            color: Color(0xFFD7E2EC),
+                            color: studentUi.actionForeground.withValues(
+                              alpha: 0.75,
+                            ),
                             fontSize: 14,
                             height: 1.5,
                           ),
@@ -211,14 +218,16 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: theme.colorScheme.surface,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: StudentUi.of(context).border,
                           ),
-                          boxShadow: const [
+                          boxShadow: [
                             BoxShadow(
-                              color: Color(0x120C2238),
+                              color: theme.colorScheme.shadow.withValues(
+                                alpha: 0.12,
+                              ),
                               blurRadius: 20,
                               offset: Offset(0, 8),
                             ),
@@ -231,14 +240,13 @@ class _LoginScreenState extends State<LoginScreen> {
                               'Welcome back',
                               style: theme.textTheme.titleLarge?.copyWith(
                                 fontSize: 24,
-                                color: const Color(0xFF0C2238),
                               ),
                             ),
                             const SizedBox(height: 6),
-                            const Text(
+                            Text(
                               'Sign in with your Student ID to continue.',
                               style: TextStyle(
-                                color: Color(0xFF697178),
+                                color: theme.colorScheme.onSurfaceVariant,
                                 fontSize: 14,
                               ),
                             ),

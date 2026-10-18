@@ -77,6 +77,7 @@ export default function StudentEventDetailPage() {
       </StudentCard>
       <Link
         href="/student/attendance/scan"
+        aria-disabled={!isOpen}
         className={`${studentPrimaryButtonClass} ${
           isOpen ? "" : "pointer-events-none bg-slate-300 hover:bg-slate-300"
         }`}

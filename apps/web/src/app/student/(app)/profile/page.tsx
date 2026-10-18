@@ -224,10 +224,10 @@ export default function StudentProfilePage() {
                 className="h-16 w-16 rounded-full object-cover ring-2 ring-[#c18a2e]"
               />
             ) : (
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#e7eef4] text-lg font-bold text-[#17324d]">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--surface-muted)] text-lg font-bold text-[var(--foreground)]">
                 {initials}
               </div>
-            )}<button type="button" onClick={() => avatarInput.current?.click()} className="absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full border-2 border-[#17324d] bg-[#c18a2e] text-white" aria-label="Upload profile photo"><Camera size={14} /></button><input ref={avatarInput} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(event) => void uploadAvatar(event.target.files?.[0] ?? null)} /></div>
+            )}<button type="button" onClick={() => avatarInput.current?.click()} className="absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full border-2 border-[var(--action-foreground)] bg-[var(--action-background)] text-[var(--action-foreground)]" aria-label="Upload profile photo"><Camera size={14} /></button><input ref={avatarInput} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(event) => void uploadAvatar(event.target.files?.[0] ?? null)} /></div>
             <div>
               <h2 className="text-xl font-bold text-[var(--action-foreground)]">
                 {formatStudentDisplayName(profile)}

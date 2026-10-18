@@ -64,14 +64,22 @@ class _AppearanceSheet extends StatelessWidget {
                         .toList(),
                   ),
                   const SizedBox(height: 24),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Notification sound'),
-                    subtitle: const Text(
-                      'Play a sound when a new notification arrives.',
+                  const _SectionLabel('NOTIFICATION SOUND'),
+                  const SizedBox(height: 10),
+                  ...NotificationSoundPreference.values.map(
+                    (preference) => RadioListTile<NotificationSoundPreference>(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(_notificationSoundLabel(preference)),
+                      subtitle: Text(
+                        preference == NotificationSoundPreference.system
+                            ? 'Use the device default notification sound.'
+                            : 'Play the CheckedIn custom sound.',
+                      ),
+                      value: preference,
+                      groupValue: appearance.notificationSoundPreference,
+                      onChanged: (_) =>
+                          appearance.setNotificationSoundPreference(preference),
                     ),
-                    value: appearance.notificationSoundEnabled,
-                    onChanged: appearance.setNotificationSoundEnabled,
                   ),
                   const SizedBox(height: 16),
                   const _SectionLabel('COLOR THEME'),
@@ -124,6 +132,13 @@ class _AppearanceSheet extends StatelessWidget {
     ThemeMode.light => 'Light',
     ThemeMode.dark => 'Dark',
     ThemeMode.system => 'System',
+  };
+
+  static String _notificationSoundLabel(
+    NotificationSoundPreference preference,
+  ) => switch (preference) {
+    NotificationSoundPreference.system => 'System',
+    NotificationSoundPreference.checkedInMp3 => 'CheckedIn MP3',
   };
 }
 

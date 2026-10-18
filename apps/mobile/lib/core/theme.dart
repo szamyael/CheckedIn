@@ -10,6 +10,10 @@ enum AppColorTheme {
     primarySoft: Color(0xFFE6EEF9),
     accent: Color(0xFF087F8C),
     background: Color(0xFFF7F9FC),
+    surfaceMuted: Color(0xFFEEF2F7),
+    border: Color(0xFFD9E1EC),
+    actionBackground: Color(0xFF1E3A8A),
+    actionBackgroundDark: Color(0xFF2F5D9F),
     backgroundDark: Color(0xFF111A2B),
     surfaceDark: Color(0xFF192640),
     surfaceMutedDark: Color(0xFF223452),
@@ -25,6 +29,10 @@ enum AppColorTheme {
     primarySoft: Color(0xFFF0E7F7),
     accent: Color(0xFF68428C),
     background: Color(0xFFFAF8FC),
+    surfaceMuted: Color(0xFFF1EBF5),
+    border: Color(0xFFE5DCED),
+    actionBackground: Color(0xFF68428C),
+    actionBackgroundDark: Color(0xFF68428C),
     backgroundDark: Color(0xFF1A1420),
     surfaceDark: Color(0xFF282032),
     surfaceMutedDark: Color(0xFF352941),
@@ -40,6 +48,10 @@ enum AppColorTheme {
     primarySoft: Color(0xFFFBEBDD),
     accent: Color(0xFF9A4E18),
     background: Color(0xFFFCF8F5),
+    surfaceMuted: Color(0xFFF5EEE8),
+    border: Color(0xFFEEDFD2),
+    actionBackground: Color(0xFF9A4E18),
+    actionBackgroundDark: Color(0xFF9A4E18),
     backgroundDark: Color(0xFF1F1712),
     surfaceDark: Color(0xFF2D221A),
     surfaceMutedDark: Color(0xFF3B2D22),
@@ -55,6 +67,10 @@ enum AppColorTheme {
     primarySoft: Color(0xFFF5E7EC),
     accent: Color(0xFF7B3047),
     background: Color(0xFFFBF7F8),
+    surfaceMuted: Color(0xFFF4EAEE),
+    border: Color(0xFFEADDE2),
+    actionBackground: Color(0xFF7B3047),
+    actionBackgroundDark: Color(0xFF7B3047),
     backgroundDark: Color(0xFF1D1418),
     surfaceDark: Color(0xFF2A1D23),
     surfaceMutedDark: Color(0xFF38262E),
@@ -70,6 +86,10 @@ enum AppColorTheme {
     primarySoft: Color(0xFFE9EDE3),
     accent: Color(0xFF4B6339),
     background: Color(0xFFF8F9F5),
+    surfaceMuted: Color(0xFFEEF0E9),
+    border: Color(0xFFDFE3D8),
+    actionBackground: Color(0xFF4B6339),
+    actionBackgroundDark: Color(0xFF4B6339),
     backgroundDark: Color(0xFF151A12),
     surfaceDark: Color(0xFF21291C),
     surfaceMutedDark: Color(0xFF2C3625),
@@ -85,6 +105,10 @@ enum AppColorTheme {
     primarySoft: Color(0xFFECECEC),
     accent: Color(0xFF303030),
     background: Color(0xFFF7F7F7),
+    surfaceMuted: Color(0xFFEFEFEF),
+    border: Color(0xFFE2E2E2),
+    actionBackground: Color(0xFF303030),
+    actionBackgroundDark: Color(0xFF484848),
     backgroundDark: Color(0xFF121212),
     surfaceDark: Color(0xFF202020),
     surfaceMutedDark: Color(0xFF2B2B2B),
@@ -100,6 +124,10 @@ enum AppColorTheme {
     primarySoft: Color(0xFFE9EDF2),
     accent: Color(0xFF526276),
     background: Color(0xFFF7F8FA),
+    surfaceMuted: Color(0xFFEDF0F4),
+    border: Color(0xFFDFE4EA),
+    actionBackground: Color(0xFF526276),
+    actionBackgroundDark: Color(0xFF526276),
     backgroundDark: Color(0xFF141A21),
     surfaceDark: Color(0xFF202934),
     surfaceMutedDark: Color(0xFF2C3744),
@@ -116,6 +144,10 @@ enum AppColorTheme {
     required this.primarySoft,
     required this.accent,
     required this.background,
+    required this.surfaceMuted,
+    required this.border,
+    required this.actionBackground,
+    required this.actionBackgroundDark,
     required this.backgroundDark,
     required this.surfaceDark,
     required this.surfaceMutedDark,
@@ -131,6 +163,10 @@ enum AppColorTheme {
   final Color primarySoft;
   final Color accent;
   final Color background;
+  final Color surfaceMuted;
+  final Color border;
+  final Color actionBackground;
+  final Color actionBackgroundDark;
   final Color backgroundDark;
   final Color surfaceDark;
   final Color surfaceMutedDark;
@@ -175,7 +211,7 @@ class AppTheme {
     final dark = brightness == Brightness.dark;
     final background = dark ? selected.backgroundDark : selected.background;
     final surface = dark ? selected.surfaceDark : const Color(0xFFFFFFFF);
-    final border = dark ? selected.borderDark : const Color(0xFFD9E1EC);
+    final border = dark ? selected.borderDark : selected.border;
     final text = dark ? const Color(0xFFE6EDF7) : const Color(0xFF172033);
     final secondary = dark ? const Color(0xFFC4D0E0) : const Color(0xFF40516A);
     final muted = dark ? const Color(0xFFA7B5C8) : const Color(0xFF5F6E82);
@@ -197,9 +233,10 @@ class AppTheme {
           onSurface: text,
           surfaceContainerHighest: dark
               ? selected.surfaceMutedDark
-              : selected.primarySoft,
+              : selected.surfaceMuted,
           onSurfaceVariant: muted,
           outline: border,
+          outlineVariant: border,
           tertiary: dark ? const Color(0xFFF1C67B) : const Color(0xFFA46618),
           onTertiary: dark ? const Color(0xFF3B2B11) : Colors.white,
           tertiaryContainer: dark
@@ -230,7 +267,6 @@ class AppTheme {
       splashFactory: InkSparkle.splashFactory,
       textTheme: TextTheme(
         displaySmall: TextStyle(
-          fontFamily: 'serif',
           color: text,
           fontSize: 32,
           height: 1.12,
@@ -238,7 +274,6 @@ class AppTheme {
           letterSpacing: -0.8,
         ),
         headlineSmall: TextStyle(
-          fontFamily: 'serif',
           color: text,
           fontSize: 25,
           height: 1.2,
@@ -351,8 +386,10 @@ class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: primary,
-          foregroundColor: dark ? background : Colors.white,
+          backgroundColor: dark
+              ? selected.actionBackgroundDark
+              : selected.actionBackground,
+          foregroundColor: Colors.white,
           minimumSize: const Size.fromHeight(52),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -383,8 +420,8 @@ class AppTheme {
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: dark
-            ? const Color(0xFF263A3D)
-            : const Color(0xFF173A42),
+            ? selected.actionBackgroundDark
+            : selected.actionBackground,
         contentTextStyle: const TextStyle(color: Colors.white),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),

@@ -107,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              _CampusPass(
+              CampusPassCard(
                 name: data?.fullName.isNotEmpty == true
                     ? data!.fullName
                     : firstName,
@@ -183,7 +183,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _CampusPass extends StatefulWidget {
+class CampusPassCard extends StatefulWidget {
   final String name;
   final String studentId;
   final String program;
@@ -193,7 +193,8 @@ class _CampusPass extends StatefulWidget {
   final String? campusPassToken;
   final VoidCallback onScan;
 
-  const _CampusPass({
+  const CampusPassCard({
+    super.key,
     required this.name,
     required this.studentId,
     required this.program,
@@ -205,10 +206,10 @@ class _CampusPass extends StatefulWidget {
   });
 
   @override
-  State<_CampusPass> createState() => _CampusPassState();
+  State<CampusPassCard> createState() => _CampusPassCardState();
 }
 
-class _CampusPassState extends State<_CampusPass> {
+class _CampusPassCardState extends State<CampusPassCard> {
   bool _flipped = false;
 
   String get _yearLabel {
@@ -298,7 +299,7 @@ class _CampusPassState extends State<_CampusPass> {
             if (reduceMotion) {
               return FadeTransition(opacity: animation, child: child);
             }
-            final rotation = Tween<double>(begin: 3.1416, end: 0).animate(
+            final rotation = Tween<double>(begin: -3.1416, end: 0).animate(
               CurvedAnimation(parent: animation, curve: Curves.easeInOutCubic),
             );
             return AnimatedBuilder(
@@ -315,10 +316,7 @@ class _CampusPassState extends State<_CampusPass> {
           },
           layoutBuilder: (currentChild, previousChildren) => Stack(
             alignment: Alignment.center,
-            children: [
-              ...previousChildren,
-              if (currentChild != null) currentChild,
-            ],
+            children: [...previousChildren, ?currentChild],
           ),
           child: _flipped
               ? _studentCard(primary)

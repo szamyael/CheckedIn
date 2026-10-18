@@ -17,7 +17,7 @@ export default function StudentTermsPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-white px-6 py-8">
+    <div className="auth-theme mx-auto flex min-h-dvh w-full max-w-md flex-col bg-white px-6 py-8">
       <div className="mb-4 flex items-center justify-between">
         <BrandMark size={40} />
         <span className="text-xs text-slate-500">August 2026</span>

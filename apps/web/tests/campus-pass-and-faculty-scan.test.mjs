@@ -8,12 +8,75 @@ const read = (path) => readFileSync(fileURLToPath(new URL(path, import.meta.url)
 test("campus QR payload accepts only opaque UUID student-pass tokens", async () => {
   const modulePath = fileURLToPath(new URL("../src/lib/campus-pass.mjs", import.meta.url));
   assert.ok(existsSync(modulePath), "campus pass token parser should exist");
-  const { normalizeCampusPassToken } = await import("../src/lib/campus-pass.mjs");
+  const { normalizeCampusPassToken, getNewCampusPassTokens } = await import("../src/lib/campus-pass.mjs");
 
   assert.equal(normalizeCampusPassToken("A3F7C6A2-947D-4C69-801B-6808EDC51B5D"), "a3f7c6a2-947d-4c69-801b-6808edc51b5d");
   assert.equal(normalizeCampusPassToken("0123-4567"), null);
   assert.equal(normalizeCampusPassToken("student:a3f7c6a2-947d-4c69-801b-6808edc51b5d"), null);
   assert.equal(normalizeCampusPassToken(""), null);
+
+  const seen = new Set();
+  assert.deepEqual(
+    getNewCampusPassTokens([
+      "a3f7c6a2-947d-4c69-801b-6808edc51b5d",
+      "b3f7c6a2-947d-4c69-801b-6808edc51b5d",
+      "a3f7c6a2-947d-4c69-801b-6808edc51b5d",
+    ], seen),
+    [
+      "a3f7c6a2-947d-4c69-801b-6808edc51b5d",
+      "b3f7c6a2-947d-4c69-801b-6808edc51b5d",
+    ],
+  );
+  assert.deepEqual(getNewCampusPassTokens([], seen), []);
+  assert.deepEqual(
+    getNewCampusPassTokens(["a3f7c6a2-947d-4c69-801b-6808edc51b5d"], seen),
+    ["a3f7c6a2-947d-4c69-801b-6808edc51b5d"],
+  );
+});
+
+test("campus pass scan result includes student identification and attendance action", async () => {
+  const { parseCampusPassScanResult } = await import("../src/lib/campus-pass.mjs");
+
+  assert.deepEqual(
+    parseCampusPassScanResult({
+      success: true,
+      action: "checked_out",
+      student: {
+        name: "Ada Lovelace",
+        student_id: "STU-1042",
+        program: "Computer Science",
+        year_level: 2,
+        section: "A",
+      },
+    }),
+    {
+      success: true,
+      action: "checked_out",
+      student: {
+        name: "Ada Lovelace",
+        student_id: "STU-1042",
+        program: "Computer Science",
+        year_level: 2,
+        section: "A",
+      },
+    },
+  );
+  assert.equal(
+    parseCampusPassScanResult({
+      success: true,
+      action: "checked_in",
+      student: { name: "Ada", student_id: "STU-1042", program: "CS", year_level: null, section: null },
+    }).success,
+    true,
+  );
+  assert.equal(
+    parseCampusPassScanResult({
+      success: true,
+      action: "unknown",
+      student: { name: "Ada", student_id: "STU-1042", program: "CS", year_level: null, section: null },
+    }),
+    null,
+  );
 });
 
 test("campus passes have private per-student tokens and staff scan enforces event and student eligibility", () => {
@@ -120,4 +183,35 @@ test("faculty scanner selects an active event and records a scanned campus pass"
   assert.match(scanner, /useState\(""\)/);
   assert.match(scanner, /<option value="">Select an event/);
   assert.match(scanner, /\{selectedEvent \?/);
+});
+
+test("faculty scanner does not start a camera from a cleaned-up effect", () => {
+  const scanner = read("../src/components/CampusPassAttendanceScanner.tsx");
+  const cameraEffect = scanner.slice(scanner.indexOf("function CampusPassCamera"), scanner.indexOf("export function CampusPassAttendanceScanner"));
+
+  assert.match(cameraEffect, /queueMicrotask\(start\)/);
+  assert.match(cameraEffect, /const start = \(\) => \{\s*if \(cancelled\) return;/);
+});
+
+test("staff campus-pass scans toggle attendance and report the resulting action", () => {
+  const migrationPath = fileURLToPath(new URL("../../../backend/supabase/migrations/083_staff_campus_pass_check_out.sql", import.meta.url));
+  assert.ok(existsSync(migrationPath), "campus pass check-out migration should exist");
+  const migration = readFileSync(migrationPath, "utf8");
+
+  assert.match(migration, /ON CONFLICT \(event_id, student_id\) DO UPDATE SET/);
+  assert.match(migration, /checked_out_at = CASE/);
+  assert.match(migration, /RETURNING id, status INTO v_attendance_id, v_action/);
+  assert.match(migration, /'action', v_action/);
+});
+
+test("faculty scanner reads every visible QR and keeps scan results with student IDs", () => {
+  const scanner = read("../src/components/CampusPassAttendanceScanner.tsx");
+
+  assert.match(scanner, /BarcodeDetector/);
+  assert.match(scanner, /activeDetector\.detect\(video\)/);
+  assert.match(scanner, /getNewCampusPassTokens/);
+  assert.match(scanner, /setScanResults/);
+  assert.match(scanner, /Student ID/);
+  assert.match(scanner, /result\.action === "checked_in"/);
+  assert.doesNotMatch(scanner, /Scan another student/);
 });
