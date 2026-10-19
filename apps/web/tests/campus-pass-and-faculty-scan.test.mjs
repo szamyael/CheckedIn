@@ -164,9 +164,14 @@ test("web and mobile campus passes flip to a QR student business card with event
 
 test("student mobile navigation remains fixed outside the horizontal scroll clip", () => {
   const studentShell = read("../src/components/student/StudentShell.tsx");
+  const styles = read("../src/app/globals.css");
 
   assert.match(studentShell, /student-portal flex min-h-dvh w-full overflow-x-clip/);
-  assert.match(studentShell, /student-bottom-nav fixed inset-x-0 bottom-0 z-20/);
+  assert.match(studentShell, /useSyncExternalStore\([\s\S]*?getDocumentBody[\s\S]*?getServerDocumentBody/);
+  assert.match(studentShell, /const getDocumentBody = \(\) => document\.body/);
+  assert.match(studentShell, /portalTarget && createPortal\([\s\S]*?student-bottom-nav fixed inset-x-0 bottom-0 z-20[\s\S]*?portalTarget/);
+  assert.match(styles, /\.student-bottom-nav\s*\{\s*padding-block:/);
+  assert.match(styles, /:root\[data-mode="dark"\] \.student-bottom-nav/);
 });
 
 test("Android keeps screenshots blocked for the whole app session", () => {

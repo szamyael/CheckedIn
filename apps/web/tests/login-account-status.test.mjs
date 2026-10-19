@@ -43,3 +43,12 @@ test("suspended portal sessions reach the student dialog with their status reaso
     /useEffect\([\s\S]*?supabase\.auth\.getUser\(\)[\s\S]*?profile\.status === "suspended"[\s\S]*?setAccountDecision\(\{\s*status: profile\.status,\s*reason: profile\.account_status_reason/,
   );
 });
+
+test("student login does not report an account-status error when no session exists", () => {
+  const login = read("../src/app/student/login/page.tsx");
+
+  assert.match(
+    login,
+    /supabase\.auth\.getSession\(\)[\s\S]*?if \(session\) \{[\s\S]*?supabase\.auth\.getUser\(\)/,
+  );
+});

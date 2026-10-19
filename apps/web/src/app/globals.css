@@ -548,7 +548,7 @@ select {
 }
 
 .student-portal > .student-main > header,
-.student-portal .student-bottom-nav {
+.student-bottom-nav {
   border-color: var(--border);
   background-color: color-mix(in srgb, var(--surface) 94%, transparent);
   box-shadow: var(--shadow-soft);
@@ -1196,7 +1196,7 @@ body,
 }
 
 .student-portal .student-header,
-.student-portal .student-bottom-nav,
+.student-bottom-nav,
 .dashboard-workspace .dashboard-topbar {
   backdrop-filter: blur(10px);
 }
@@ -1623,13 +1623,13 @@ body,
   to { opacity: 1; }
 }
 
-.student-portal .student-bottom-nav {
+.student-bottom-nav {
   padding-block: 0.5rem max(0.5rem, env(safe-area-inset-bottom));
   border-color: color-mix(in srgb, var(--border) 85%, transparent);
   box-shadow: 0 -8px 28px rgb(15 23 42 / 9%);
 }
 
-:root[data-mode="dark"] .student-portal .student-bottom-nav {
+:root[data-mode="dark"] .student-bottom-nav {
   box-shadow: 0 -8px 28px rgb(0 0 0 / 24%);
 }
 

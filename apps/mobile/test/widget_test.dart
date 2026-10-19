@@ -168,9 +168,7 @@ void main() {
           studentUi = StudentUi.of(context);
           return child!;
         },
-        home: const Scaffold(
-          body: PasswordRequirements(value: 'AB12!xyz'),
-        ),
+        home: const Scaffold(body: PasswordRequirements(value: 'AB12!xyz')),
       ),
     );
 
@@ -237,7 +235,7 @@ void main() {
     expect(avatarCenters, [250, 350, 450, 550]);
   });
 
-  testWidgets('campus pass flips both sides in the same direction', (
+  testWidgets('campus pass flips as one card in both directions', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -263,9 +261,14 @@ void main() {
       ),
     );
 
-    double rotationOf(Finder side) {
+    double cardRotation() {
       final transform = tester.widget<Transform>(
-        find.ancestor(of: side, matching: find.byType(Transform)).first,
+        find
+            .descendant(
+              of: find.byType(CampusPassCard),
+              matching: find.byType(Transform),
+            )
+            .first,
       );
       return math.atan2(
         -transform.transform.storage[2],
@@ -273,39 +276,24 @@ void main() {
       );
     }
 
-    Future<void> expectFlipDirection(
-      Finder tapTarget,
-      Finder outgoingSide,
-      Finder incomingSide,
-      Finder visibleSide,
-    ) async {
+    Future<double> flipAndMeasure(Finder tapTarget) async {
       await tester.tap(tapTarget);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 250));
-      final outgoingStart = rotationOf(outgoingSide);
-      final incomingStart = rotationOf(incomingSide);
+      final start = cardRotation();
       await tester.pump(const Duration(milliseconds: 100));
-      final outgoingEnd = rotationOf(outgoingSide);
-      final incomingEnd = rotationOf(incomingSide);
-
-      expect(outgoingEnd - outgoingStart, greaterThan(0));
-      expect(incomingEnd - incomingStart, greaterThan(0));
+      final end = cardRotation();
       await tester.pumpAndSettle();
-      expect(visibleSide, findsOneWidget);
+      return end - start;
     }
 
-    await expectFlipDirection(
-      find.text('TAP CARD TO VIEW STUDENT ID'),
-      find.byKey(const ValueKey('campus-pass-front')),
-      find.byKey(const ValueKey('campus-pass-qr')),
-      find.text('STUDENT IDENTIFICATION'),
+    expect(
+      await flipAndMeasure(find.text('TAP CARD TO VIEW STUDENT ID')),
+      greaterThan(0),
     );
-    await expectFlipDirection(
-      find.text('TAP TO RETURN'),
-      find.byKey(const ValueKey('campus-pass-qr')),
-      find.byKey(const ValueKey('campus-pass-front')),
-      find.text('YOUR CAMPUS PASS'),
-    );
+    expect(find.text('STUDENT IDENTIFICATION'), findsOneWidget);
+    expect(await flipAndMeasure(find.text('TAP TO RETURN')), lessThan(0));
+    expect(find.text('YOUR CAMPUS PASS'), findsOneWidget);
   });
 
   test(

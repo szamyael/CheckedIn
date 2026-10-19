@@ -1,12 +1,21 @@
+import {
+  getSoundPayload,
+  resolvePushSoundPreference,
+  resolveSoundPreference,
+} from "./sound-preference.mjs";
+
 const corsHeaders = { "Content-Type": "application/json" };
 
-function resolveSoundPreference(value) {
-  if (!value) return "system";
-  const normalized = String(value).toLowerCase().trim();
-  if (["checkedin_mp3", "checkedinmp3", "checkedin.mp3", "checkedin.mp3.mp3", "custom"].includes(normalized)) {
-    return "checkedin_mp3";
-  }
-  return "system";
+async function getUserSoundPreference(appId: string, apiKey: string, userId: string) {
+  const response = await fetch(
+    `https://api.onesignal.com/apps/${appId}/users/by/external_id/${encodeURIComponent(userId)}`,
+    { headers: { Authorization: `Key ${apiKey}` } },
+  );
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error(`OneSignal user lookup failed: ${response.status}`);
+  const user = await response.json();
+  const preference = user.properties?.tags?.notification_sound_preference;
+  return preference == null ? null : resolveSoundPreference(preference);
 }
 
 Deno.serve(async (req) => {
@@ -26,13 +35,25 @@ Deno.serve(async (req) => {
   const apiKey = Deno.env.get("ONESIGNAL_REST_API_KEY");
   if (!appId || !apiKey) return new Response(JSON.stringify({ skipped: "Push is not configured" }), { headers: corsHeaders });
 
-  const soundPreference = resolveSoundPreference(
-    notification.sound ??
-      notification.notification_sound ??
-      notification.user_sound_preference ??
-      notification.metadata?.sound ??
-      notification.metadata?.notification_sound,
-  );
+  const notificationSound = notification.sound ??
+    notification.notification_sound ??
+    notification.user_sound_preference ??
+    notification.metadata?.sound ??
+    notification.metadata?.notification_sound;
+  let soundPreference;
+  try {
+    const userPreference = await getUserSoundPreference(
+      appId,
+      apiKey,
+      notification.user_id,
+    );
+    soundPreference = resolvePushSoundPreference(
+      userPreference,
+      notificationSound,
+    );
+  } catch (error) {
+    return new Response(JSON.stringify({ error: String(error) }), { status: 502, headers: corsHeaders });
+  }
 
   const response = await fetch("https://api.onesignal.com/notifications", {
     method: "POST",
@@ -43,8 +64,7 @@ Deno.serve(async (req) => {
       include_aliases: { external_id: [notification.user_id] },
       headings: { en: notification.title },
       contents: { en: notification.body },
-      ios_sound: soundPreference === "checkedin_mp3" ? "checkdin.mp3.mp3" : "default",
-      android_sound: "default",
+      ...getSoundPayload(soundPreference),
       data: notification.metadata ?? {},
     }),
   });

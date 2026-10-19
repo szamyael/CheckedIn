@@ -40,36 +40,48 @@ export default function StudentLoginPage() {
 
       const supabase = createClient();
       const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
       if (cancelled) return;
-      if (authError) {
+      if (sessionError) {
         setError("Could not verify your account status. Please try again.");
         return;
       }
 
-      if (user) {
-        const { data: profile, error: profileError } = await supabase
-          .from("users")
-          .select("role, status, account_status_reason")
-          .eq("id", user.id)
-          .maybeSingle();
+      if (session) {
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
         if (cancelled) return;
-        if (profileError) {
-          setError("Your account profile could not be loaded. Contact an administrator.");
+        if (authError) {
+          setError("Could not verify your account status. Please try again.");
           return;
         }
-        if (profile?.role === "student" && profile.status === "suspended") {
-          setAccountDecision({
-            status: profile.status,
-            reason: profile.account_status_reason,
-          });
-          const { error: signOutError } = await supabase.auth.signOut();
-          if (!cancelled && signOutError) {
-            setError("Could not sign out automatically. Please close this message and try again.");
+
+        if (user) {
+          const { data: profile, error: profileError } = await supabase
+            .from("users")
+            .select("role, status, account_status_reason")
+            .eq("id", user.id)
+            .maybeSingle();
+          if (cancelled) return;
+          if (profileError) {
+            setError("Your account profile could not be loaded. Contact an administrator.");
+            return;
           }
-          return;
+          if (profile?.role === "student" && profile.status === "suspended") {
+            setAccountDecision({
+              status: profile.status,
+              reason: profile.account_status_reason,
+            });
+            const { error: signOutError } = await supabase.auth.signOut();
+            if (!cancelled && signOutError) {
+              setError("Could not sign out automatically. Please close this message and try again.");
+            }
+            return;
+          }
         }
       }
 
