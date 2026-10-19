@@ -42,7 +42,7 @@ export function StudentShell({
     exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <div className="student-portal flex min-h-dvh w-full overflow-x-hidden text-[var(--foreground)]">
+    <div className="student-portal flex min-h-dvh w-full overflow-x-clip text-[var(--foreground)]">
       <a className="skip-to-content" href="#student-content">Skip to content</a>
       <NotificationPopup
         item={notificationPopup}

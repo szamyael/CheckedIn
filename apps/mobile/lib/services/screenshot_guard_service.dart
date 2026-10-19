@@ -22,7 +22,7 @@ class ScreenshotGuardService {
         'live_camera_capture': true,
       };
 
-  Future<void> beginProtectedSession({bool reset = false}) async {
+  Future<void> beginProtectedSession({bool reset = false}) => Future.sync(() {
     if (_active) {
       if (reset) {
         _screenshotCount = 0;
@@ -42,27 +42,17 @@ class ScreenshotGuardService {
       _screenRecording = recording;
     });
     _listener!.watch();
+  });
 
-    try {
-      await _listener!.preventAndroidScreenShot(true);
-    } catch (_) {
-      // iOS does not support this API.
-    }
-  }
-
-  Future<void> endProtectedSession() async {
+  Future<void> endProtectedSession() => Future.sync(() {
     if (!_active) return;
     _active = false;
-
-    try {
-      await _listener?.preventAndroidScreenShot(false);
-    } catch (_) {}
 
     _listener?.dispose();
     _listener = null;
     _screenshotCount = 0;
     _screenRecording = false;
-  }
+  });
 
   String? validateBeforeCapture() {
     if (!_active) return null;

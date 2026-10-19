@@ -211,8 +211,31 @@ class CampusPassCard extends StatefulWidget {
   State<CampusPassCard> createState() => _CampusPassCardState();
 }
 
-class _CampusPassCardState extends State<CampusPassCard> {
+class _CampusPassCardState extends State<CampusPassCard>
+    with SingleTickerProviderStateMixin {
   bool _flipped = false;
+  late final AnimationController _flipController;
+  late final Animation<double> _flipAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _flipController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+    _flipAnimation = CurvedAnimation(
+      parent: _flipController,
+      curve: Curves.ease,
+      reverseCurve: Curves.ease,
+    );
+  }
+
+  @override
+  void dispose() {
+    _flipController.dispose();
+    super.dispose();
+  }
 
   String get _yearLabel {
     if (widget.yearLevel == null) return '';
@@ -287,47 +310,41 @@ class _CampusPassCardState extends State<CampusPassCard> {
     final colors = Theme.of(context).colorScheme;
     final primary = colors.primary;
     final foreground = colors.onPrimary;
-    final reduceMotion = MediaQuery.of(context).disableAnimations;
     return Semantics(
       button: true,
       toggled: _flipped,
       label: _flipped ? 'Show campus pass' : 'Show student QR card',
       child: InkWell(
-        onTap: () => setState(() => _flipped = !_flipped),
+        onTap: () {
+          final next = !_flipped;
+          setState(() => _flipped = next);
+          if (MediaQuery.of(context).disableAnimations) {
+            _flipController.value = next ? 1 : 0;
+          } else if (next) {
+            _flipController.forward();
+          } else {
+            _flipController.reverse();
+          }
+        },
         borderRadius: BorderRadius.circular(28),
-        child: AnimatedSwitcher(
-          duration: Duration(milliseconds: reduceMotion ? 150 : 600),
-          transitionBuilder: (child, animation) {
-            if (reduceMotion) {
-              return FadeTransition(opacity: animation, child: child);
-            }
-            return AnimatedBuilder(
-              animation: animation,
-              child: child,
-              builder: (context, child) {
-                final progress = Curves.easeInOutCubic.transform(
-                  animation.value,
-                );
-                final rotation = animation.status == AnimationStatus.reverse
-                    ? math.pi / 2 * (1 - progress)
-                    : -math.pi / 2 * (1 - progress);
-                return Transform(
-                  alignment: Alignment.center,
-                  transform: Matrix4.identity()
-                    ..setEntry(3, 2, 0.001)
-                    ..rotateY(rotation),
-                  child: child,
-                );
-              },
+        child: AnimatedBuilder(
+          animation: _flipAnimation,
+          builder: (context, child) {
+            final progress = _flipAnimation.value;
+            return Transform(
+              alignment: Alignment.center,
+              transform: Matrix4.identity()
+                ..setEntry(3, 2, 0.001)
+                ..rotateY(math.pi * progress),
+              child: progress < 0.5
+                  ? _passFront(primary, foreground)
+                  : Transform(
+                      alignment: Alignment.center,
+                      transform: Matrix4.rotationY(math.pi),
+                      child: _studentCard(primary),
+                    ),
             );
           },
-          layoutBuilder: (currentChild, previousChildren) => Stack(
-            alignment: Alignment.center,
-            children: [...previousChildren, ?currentChild],
-          ),
-          child: _flipped
-              ? _studentCard(primary)
-              : _passFront(primary, foreground),
         ),
       ),
     );

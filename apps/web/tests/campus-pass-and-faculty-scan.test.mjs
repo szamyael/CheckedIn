@@ -162,6 +162,35 @@ test("web and mobile campus passes flip to a QR student business card with event
   assert.match(mobileLockfile, /  qr:\n    dependency: transitive/);
 });
 
+test("student mobile navigation remains fixed outside the horizontal scroll clip", () => {
+  const studentShell = read("../src/components/student/StudentShell.tsx");
+
+  assert.match(studentShell, /student-portal flex min-h-dvh w-full overflow-x-clip/);
+  assert.match(studentShell, /student-bottom-nav fixed inset-x-0 bottom-0 z-20/);
+});
+
+test("Android keeps screenshots blocked for the whole app session", () => {
+  const mainActivity = read("../../mobile/android/app/src/main/kotlin/com/example/checkedin_mobile/MainActivity.kt");
+  const screenshotGuard = read("../../mobile/lib/services/screenshot_guard_service.dart");
+
+  assert.match(mainActivity, /addFlags\(WindowManager\.LayoutParams\.FLAG_SECURE\)/);
+  assert.doesNotMatch(screenshotGuard, /preventAndroidScreenShot/);
+});
+
+test("mobile campus pass uses the portal's full-card 180-degree flip", () => {
+  const mobileHome = read("../../mobile/lib/screens/home/home_screen.dart");
+  const cardStart = mobileHome.indexOf("class _CampusPassCardState");
+  const cardEnd = mobileHome.indexOf("Widget _passFront", cardStart);
+  const card = mobileHome.slice(cardStart, cardEnd);
+
+  assert.match(card, /AnimationController/);
+  assert.match(card, /Duration\(milliseconds: 700\)/);
+  assert.match(card, /curve: Curves\.ease,/);
+  assert.match(card, /reverseCurve: Curves\.ease,/);
+  assert.match(card, /rotateY\(math\.pi \* progress\)/);
+  assert.doesNotMatch(card, /AnimatedSwitcher/);
+});
+
 test("faculty scanner selects an active event and records a scanned campus pass", () => {
   const dashboard = read("../src/app/dashboard/faculty/page.tsx");
   const layout = read("../src/app/dashboard/layout.tsx");
