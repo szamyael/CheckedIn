@@ -216,6 +216,7 @@ GoRouter createRouter(
             eventTitle: data['event_title'] as String? ?? 'Event',
             eventId: data['event_id'] as String?,
             locationVerified: data['location_verified'] as bool? ?? false,
+            requiresLocation: data['requires_location'] as bool? ?? true,
             offlineSubmission: data['offline_submission'] as bool? ?? false,
             scannedAt: data['scanned_at'] is String
                 ? DateTime.parse(data['scanned_at'] as String)

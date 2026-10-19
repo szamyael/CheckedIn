@@ -72,4 +72,6 @@ export type CheckInMeta = {
   latitude?: number;
   longitude?: number;
   location_radius_m?: number;
+  requires_location?: boolean;
+  window_open?: boolean;
 };

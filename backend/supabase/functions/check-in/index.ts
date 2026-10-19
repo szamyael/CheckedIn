@@ -13,8 +13,8 @@ const corsHeaders = {
 
 interface CheckInRequest {
   qr_token: string;
-  latitude: number;
-  longitude: number;
+  latitude?: number;
+  longitude?: number;
   accuracy_m?: number;
   selfie_path: string;
   client_checked_in_at?: string;
@@ -30,7 +30,7 @@ interface CheckInRequest {
 
 const SELFIE_MAX_AGE_MS = 15 * 60 * 1000;
 
-function isValidCoordinate(lat: number, lng: number): boolean {
+function isValidCoordinate(lat: number | undefined, lng: number | undefined): boolean {
   return (
     Number.isFinite(lat) &&
     Number.isFinite(lng) &&
@@ -124,12 +124,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (!isValidCoordinate(latitude, longitude)) {
-      return new Response(
-        JSON.stringify({ error: "Invalid GPS coordinates" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
     const expectedSelfiePrefix = `${userId}/`;
     if (!selfie_path.startsWith(expectedSelfiePrefix)) {
       return new Response(
@@ -229,9 +223,19 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (event.latitude == null || event.longitude == null) {
+    const requiresLocation = event.requires_location !== false;
+    if (
+      requiresLocation &&
+      (!isValidCoordinate(latitude, longitude) ||
+        event.latitude == null ||
+        event.longitude == null)
+    ) {
       return new Response(
-        JSON.stringify({ error: "Event venue location is not configured" }),
+        JSON.stringify({
+          error: !isValidCoordinate(latitude, longitude)
+            ? "Invalid GPS coordinates"
+            : "Event venue location is not configured",
+        }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -302,35 +306,38 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { data: distanceData, error: distanceError } = await supabase.rpc(
-      "haversine_distance_m",
-      {
-        lat1: latitude,
-        lng1: longitude,
-        lat2: event.latitude,
-        lng2: event.longitude,
-      },
-    );
-
-    if (distanceError || distanceData == null || !Number.isFinite(distanceData)) {
-      return new Response(
-        JSON.stringify({ error: "Location verification failed" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    let distanceM: number | null = null;
+    if (requiresLocation) {
+      const { data: distanceData, error: distanceError } = await supabase.rpc(
+        "haversine_distance_m",
+        {
+          lat1: latitude,
+          lng1: longitude,
+          lat2: event.latitude,
+          lng2: event.longitude,
+        },
       );
-    }
 
-    const distanceM = distanceData as number;
-    const allowedRadius = (event.location_radius_m as number | null) ?? 100;
+      if (distanceError || distanceData == null || !Number.isFinite(distanceData)) {
+        return new Response(
+          JSON.stringify({ error: "Location verification failed" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
 
-    if (distanceM > allowedRadius) {
-      return new Response(
-        JSON.stringify({
-          error: "You are outside the event location",
-          distance_m: Math.round(distanceM),
-          allowed_radius_m: allowedRadius,
-        }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+      distanceM = distanceData as number;
+      const allowedRadius = (event.location_radius_m as number | null) ?? 100;
+
+      if (distanceM > allowedRadius) {
+        return new Response(
+          JSON.stringify({
+            error: "You are outside the event location",
+            distance_m: Math.round(distanceM),
+            allowed_radius_m: allowedRadius,
+          }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
     }
 
     const { data: existing } = await supabase
@@ -366,9 +373,9 @@ Deno.serve(async (req) => {
       .insert({
         event_id: event.id,
         student_id: userId,
-        latitude,
-        longitude,
-        location_accuracy_m: accuracy_m,
+        latitude: requiresLocation ? latitude : null,
+        longitude: requiresLocation ? longitude : null,
+        location_accuracy_m: requiresLocation ? accuracy_m : null,
         selfie_url: selfie_path,
         distance_from_venue_m: distanceM,
         checked_in_at: checkInTime.toISOString(),

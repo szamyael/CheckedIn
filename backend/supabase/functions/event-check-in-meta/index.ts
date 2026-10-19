@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
     const { data: event } = await supabase
       .from("events")
       .select(
-        "id, title, requires_otp, venue_name, latitude, longitude, location_radius_m, attendance_starts_at, attendance_ends_at, starts_at, ends_at, status, break_time_limit_minutes, allowed_year_levels",
+        "id, title, requires_otp, requires_location, venue_name, latitude, longitude, location_radius_m, attendance_starts_at, attendance_ends_at, starts_at, ends_at, status, break_time_limit_minutes, allowed_year_levels",
       )
       .eq("qr_token", qr_token)
       .eq("status", "published")
@@ -122,6 +122,7 @@ Deno.serve(async (req) => {
       id: event.id,
       title: event.title,
       requires_otp: event.requires_otp === true,
+      requires_location: event.requires_location !== false,
       venue_name: event.venue_name,
       latitude: event.latitude,
       longitude: event.longitude,
@@ -143,6 +144,17 @@ Deno.serve(async (req) => {
       break_deadline_at: deadline?.toISOString() ?? null,
       break_time_expired: breakExpired,
     };
+
+    if (event.requires_location === false) {
+      return new Response(
+        JSON.stringify({
+          ...base,
+          location_ok: windowOpen,
+          ...(windowOpen ? {} : { error: "Attendance window is not open for this event" }),
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     // Location verification gate — required before OTP / selfie.
     if (latitude != null && longitude != null) {

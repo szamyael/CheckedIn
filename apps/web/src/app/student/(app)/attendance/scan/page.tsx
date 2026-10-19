@@ -128,11 +128,28 @@ export default function AttendanceScanPage() {
           return;
         }
 
+        if (meta.requires_location === false) {
+          if (meta.window_open !== true) {
+            throw new Error(meta.error || "Attendance window is not open for this event");
+          }
+          saveFlow({
+            qrToken: token,
+            eventId: meta.id,
+            eventTitle: meta.title,
+            requiresOtp: meta.requires_otp === true,
+            requiresLocation: false,
+            locationVerified: true,
+          });
+          router.push("/student/attendance/otp");
+          return;
+        }
+
         saveFlow({
           qrToken: token,
           eventId: meta.id,
           eventTitle: meta.title,
           requiresOtp: meta.requires_otp === true,
+          requiresLocation: true,
         });
         router.push("/student/attendance/location");
       } catch (err) {

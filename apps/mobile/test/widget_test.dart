@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:checkedin_mobile/core/constants.dart';
 import 'package:checkedin_mobile/core/theme.dart';
 import 'package:checkedin_mobile/services/appearance_service.dart';
@@ -261,33 +263,47 @@ void main() {
       ),
     );
 
+    double rotationOf(Finder side) {
+      final transform = tester.widget<Transform>(
+        find.ancestor(of: side, matching: find.byType(Transform)).first,
+      );
+      return math.atan2(
+        -transform.transform.storage[2],
+        transform.transform.storage[0],
+      );
+    }
+
     Future<void> expectFlipDirection(
       Finder tapTarget,
+      Finder outgoingSide,
+      Finder incomingSide,
       Finder visibleSide,
     ) async {
       await tester.tap(tapTarget);
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 250));
+      final outgoingStart = rotationOf(outgoingSide);
+      final incomingStart = rotationOf(incomingSide);
+      await tester.pump(const Duration(milliseconds: 100));
+      final outgoingEnd = rotationOf(outgoingSide);
+      final incomingEnd = rotationOf(incomingSide);
 
-      final rotations = tester
-          .widgetList<Transform>(find.byType(Transform))
-          .where((transform) => transform.transform.entry(3, 2) != 0)
-          .toList();
-      expect(rotations, hasLength(2));
-      expect(
-        rotations.every((transform) => transform.transform.storage[2] > 0),
-        isTrue,
-      );
+      expect(outgoingEnd - outgoingStart, greaterThan(0));
+      expect(incomingEnd - incomingStart, greaterThan(0));
       await tester.pumpAndSettle();
       expect(visibleSide, findsOneWidget);
     }
 
     await expectFlipDirection(
       find.text('TAP CARD TO VIEW STUDENT ID'),
+      find.byKey(const ValueKey('campus-pass-front')),
+      find.byKey(const ValueKey('campus-pass-qr')),
       find.text('STUDENT IDENTIFICATION'),
     );
     await expectFlipDirection(
       find.text('TAP TO RETURN'),
+      find.byKey(const ValueKey('campus-pass-qr')),
+      find.byKey(const ValueKey('campus-pass-front')),
       find.text('YOUR CAMPUS PASS'),
     );
   });

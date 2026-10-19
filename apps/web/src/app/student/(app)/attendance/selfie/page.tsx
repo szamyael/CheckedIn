@@ -72,11 +72,9 @@ export default function AttendanceSelfiePage() {
 
   async function submit() {
     if (!flow || !videoRef.current) return;
-    if (
-      !flow.locationVerified ||
-      flow.latitude == null ||
-      flow.longitude == null
-    ) {
+    if (!flow.locationVerified ||
+      (flow.requiresLocation !== false &&
+        (flow.latitude == null || flow.longitude == null))) {
       router.replace("/student/attendance/location");
       return;
     }
@@ -114,9 +112,13 @@ export default function AttendanceSelfiePage() {
 
       const body: Record<string, unknown> = {
         qr_token: flow.qrToken,
-        latitude: flow.latitude,
-        longitude: flow.longitude,
-        accuracy_m: flow.accuracyM ?? 0,
+        ...(flow.latitude != null && flow.longitude != null
+          ? {
+              latitude: flow.latitude,
+              longitude: flow.longitude,
+              accuracy_m: flow.accuracyM ?? 0,
+            }
+          : {}),
         selfie_path: path,
         capture_integrity: {
           live_camera_capture: true,

@@ -90,6 +90,21 @@ test("organization workspace exposes only organization-scoped broadcast delivery
   assert.match(migration, /op\.organization_id = v_organization_id/);
 });
 
+test("notification SELECT inserts cast notification literals to the database enum", () => {
+  const migrationPath = fileURLToPath(new URL("../../../backend/supabase/migrations/084_notification_type_enum_casts.sql", import.meta.url));
+  assert.ok(existsSync(migrationPath), "notification enum cast migration should exist");
+  const migration = readFileSync(migrationPath, "utf8");
+
+  assert.match(
+    migration,
+    /CREATE OR REPLACE FUNCTION public\.notify_event_published\(\)[\s\S]*?'event_published'::public\.notification_type/,
+  );
+  assert.match(
+    migration,
+    /CREATE OR REPLACE FUNCTION public\.send_organization_broadcast\([\s\S]*?'general'::public\.notification_type/,
+  );
+});
+
 test("admins must set a private six-digit code before creating another admin", () => {
   const migrationPath = fileURLToPath(new URL("../../../backend/supabase/migrations/081_admin_personal_creation_code.sql", import.meta.url));
   assert.ok(existsSync(migrationPath), "admin personal-code migration should exist");

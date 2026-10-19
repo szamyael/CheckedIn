@@ -14,6 +14,7 @@ class AttendanceOtpScreen extends StatefulWidget {
   final String eventTitle;
   final String? eventId;
   final bool locationVerified;
+  final bool requiresLocation;
   final bool offlineSubmission;
   final DateTime? scannedAt;
   final int? deviceUtcOffsetMinutes;
@@ -29,6 +30,7 @@ class AttendanceOtpScreen extends StatefulWidget {
     required this.eventTitle,
     this.eventId,
     this.locationVerified = false,
+    this.requiresLocation = true,
     this.offlineSubmission = false,
     this.scannedAt,
     this.deviceUtcOffsetMinutes,
@@ -81,6 +83,7 @@ class _AttendanceOtpScreenState extends State<AttendanceOtpScreen> {
         'event_title': widget.eventTitle,
         'requires_otp': widget.requiresOtp,
         'location_verified': widget.locationVerified,
+        'requires_location': widget.requiresLocation,
         'offline_submission': widget.offlineSubmission,
         'scanned_at': widget.scannedAt?.toIso8601String(),
         'device_utc_offset_minutes': widget.deviceUtcOffsetMinutes,
@@ -121,8 +124,8 @@ class _AttendanceOtpScreenState extends State<AttendanceOtpScreen> {
               widget.offlineSubmission
                   ? 'No location is collected offline. Enter the event OTP, choose time in or time out, then take a live selfie. Staff will review this submission after it syncs.'
                   : widget.requiresOtp
-                  ? 'Location verified. Enter the OTP announced for ${widget.eventTitle}.'
-                  : 'Location verified. If staff announced an OTP for ${widget.eventTitle}, enter it below. Otherwise continue.',
+                  ? '${widget.requiresLocation ? 'Location verified.' : 'No GPS check is needed for this online event.'} Enter the OTP announced for ${widget.eventTitle}.'
+                  : '${widget.requiresLocation ? 'Location verified.' : 'No GPS check is needed for this online event.'} If staff announced an OTP for ${widget.eventTitle}, enter it below. Otherwise continue.',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             if (widget.otpError != null) ...[

@@ -156,6 +156,33 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
         return;
       }
 
+      if (meta['requires_location'] == false) {
+        if (meta['window_open'] != true) {
+          throw Exception(
+            meta['error'] as String? ??
+                'Attendance window is not open for this event',
+          );
+        }
+        if (!mounted) return;
+        context.go(
+          '/attendance/otp',
+          extra: {
+            'qr_token': widget.qrToken,
+            'latitude': 0,
+            'longitude': 0,
+            'accuracy_m': 0,
+            'requires_otp': meta['requires_otp'] == true,
+            'event_title': title,
+            'event_id': meta['id'] as String?,
+            'location_verified': true,
+            'requires_location': false,
+            'scanned_at': widget.scannedAt.toIso8601String(),
+            'device_utc_offset_minutes': widget.deviceUtcOffsetMinutes,
+          },
+        );
+        return;
+      }
+
       if (!mounted) return;
       context.go('/attendance/location', extra: {
         'qr_token': widget.qrToken,

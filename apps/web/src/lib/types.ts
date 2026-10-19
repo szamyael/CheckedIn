@@ -38,9 +38,10 @@ export interface Event {
   description: string | null;
   venue_name: string;
   venue_address?: string | null;
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
   location_radius_m: number;
+  requires_location?: boolean;
   starts_at: string;
   ends_at: string;
   attendance_starts_at: string;

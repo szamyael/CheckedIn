@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -299,19 +301,24 @@ class _CampusPassCardState extends State<CampusPassCard> {
             if (reduceMotion) {
               return FadeTransition(opacity: animation, child: child);
             }
-            final rotation = Tween<double>(begin: -3.1416, end: 0).animate(
-              CurvedAnimation(parent: animation, curve: Curves.easeInOutCubic),
-            );
             return AnimatedBuilder(
-              animation: rotation,
+              animation: animation,
               child: child,
-              builder: (context, child) => Transform(
-                alignment: Alignment.center,
-                transform: Matrix4.identity()
-                  ..setEntry(3, 2, 0.001)
-                  ..rotateY(rotation.value),
-                child: child,
-              ),
+              builder: (context, child) {
+                final progress = Curves.easeInOutCubic.transform(
+                  animation.value,
+                );
+                final rotation = animation.status == AnimationStatus.reverse
+                    ? math.pi / 2 * (1 - progress)
+                    : -math.pi / 2 * (1 - progress);
+                return Transform(
+                  alignment: Alignment.center,
+                  transform: Matrix4.identity()
+                    ..setEntry(3, 2, 0.001)
+                    ..rotateY(rotation),
+                  child: child,
+                );
+              },
             );
           },
           layoutBuilder: (currentChild, previousChildren) => Stack(

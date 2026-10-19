@@ -36,6 +36,7 @@ export function CreateEventForm({
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [requiresLocation, setRequiresLocation] = useState(true);
   const [locationRadiusM, setLocationRadiusM] = useState(100);
   const [breakTimeLimitMinutes, setBreakTimeLimitMinutes] = useState<number | null>(null);
   const [allowedYearLevels, setAllowedYearLevels] = useState<number[]>([]);
@@ -53,7 +54,7 @@ export function CreateEventForm({
   const scheduleValidation = validateEventSchedule(schedule);
   const canSubmit =
     title.trim().length > 0 &&
-    location.venueName.trim().length > 0 &&
+    (!requiresLocation || location.venueName.trim().length > 0) &&
     scheduleValidation.valid;
 
   useEffect(() => {
@@ -88,6 +89,7 @@ export function CreateEventForm({
   function resetForm() {
     setTitle("");
     setDescription("");
+    setRequiresLocation(true);
     setLocationRadiusM(100);
     setBreakTimeLimitMinutes(null);
     setAllowedYearLevels([]);
@@ -125,7 +127,7 @@ export function CreateEventForm({
       return;
     }
 
-    if (!location.venueName.trim()) {
+    if (requiresLocation && !location.venueName.trim()) {
       setError("Venue name is required.");
       return;
     }
@@ -155,11 +157,12 @@ export function CreateEventForm({
         const { error: insertError } = await supabase.from("events").insert({
           title: title.trim(),
           description: description.trim() || null,
-          venue_name: location.venueName.trim(),
-          venue_address: location.address.trim() || null,
-          latitude: location.latitude,
-          longitude: location.longitude,
+          venue_name: requiresLocation ? location.venueName.trim() : "Online event",
+          venue_address: requiresLocation ? location.address.trim() || null : null,
+          latitude: requiresLocation ? location.latitude : null,
+          longitude: requiresLocation ? location.longitude : null,
           location_radius_m: locationRadiusM,
+          requires_location: requiresLocation,
           break_time_limit_minutes: breakTimeLimitMinutes,
           allowed_year_levels: allowedYearLevels,
           ...times,
@@ -232,12 +235,27 @@ export function CreateEventForm({
               <AllowedYearLevelsInput value={allowedYearLevels} onChange={setAllowedYearLevels} />
             </div>
 
-            <div>
+            <div className="sm:col-span-2">
+              <label className="flex items-start gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={!requiresLocation}
+                  onChange={(e) => setRequiresLocation(!e.target.checked)}
+                  className="mt-1"
+                />
+                <span>
+                  <span className="font-medium text-slate-800">Online event</span>
+                  <span className="block text-xs text-slate-500">Students can check in without GPS or venue geofencing.</span>
+                </span>
+              </label>
+            </div>
+
+            {requiresLocation && <div>
           <label className="mb-1 block text-sm font-medium">
             Check-in radius (meters)
           </label>
           <CheckInRadiusInput value={locationRadiusM} onChange={setLocationRadiusM} />
-            </div>
+            </div>}
 
             <div className="sm:col-span-2">
           <label className="mb-1 block text-sm font-medium text-slate-800">
@@ -270,19 +288,25 @@ export function CreateEventForm({
           </div>
         </section>
 
-        <aside className="min-w-0 rounded-xl border border-slate-200 bg-slate-50 p-4 xl:sticky xl:top-4 xl:self-start">
-          <EventLocationPicker
-            value={location}
-            radiusMeters={locationRadiusM}
-            onChange={setLocation}
-          />
-        </aside>
+        {requiresLocation ? (
+          <aside className="min-w-0 rounded-xl border border-slate-200 bg-slate-50 p-4 xl:sticky xl:top-4 xl:self-start">
+            <EventLocationPicker
+              value={location}
+              radiusMeters={locationRadiusM}
+              onChange={setLocation}
+            />
+          </aside>
+        ) : (
+          <aside className="flex items-center rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+            Location verification is disabled. Students will still need to meet the event’s other check-in requirements.
+          </aside>
+        )}
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-xs text-slate-500">A venue name, location, and valid schedule are required.</p>
+        <p className="text-xs text-slate-500">{requiresLocation ? "A venue name, location, and valid schedule are required." : "A valid schedule is required; no venue location is collected."}</p>
         <button type="submit" disabled={!canSubmit} className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">Create event</button>
       </div>
     </form>

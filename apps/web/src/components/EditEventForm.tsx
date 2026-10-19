@@ -10,6 +10,7 @@ import {
 import { EventScheduleFieldsInput } from "@/components/EventScheduleFields";
 import { CheckInRadiusInput } from "@/components/CheckInRadiusInput";
 import { BreakTimeLimitInput } from "@/components/BreakTimeLimitInput";
+import { DEFAULT_MAP_CENTER } from "@/lib/campus-locations";
 import { AllowedYearLevelsInput } from "@/components/AllowedYearLevelsInput";
 import { formPlaceholders } from "@/lib/form-placeholders";
 import { useAsyncAction } from "@/lib/useAsyncAction";
@@ -49,6 +50,7 @@ export function EditEventForm({ event, restrictionsOnly = false }: { event: Even
 
   const [title, setTitle] = useState(event.title);
   const [description, setDescription] = useState(event.description ?? "");
+  const [requiresLocation, setRequiresLocation] = useState(event.requires_location !== false);
   const [locationRadiusM, setLocationRadiusM] = useState(event.location_radius_m);
   const [breakTimeLimitMinutes, setBreakTimeLimitMinutes] = useState<number | null>(
     event.break_time_limit_minutes ?? null,
@@ -65,21 +67,21 @@ export function EditEventForm({ event, restrictionsOnly = false }: { event: Even
   const [location, setLocation] = useState<EventLocation>({
     venueName: event.venue_name,
     address: event.venue_address ?? "",
-    latitude: event.latitude,
-    longitude: event.longitude,
+    latitude: event.latitude ?? DEFAULT_MAP_CENTER.lat,
+    longitude: event.longitude ?? DEFAULT_MAP_CENTER.lng,
   });
 
   const scheduleValidation = validateEventSchedule(schedule);
   const canSubmit =
     restrictionsOnly || (title.trim().length > 0 &&
-    location.venueName.trim().length > 0 &&
+    (!requiresLocation || location.venueName.trim().length > 0) &&
     scheduleValidation.valid);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
 
-    if (!restrictionsOnly && !location.venueName.trim()) {
+    if (!restrictionsOnly && requiresLocation && !location.venueName.trim()) {
       setError("Venue name is required.");
       return;
     }
@@ -108,11 +110,12 @@ export function EditEventForm({ event, restrictionsOnly = false }: { event: Even
           .update({
             title: title.trim(),
             description: description.trim() || null,
-            venue_name: location.venueName.trim(),
-            venue_address: location.address.trim() || null,
-            latitude: location.latitude,
-            longitude: location.longitude,
+            venue_name: requiresLocation ? location.venueName.trim() : "Online event",
+            venue_address: requiresLocation ? location.address.trim() || null : null,
+            latitude: requiresLocation ? location.latitude : null,
+            longitude: requiresLocation ? location.longitude : null,
             location_radius_m: locationRadiusM,
+            requires_location: requiresLocation,
             break_time_limit_minutes: breakTimeLimitMinutes,
             allowed_year_levels: allowedYearLevels,
             ...times,
@@ -158,13 +161,31 @@ export function EditEventForm({ event, restrictionsOnly = false }: { event: Even
         className="w-full rounded border px-2 py-1 text-sm"
         placeholder={formPlaceholders.eventDescription}
       />
-      <EventLocationPicker
-        value={location}
-        radiusMeters={locationRadiusM}
-        onChange={setLocation}
-        compact
-      />
-      <CheckInRadiusInput value={locationRadiusM} onChange={setLocationRadiusM} compact />
+      <label className="flex items-start gap-2 text-sm text-slate-700">
+        <input
+          type="checkbox"
+          checked={!requiresLocation}
+          onChange={(e) => setRequiresLocation(!e.target.checked)}
+          className="mt-1"
+        />
+        <span>
+          <span className="font-medium text-slate-800">Online event</span>
+          <span className="block text-xs text-slate-500">Students can check in without GPS or venue geofencing.</span>
+        </span>
+      </label>
+      {requiresLocation ? (
+        <>
+          <EventLocationPicker
+            value={location}
+            radiusMeters={locationRadiusM}
+            onChange={setLocation}
+            compact
+          />
+          <CheckInRadiusInput value={locationRadiusM} onChange={setLocationRadiusM} compact />
+        </>
+      ) : (
+        <p className="text-sm text-slate-600">Location verification is disabled. Other check-in requirements still apply.</p>
+      )}
       <div>
         <label className="mb-1 block text-sm font-medium text-slate-800">Break time limit</label>
         <BreakTimeLimitInput value={breakTimeLimitMinutes} onChange={setBreakTimeLimitMinutes} compact />

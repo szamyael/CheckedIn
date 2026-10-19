@@ -3,6 +3,7 @@ export type AttendanceFlowState = {
   latitude?: number;
   longitude?: number;
   accuracyM?: number;
+  requiresLocation?: boolean;
   requiresOtp?: boolean;
   otpCode?: string;
   eventId?: string;
