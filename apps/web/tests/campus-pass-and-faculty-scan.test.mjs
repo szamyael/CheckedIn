@@ -255,6 +255,29 @@ test("faculty scanner does not start a camera from a cleaned-up effect", () => {
   assert.match(cameraEffect, /const start = \(\) => \{\s*if \(cancelled\) return;/);
 });
 
+test("staff campus-pass camera has a reversible 180-degree preview adjustment", () => {
+  const scanner = read("../src/components/CampusPassAttendanceScanner.tsx");
+  const styles = read("../src/app/globals.css");
+
+  assert.match(scanner, /useState\(true\)/);
+  assert.match(scanner, /RotateCw/);
+  assert.match(scanner, /Rotate camera preview/);
+  assert.match(scanner, /campus-pass-qr-reader--rotated/);
+  assert.match(styles, /\.campus-pass-camera__video--rotated,\s*\.campus-pass-qr-reader--rotated video\s*\{\s*transform: rotate\(180deg\)/);
+});
+
+test("staff campus-pass camera visibly reports QR detection and attendance processing", () => {
+  const scanner = read("../src/components/CampusPassAttendanceScanner.tsx");
+  const styles = read("../src/app/globals.css");
+
+  assert.match(scanner, /setQrDetected/);
+  assert.match(scanner, /QR detected/);
+  assert.match(scanner, /Processing scan/);
+  assert.match(scanner, /campus-pass-camera__scan-line/);
+  assert.match(styles, /@keyframes campus-pass-scan/);
+  assert.match(styles, /prefers-reduced-motion: reduce[\s\S]*?campus-pass-camera__scan-line/);
+});
+
 test("staff campus-pass scans toggle attendance and report the resulting action", () => {
   const migrationPath = fileURLToPath(new URL("../../../backend/supabase/migrations/083_staff_campus_pass_check_out.sql", import.meta.url));
   assert.ok(existsSync(migrationPath), "campus pass check-out migration should exist");

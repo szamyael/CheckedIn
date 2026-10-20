@@ -538,6 +538,43 @@ select {
 .analytics-chart-card:nth-child(2) { animation-delay: 90ms; }
 .analytics-chart-card:nth-child(3) { animation-delay: 180ms; }
 
+.campus-pass-camera__video--rotated,
+.campus-pass-qr-reader--rotated video {
+  transform: rotate(180deg);
+}
+
+.campus-pass-camera__frame {
+  position: absolute;
+  z-index: 5;
+  inset: 14% 16% 22%;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 55%);
+  border-radius: 1rem;
+  pointer-events: none;
+}
+
+.campus-pass-camera__scan-line {
+  position: absolute;
+  top: 0;
+  left: 4%;
+  width: 92%;
+  height: 2px;
+  background: #5eead4;
+  box-shadow: 0 0 12px rgb(94 234 212 / 85%);
+  animation: campus-pass-scan 2s ease-in-out infinite alternate;
+}
+
+@keyframes campus-pass-scan {
+  to { top: calc(100% - 2px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .campus-pass-camera__scan-line {
+    top: 50%;
+    animation: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .analytics-chart-card {
     animation: none;

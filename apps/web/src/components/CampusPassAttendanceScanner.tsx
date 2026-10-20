@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
-import { Calendar, CircleCheck, QrCode } from "@/lib/icons";
+import { Calendar, CircleCheck, QrCode, RotateCw } from "@/lib/icons";
 import {
   getNewCampusPassTokens,
   normalizeCampusPassToken,
@@ -43,13 +43,17 @@ type BarcodeDetectorWindow = Window & { BarcodeDetector?: BarcodeDetectorConstru
 function CampusPassCamera({
   onToken,
   onError,
+  isSubmitting,
 }: {
   onToken: (token: string) => void;
   onError: (message: string) => void;
+  isSubmitting: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [ready, setReady] = useState(false);
   const [nativeScanner, setNativeScanner] = useState(false);
+  const [rotated, setRotated] = useState(true);
+  const [qrDetected, setQrDetected] = useState(false);
   const callbacks = useRef({ onToken, onError });
 
   useEffect(() => {
@@ -81,6 +85,7 @@ function CampusPassCamera({
         return;
       }
 
+      setQrDetected(values.some((value) => Boolean(normalizeCampusPassToken(value))));
       const newValues = values.filter((value) => {
         if (seenValues.has(value)) return false;
         seenValues.add(value);
@@ -195,15 +200,41 @@ function CampusPassCamera({
   }, []);
 
   return (
-    <div className="overflow-hidden rounded-2xl bg-black">
+    <div className="relative overflow-hidden rounded-2xl bg-black">
       <video
         ref={videoRef}
-        className={nativeScanner ? "min-h-[280px] w-full object-cover" : "hidden"}
+        className={`campus-pass-camera__video ${rotated ? "campus-pass-camera__video--rotated" : ""} ${nativeScanner ? "min-h-[280px] w-full object-cover" : "hidden"}`}
         muted
         playsInline
         aria-label="Camera scanning student campus passes"
       />
-      <div id="campus-pass-qr-reader" className={nativeScanner ? "hidden" : "min-h-[280px] w-full"} />
+      <div
+        id="campus-pass-qr-reader"
+        className={`campus-pass-qr-reader ${rotated ? "campus-pass-qr-reader--rotated" : ""} ${nativeScanner ? "hidden" : "min-h-[280px] w-full"}`}
+      />
+      {ready && (
+        <>
+          <button
+            type="button"
+            onClick={() => setRotated((current) => !current)}
+            aria-label="Rotate camera preview"
+            title="Rotate camera preview"
+            className="absolute right-3 top-3 z-10 grid h-10 w-10 place-items-center rounded-full bg-black/65 text-white hover:bg-black/80"
+          >
+            <RotateCw size={20} aria-hidden="true" />
+          </button>
+          <div className="campus-pass-camera__frame" aria-hidden="true">
+            <span className="campus-pass-camera__scan-line" />
+          </div>
+          <p
+            role="status"
+            aria-live="polite"
+            className={`absolute inset-x-0 bottom-0 z-10 p-3 text-center text-sm font-semibold text-white ${isSubmitting || qrDetected ? "bg-emerald-900/85" : "bg-black/65"}`}
+          >
+            {isSubmitting ? "Processing scan…" : qrDetected ? "QR detected — hold steady" : "Scanning for student passes…"}
+          </p>
+        </>
+      )}
       {!ready && <p className="p-4 text-center text-sm text-white/70">Starting camera…</p>}
     </div>
   );
@@ -282,7 +313,7 @@ export function CampusPassAttendanceScanner({ events }: { events: CheckInEvent[]
 
         {selectedEvent ? (
           <>
-            <CampusPassCamera onToken={scanToken} onError={setScannerError} />
+            <CampusPassCamera onToken={scanToken} onError={setScannerError} isSubmitting={submitting} />
             <p className="text-sm text-[var(--muted)]">Keep the camera pointed at student campus passes to scan one or more students. The first scan checks in; present that pass again after it leaves the camera view to check the student out.</p>
           </>
         ) : events.length ? (
