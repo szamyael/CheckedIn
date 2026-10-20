@@ -255,6 +255,17 @@ test("faculty scanner does not start a camera from a cleaned-up effect", () => {
   assert.match(cameraEffect, /const start = \(\) => \{\s*if \(cancelled\) return;/);
 });
 
+test("faculty scanner falls back when native QR detection fails at runtime", () => {
+  const scanner = read("../src/components/CampusPassAttendanceScanner.tsx");
+  const cameraEffect = scanner.slice(
+    scanner.indexOf("function CampusPassCamera"),
+    scanner.indexOf("export function CampusPassAttendanceScanner"),
+  );
+
+  assert.match(cameraEffect, /const startHtml5Scanner = \(\) =>/);
+  assert.match(cameraEffect, /activeDetector\.detect\(video\)[\s\S]*?startHtml5Scanner\(\)/);
+});
+
 test("staff campus-pass camera mirrors both preview paths without a rotate control", () => {
   const scanner = read("../src/components/CampusPassAttendanceScanner.tsx");
   const styles = read("../src/app/globals.css");

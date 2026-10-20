@@ -1,5 +1,6 @@
 export function normalizeCampusPassToken(value: string): string | null;
 export function getNewCampusPassTokens(values: unknown[], seenTokens: Set<string>): string[];
+export function claimCampusPassScanToken(token: string, pendingTokens: Set<string>): boolean;
 export function parseCampusPassScanResult(value: unknown):
   | {
       success: true;

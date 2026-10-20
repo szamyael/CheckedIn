@@ -81,6 +81,7 @@ SET search_path = public
 AS $$
 DECLARE
     v_event_title TEXT;
+    v_points INTEGER;
 BEGIN
     IF NEW.is_manual_override IS DISTINCT FROM true
        OR NEW.status NOT IN ('checked_in', 'late') THEN
@@ -112,6 +113,22 @@ BEGIN
         NEW.event_id,
         NEW.id
     );
+
+    IF TG_OP = 'INSERT' THEN
+        IF NEW.is_offline IS DISTINCT FROM true THEN
+            v_points := CASE WHEN NEW.status = 'late' THEN 5 ELSE 10 END;
+        END IF;
+    ELSIF NEW.is_offline IS DISTINCT FROM true
+       AND OLD.status NOT IN ('checked_in', 'late', 'on_break', 'checked_out') THEN
+        v_points := CASE WHEN NEW.status = 'late' THEN 5 ELSE 10 END;
+    END IF;
+
+    IF v_points IS NOT NULL THEN
+        PERFORM public.increment_student_points(
+            NEW.student_id,
+            v_points
+        );
+    END IF;
 
     RETURN NEW;
 END;

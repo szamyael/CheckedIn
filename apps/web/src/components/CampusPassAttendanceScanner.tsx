@@ -5,6 +5,7 @@ import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { Calendar, CircleCheck, QrCode } from "@/lib/icons";
 import {
   getNewCampusPassTokens,
+  claimCampusPassScanToken,
   normalizeCampusPassToken,
   parseCampusPassScanResult,
 } from "@/lib/campus-pass.mjs";
@@ -65,6 +66,7 @@ function CampusPassCamera({
     let cancelled = false;
     let animationFrame: number | null = null;
     let resetSeenTimer: ReturnType<typeof setTimeout> | null = null;
+    let nativeDetectionFailed = false;
     const seenTokens = new Set<string>();
     const seenValues = new Set<string>();
 
@@ -104,6 +106,29 @@ function CampusPassCamera({
       if (scanner?.isScanning) void scanner.stop().catch(() => undefined);
       stream?.getTracks().forEach((track) => track.stop());
       if (videoRef.current) videoRef.current.srcObject = null;
+    };
+
+    const startHtml5Scanner = () => {
+      if (cancelled || scanner) return;
+      setNativeScanner(false);
+      scanner = new Html5Qrcode("campus-pass-qr-reader", {
+        verbose: false,
+        formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+      });
+      void scanner.start(
+        { facingMode: "environment" },
+        { fps: 8 },
+        (decoded) => handleDecodedValues([decoded]),
+        () => handleDecodedValues([]),
+      ).then(() => {
+        if (cancelled) {
+          stopScanner();
+          return;
+        }
+        setReady(true);
+      }).catch((error: Error) => {
+        if (!cancelled) callbacks.current.onError(error.message || "Allow camera access to scan a student pass.");
+      });
     };
 
     const start = () => {
@@ -150,13 +175,19 @@ function CampusPassCamera({
                 try {
                   const barcodes = await activeDetector.detect(video);
                   handleDecodedValues(barcodes.map((barcode) => barcode.rawValue));
-                } catch (error) {
-                  callbacks.current.onError(error instanceof Error ? error.message : "Unable to read the camera frame.");
+                } catch {
+                  if (!nativeDetectionFailed) {
+                    nativeDetectionFailed = true;
+                    stopScanner();
+                    startHtml5Scanner();
+                  }
                 } finally {
                   detecting = false;
                 }
               }
-              if (!cancelled) animationFrame = requestAnimationFrame(() => void detectNextFrame());
+              if (!cancelled && !nativeDetectionFailed) {
+                animationFrame = requestAnimationFrame(() => void detectNextFrame());
+              }
             };
             animationFrame = requestAnimationFrame(() => void detectNextFrame());
           } catch (error) {
@@ -169,24 +200,7 @@ function CampusPassCamera({
         return;
       }
 
-      scanner = new Html5Qrcode("campus-pass-qr-reader", {
-        verbose: false,
-        formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
-      });
-      void scanner.start(
-        { facingMode: "environment" },
-        { fps: 8 },
-        (decoded) => handleDecodedValues([decoded]),
-        () => handleDecodedValues([]),
-      ).then(() => {
-        if (cancelled) {
-          stopScanner();
-          return;
-        }
-        setReady(true);
-      }).catch((error: Error) => {
-        if (!cancelled) callbacks.current.onError(error.message || "Allow camera access to scan a student pass.");
-      });
+      startHtml5Scanner();
     };
 
     queueMicrotask(start);
@@ -236,9 +250,11 @@ export function CampusPassAttendanceScanner({ events }: { events: CheckInEvent[]
   const [pendingScans, setPendingScans] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [scanResults, setScanResults] = useState<ScanResult[]>([]);
+  const pendingTokens = useRef(new Set<string>());
   const submitting = pendingScans > 0;
 
   const scanToken = useCallback(async (token: string) => {
+    if (!claimCampusPassScanToken(token, pendingTokens.current)) return;
     setPendingScans((count) => count + 1);
     setError(null);
     try {
@@ -263,6 +279,7 @@ export function CampusPassAttendanceScanner({ events }: { events: CheckInEvent[]
     } catch (error) {
       setError(error instanceof Error ? error.message : "Unable to record attendance. Please try again.");
     } finally {
+      pendingTokens.current.delete(token);
       setPendingScans((count) => Math.max(0, count - 1));
     }
   }, [eventId]);

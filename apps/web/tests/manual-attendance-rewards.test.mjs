@@ -40,4 +40,16 @@ test("manual attendance insertions and check-ins award event, milestone, and bin
   assert.match(migration, /award_check_in_achievements/);
   assert.match(migration, /apply_bingo_after_check_in/);
   assert.match(migration, /status IN \('checked_in', 'late', 'on_break', 'checked_out'\)/);
+  assert.match(migration, /increment_student_points/);
+  assert.match(migration, /NEW\.is_offline IS DISTINCT FROM true/);
+  assert.match(migration, /OLD\.status NOT IN \('checked_in', 'late', 'on_break', 'checked_out'\)/);
+});
+
+test("scanner prevents duplicate in-flight scans without blocking another student", async () => {
+  const { claimCampusPassScanToken } = await import("../src/lib/campus-pass.mjs");
+  const pending = new Set();
+
+  assert.equal(claimCampusPassScanToken("student-a", pending), true);
+  assert.equal(claimCampusPassScanToken("student-a", pending), false);
+  assert.equal(claimCampusPassScanToken("student-b", pending), true);
 });

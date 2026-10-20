@@ -32,6 +32,17 @@ export function getNewCampusPassTokens(values, seenTokens) {
 }
 
 /**
+ * @param {string} token
+ * @param {Set<string>} pendingTokens
+ * @returns {boolean}
+ */
+export function claimCampusPassScanToken(token, pendingTokens) {
+  if (pendingTokens.has(token)) return false;
+  pendingTokens.add(token);
+  return true;
+}
+
+/**
  * @param {unknown} value
  * @returns {{ success: true, action: "checked_in" | "checked_out", student: { name: string, student_id: string, program: string, year_level: number | null, section: string | null } } | { success: false, error: string } | null}
  */
