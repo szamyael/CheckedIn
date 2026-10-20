@@ -79,6 +79,34 @@ test("campus pass scan result includes student identification and attendance act
   );
 });
 
+test("a successful legacy campus-pass scan is displayed as checked in", async () => {
+  const { parseCampusPassScanResult } = await import("../src/lib/campus-pass.mjs");
+
+  assert.deepEqual(
+    parseCampusPassScanResult({
+      success: true,
+      student: {
+        name: "Ada Lovelace",
+        student_id: "STU-1042",
+        program: "Computer Science",
+        year_level: 2,
+        section: "A",
+      },
+    }),
+    {
+      success: true,
+      action: "checked_in",
+      student: {
+        name: "Ada Lovelace",
+        student_id: "STU-1042",
+        program: "Computer Science",
+        year_level: 2,
+        section: "A",
+      },
+    },
+  );
+});
+
 test("campus passes have private per-student tokens and staff scan enforces event and student eligibility", () => {
   const migrationPath = fileURLToPath(new URL("../../../backend/supabase/migrations/082_student_campus_pass_and_staff_scan.sql", import.meta.url));
   assert.ok(existsSync(migrationPath), "campus pass migration should exist");

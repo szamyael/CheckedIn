@@ -41,9 +41,10 @@ export function parseCampusPassScanResult(value) {
   if (result.success === false && typeof result.error === "string") {
     return { success: false, error: result.error };
   }
+  const action = result.action === undefined ? "checked_in" : result.action;
   if (
     result.success !== true ||
-    (result.action !== "checked_in" && result.action !== "checked_out") ||
+    (action !== "checked_in" && action !== "checked_out") ||
     !result.student ||
     typeof result.student !== "object"
   ) {
@@ -63,7 +64,7 @@ export function parseCampusPassScanResult(value) {
 
   return {
     success: true,
-    action: result.action,
+    action,
     student: {
       name: student.name,
       student_id: student.student_id,
