@@ -10,6 +10,17 @@ import {
   ShieldCheck,
   UsersRound,
 } from "@/lib/icons";
+import {
+  IconBellRinging,
+  IconBrandFlutter,
+  IconBrandReact,
+  IconBrandSupabase,
+  IconBrandTailwind,
+  IconBrandTypescript,
+  IconBrandVercel,
+  IconFileText,
+  IconMap2,
+} from "@tabler/icons-react";
 import { BrandMark } from "@/components/BrandLogo";
 import { PhoneStudentRedirect } from "@/components/student/PhoneStudentRedirect";
 
@@ -38,6 +49,18 @@ const steps = [
   ["01", "Set up the event", "Create the event and choose the attendance checks it needs."],
   ["02", "Share the check-in", "Display an event QR code for students to scan in the app."],
   ["03", "Follow participation", "Monitor arrivals live and use clear records after the event."],
+];
+
+const poweredBy = [
+  { name: "Vercel", description: "Hosts and delivers the web experience.", icon: IconBrandVercel },
+  { name: "Supabase", description: "Powers accounts, database, storage, and live updates.", icon: IconBrandSupabase },
+  { name: "React + Next.js", description: "Builds the fast, responsive web portal.", icon: IconBrandReact },
+  { name: "TypeScript", description: "Keeps application code clear and type-safe.", icon: IconBrandTypescript },
+  { name: "Flutter", description: "Powers the CheckedIn student mobile app.", icon: IconBrandFlutter },
+  { name: "Veryfi", description: "Reads student ID details during registration with OCR.", icon: IconFileText },
+  { name: "Leaflet + OpenStreetMap", description: "Provides interactive venue maps and location context.", icon: IconMap2 },
+  { name: "OneSignal", description: "Delivers timely push notifications to students.", icon: IconBellRinging },
+  { name: "Tailwind CSS", description: "Keeps the interface responsive and consistent.", icon: IconBrandTailwind },
 ];
 
 export default function HomePage() {
@@ -208,6 +231,59 @@ export default function HomePage() {
               >
                 Staff workspace
               </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        aria-labelledby="powered-by-heading"
+        className="border-y border-[var(--border)] bg-[var(--surface)]"
+      >
+        <div className="mx-auto grid max-w-7xl gap-6 px-5 py-8 sm:px-8 lg:grid-cols-[minmax(15rem,.65fr)_minmax(0,1.35fr)] lg:items-center lg:gap-10 lg:px-12 lg:py-10">
+          <div>
+            <p className="text-xs font-bold tracking-[0.16em] text-[var(--accent)]">
+              BUILT WITH PURPOSE
+            </p>
+            <h2
+              id="powered-by-heading"
+              className="mt-2 text-2xl font-semibold tracking-tight text-[var(--primary-strong)] sm:text-3xl"
+            >
+              The tools behind CheckedIn
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+              Scroll through the technology powering campus check-in on web and mobile.
+            </p>
+          </div>
+          <div
+            aria-label="Technology carousel"
+            className="powered-by-carousel min-w-0 overflow-x-auto overscroll-x-contain"
+            role="region"
+            tabIndex={0}
+          >
+            <div className="powered-by-track flex w-max">
+              {[false, true].map((duplicate) => (
+                <ul
+                  key={String(duplicate)}
+                  aria-hidden={duplicate || undefined}
+                  className="flex w-max gap-3 pr-3"
+                >
+                  {poweredBy.map(({ name, description, icon: Icon }) => (
+                    <li
+                      key={name}
+                      className="flex min-h-24 w-[17rem] items-center gap-4 rounded-2xl border border-[var(--border)] bg-[var(--background)] p-4"
+                    >
+                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[var(--primary-soft)] text-[var(--primary)]">
+                        <Icon size={22} aria-hidden="true" />
+                      </span>
+                      <span>
+                        <span className="block text-sm font-semibold text-[var(--primary-strong)]">{name}</span>
+                        <span className="mt-1 block text-xs leading-5 text-[var(--muted)]">{description}</span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ))}
             </div>
           </div>
         </div>
