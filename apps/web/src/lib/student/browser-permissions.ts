@@ -42,6 +42,37 @@ export async function requestLocationAccess(): Promise<boolean> {
   });
 }
 
+export function isLocationPermissionDenied(error: unknown): boolean {
+  return getGeolocationErrorCode(error) === 1;
+}
+
+export function locationErrorMessage(error: unknown): string {
+  switch (getGeolocationErrorCode(error)) {
+    case 1:
+      return "Location permission was denied. Allow Location access in your browser settings, then try again.";
+    case 2:
+      return "Your device could not determine your location. Check that location services are on and try again.";
+    case 3:
+      return "Location request timed out. Move to an area with a clear GPS signal and try again.";
+    default:
+      return error instanceof Error
+        ? error.message
+        : "Location verification failed. Check your device location settings and try again.";
+  }
+}
+
+function getGeolocationErrorCode(error: unknown): number | null {
+  if (
+    typeof error !== "object" ||
+    error === null ||
+    !("code" in error) ||
+    typeof error.code !== "number"
+  ) {
+    return null;
+  }
+  return error.code;
+}
+
 export async function ensureBrowserPermission(
   type: BrowserPermission,
 ): Promise<boolean> {
@@ -55,7 +86,6 @@ export function isPermissionErrorMessage(message: string): boolean {
   return (
     lower.includes("permission") ||
     lower.includes("denied") ||
-    lower.includes("not allowed") ||
-    lower.includes("geolocation")
+    lower.includes("not allowed")
   );
 }

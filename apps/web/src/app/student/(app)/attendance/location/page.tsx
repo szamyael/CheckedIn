@@ -13,8 +13,8 @@ import { useLoader } from "@/components/LoaderProvider";
 import type { CheckInMeta } from "@/lib/student/api";
 import { loadFlow, saveFlow } from "@/lib/student/attendance-flow";
 import {
-  ensureBrowserPermission,
-  isPermissionErrorMessage,
+  isLocationPermissionDenied,
+  locationErrorMessage,
 } from "@/lib/student/browser-permissions";
 import { createClient } from "@/lib/supabase/client";
 import { hasUsableCoordinates } from "@/lib/student/location-verification";
@@ -53,13 +53,6 @@ export default function AttendanceLocationPage() {
     if (flow.requiresLocation === false) {
       saveFlow({ ...flow, locationVerified: true });
       router.push("/student/attendance/otp");
-      return;
-    }
-
-    const granted = await ensureBrowserPermission("location");
-    if (!granted) {
-      setLocationBlocked(true);
-      setError("Location is required to verify you are at the event venue.");
       return;
     }
 
@@ -105,12 +98,8 @@ export default function AttendanceLocationPage() {
       });
       router.push("/student/attendance/otp");
     } catch (err) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : "Location verification failed. Allow location access and try again.";
-      setError(message);
-      if (isPermissionErrorMessage(message)) setLocationBlocked(true);
+      setError(locationErrorMessage(err));
+      setLocationBlocked(isLocationPermissionDenied(err));
     } finally {
       hideLoader();
     }
