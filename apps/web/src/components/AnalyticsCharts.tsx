@@ -77,7 +77,7 @@ function TrendChart({
         <div>
           <p className="text-[10px] font-bold tracking-[0.14em] text-[var(--primary)]">ATTENDANCE TREND</p>
           <h2 className="mt-1 text-lg font-semibold text-slate-900">Weekly check-ins</h2>
-          <p className="mt-1 text-sm text-slate-500">Confirmed attendance over the last 12 weeks</p>
+          <p className="mt-1 text-sm text-slate-500">Confirmed attendance over the last 12 weeks, through today</p>
         </div>
         <div className="flex gap-5">
           <div>
