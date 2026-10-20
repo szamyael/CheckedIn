@@ -269,6 +269,7 @@ test("staff campus-pass camera visibly reports QR detection and attendance proce
   const scanner = read("../src/components/CampusPassAttendanceScanner.tsx");
   const styles = read("../src/app/globals.css");
 
+  assert.match(scanner, /setQrDetected\(false\);\s*resetSeenTimer = setTimeout\(clearSeen, 500\)/);
   assert.match(scanner, /setQrDetected/);
   assert.match(scanner, /QR detected/);
   assert.match(scanner, /Processing scan/);

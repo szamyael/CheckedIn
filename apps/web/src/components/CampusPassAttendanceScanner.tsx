@@ -80,7 +80,8 @@ function CampusPassCamera({
         resetSeenTimer = null;
       }
       if (values.length === 0) {
-        resetSeenTimer = setTimeout(clearSeen, 1200);
+        setQrDetected(false);
+        resetSeenTimer = setTimeout(clearSeen, 500);
         return;
       }
 
