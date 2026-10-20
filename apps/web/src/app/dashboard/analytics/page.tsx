@@ -5,6 +5,8 @@ import { DashboardPageHeader, DashboardSection, DashboardStat } from "@/componen
 import { canonicalProgramName, programNameKey } from "@/lib/program-name";
 import { buildAttendanceTrendPeriods } from "@/lib/attendance-trend.mjs";
 
+const ATTENDANCE_STATUSES = ["checked_in", "late", "on_break", "checked_out"] as const;
+
 export default async function AnalyticsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -28,11 +30,11 @@ export default async function AnalyticsPage() {
     { data: orgStats },
   ] = await Promise.all([
     supabase.from("events").select("*", { count: "exact", head: true }),
-    supabase.from("attendance_records").select("*", { count: "exact", head: true }).eq("status", "checked_in"),
+    supabase.from("attendance_records").select("*", { count: "exact", head: true }).in("status", ATTENDANCE_STATUSES),
     supabase.from("students").select("*", { count: "exact", head: true }),
-    supabase.from("events").select("id, title, attendance_records(count)").eq("status", "published"),
-    supabase.from("students").select("program, attendance_records(count)"),
-    supabase.from("students").select("year_level, attendance_records(count)"),
+    supabase.from("events").select("id, title, attendance_records(count)").eq("status", "published").in("attendance_records.status", ATTENDANCE_STATUSES),
+    supabase.from("students").select("program, attendance_records(count)").in("attendance_records.status", ATTENDANCE_STATUSES),
+    supabase.from("students").select("year_level, attendance_records(count)").in("attendance_records.status", ATTENDANCE_STATUSES),
     supabase.from("organizations").select("name, events(count)"),
   ]);
 
@@ -90,7 +92,7 @@ export default async function AnalyticsPage() {
       const { count, error } = await supabase
         .from("attendance_records")
         .select("*", { count: "exact", head: true })
-        .eq("status", "checked_in")
+        .in("status", ATTENDANCE_STATUSES)
         .gte("checked_in_at", period.start.toISOString())
         .lt("checked_in_at", period.end.toISOString());
       if (error) throw error;
