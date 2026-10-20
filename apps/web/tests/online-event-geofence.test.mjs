@@ -29,10 +29,27 @@ test("attendance metadata and final check-in enforce GPS only when the event req
   const checkIn = read("../../../backend/supabase/functions/check-in/index.ts");
 
   assert.match(metadata, /requires_location/);
-  assert.match(metadata, /event\.requires_location\s*===\s*false/);
+  assert.match(
+    metadata,
+    /event\.requires_location\s*!==\s*false\s*&&\s*event\.venue_name\?\.trim\(\)\.toLowerCase\(\)\s*!==\s*"online event"/,
+  );
   assert.match(checkIn, /requiresLocation\s*=\s*event\.requires_location\s*!==\s*false/);
   assert.match(checkIn, /latitude:\s*requiresLocation\s*\?\s*latitude\s*:\s*null/);
   assert.match(checkIn, /longitude:\s*requiresLocation\s*\?\s*longitude\s*:\s*null/);
+});
+
+test("legacy online events do not require GPS even when their flag defaults to true", () => {
+  const metadata = read("../../../backend/supabase/functions/event-check-in-meta/index.ts");
+  const checkIn = read("../../../backend/supabase/functions/check-in/index.ts");
+
+  assert.match(
+    metadata,
+    /event\.requires_location\s*!==\s*false\s*&&\s*event\.venue_name\?\.trim\(\)\.toLowerCase\(\)\s*!==\s*"online event"/,
+  );
+  assert.match(
+    checkIn,
+    /event\.requires_location\s*!==\s*false\s*&&\s*event\.venue_name\?\.trim\(\)\.toLowerCase\(\)\s*!==\s*"online event"/,
+  );
 });
 
 test("web and mobile let online-event check-ins continue without requesting GPS", () => {
@@ -42,9 +59,42 @@ test("web and mobile let online-event check-ins continue without requesting GPS"
   const mobileLocation = read("../../mobile/lib/screens/attendance/location_check_screen.dart");
 
   assert.match(webScan, /meta\.requires_location\s*\?\?/);
-  assert.match(mobileResolve, /meta\['requires_location'\]\s+as bool\?\s*\?\?/);
+  assert.match(
+    mobileResolve,
+    /AttendanceService\.requiresLocationForCheckIn\(\s*meta,?\s*\)/,
+  );
   assert.match(webScan, /meta\.venue_name[\s\S]*online event/i);
-  assert.match(mobileResolve, /meta\['venue_name'\][\s\S]*online event/i);
+  assert.match(
+    mobileLocation,
+    /AttendanceService\.requiresLocationForCheckIn\(\s*eventMeta,?\s*\)/,
+  );
   assert.match(webLocation, /flow\.requiresLocation\s*===\s*false/);
-  assert.match(mobileLocation, /requires_location[\s\S]*online event/i);
+  assert.match(
+    mobileLocation,
+    /AttendanceService\.requiresLocationForCheckIn\(\s*eventMeta,?\s*\)/,
+  );
+});
+
+test("web and mobile send the same geofence request and allow GPS time to resolve", () => {
+  const webLocation = read("../src/app/student/(app)/attendance/location/page.tsx");
+  const mobileLocation = read("../../mobile/lib/screens/attendance/location_check_screen.dart");
+  const mobileService = read("../../mobile/lib/services/attendance_service.dart");
+  const metadata = read("../../../backend/supabase/functions/event-check-in-meta/index.ts");
+
+  assert.match(webLocation, /functions\.invoke\(\s*"event-check-in-meta"/);
+  assert.match(mobileService, /functions\.invoke\(\s*'event-check-in-meta'/);
+  assert.match(
+    webLocation,
+    /body:\s*\{\s*qr_token:\s*flow\.qrToken,\s*latitude:\s*pos\.coords\.latitude,\s*longitude:\s*pos\.coords\.longitude,\s*accuracy_m:\s*pos\.coords\.accuracy,/,
+  );
+  assert.match(
+    mobileService,
+    /body:\s*\{\s*'qr_token':\s*qrToken,\s*'latitude':\s*latitude,\s*'longitude':\s*longitude,\s*'accuracy_m':\s*accuracyM,/,
+  );
+  assert.match(metadata, /const latitude = body\.latitude/);
+  assert.match(metadata, /const longitude = body\.longitude/);
+  assert.match(metadata, /location_ok:\s*true/);
+
+  assert.match(webLocation, /timeout:\s*60000/);
+  assert.match(mobileService, /timeLimit:\s*Duration\(seconds:\s*60\)/);
 });

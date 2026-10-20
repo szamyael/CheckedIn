@@ -51,6 +51,23 @@ void main() {
     );
   });
 
+  test('does not require GPS for online event venue metadata', () {
+    expect(
+      AttendanceService.requiresLocationForCheckIn({
+        'requires_location': true,
+        'venue_name': ' Online Event ',
+      }),
+      isFalse,
+    );
+    expect(
+      AttendanceService.requiresLocationForCheckIn({
+        'requires_location': true,
+        'venue_name': 'Main Hall',
+      }),
+      isTrue,
+    );
+  });
+
   test('treats an HTTP response from Supabase as reachable internet', () {
     expect(ConnectivityService.isReachableHttpStatus(401), isTrue);
     expect(ConnectivityService.isReachableHttpStatus(204), isTrue);

@@ -21,12 +21,12 @@ class CheckInSubmission {
   final PendingCheckIn? pending;
 
   const CheckInSubmission.synced(this.serverResult)
-      : outcome = CheckInOutcome.synced,
-        pending = null;
+    : outcome = CheckInOutcome.synced,
+      pending = null;
 
   const CheckInSubmission.queuedOffline(this.pending)
-      : outcome = CheckInOutcome.queuedOffline,
-        serverResult = null;
+    : outcome = CheckInOutcome.queuedOffline,
+      serverResult = null;
 }
 
 class AttendanceService {
@@ -34,6 +34,15 @@ class AttendanceService {
 
   static bool isRecoverableOtpError(String message) =>
       message.toLowerCase().contains('invalid or expired attendance otp');
+
+  static bool requiresLocationForCheckIn(Map<String, dynamic> eventMeta) {
+    final venueName = eventMeta['venue_name'];
+    if (venueName is String &&
+        venueName.trim().toLowerCase() == 'online event') {
+      return false;
+    }
+    return eventMeta['requires_location'] as bool? ?? true;
+  }
 
   String? get currentUserId => AuthService.instance.currentUserId;
 
@@ -53,7 +62,9 @@ class AttendanceService {
     }
 
     if (permission == LocationPermission.denied) {
-      throw Exception('Location permission was denied. Allow location to check in.');
+      throw Exception(
+        'Location permission was denied. Allow location to check in.',
+      );
     }
 
     if (permission == LocationPermission.deniedForever) {
@@ -66,7 +77,7 @@ class AttendanceService {
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,
         distanceFilter: 0,
-        timeLimit: Duration(seconds: 25),
+        timeLimit: Duration(seconds: 60),
       ),
     );
   }
@@ -113,13 +124,10 @@ class AttendanceService {
       await LocalCacheService.instance.writeJson(cacheKey, meta);
       return meta;
     } catch (_) {
-      final cached = await LocalCacheService.instance.readJson(
-        cacheKey,
-        (raw) {
-          if (raw is! Map) return null;
-          return Map<String, dynamic>.from(raw);
-        },
-      );
+      final cached = await LocalCacheService.instance.readJson(cacheKey, (raw) {
+        if (raw is! Map) return null;
+        return Map<String, dynamic>.from(raw);
+      });
       if (cached != null) return {...cached, 'offline_fallback': true};
 
       return {
@@ -171,13 +179,10 @@ class AttendanceService {
       );
     } catch (e) {
       // Offline: verify locally against cached venue coordinates.
-      final cached = await LocalCacheService.instance.readJson(
-        cacheKey,
-        (raw) {
-          if (raw is! Map) return null;
-          return Map<String, dynamic>.from(raw);
-        },
-      );
+      final cached = await LocalCacheService.instance.readJson(cacheKey, (raw) {
+        if (raw is! Map) return null;
+        return Map<String, dynamic>.from(raw);
+      });
 
       final venueLat = (cached?['latitude'] as num?)?.toDouble();
       final venueLng = (cached?['longitude'] as num?)?.toDouble();
@@ -272,7 +277,9 @@ class AttendanceService {
       'selfie_path': selfiePath,
     };
     if (clientCheckedInAt != null) {
-      body['client_checked_in_at'] = clientCheckedInAt.toUtc().toIso8601String();
+      body['client_checked_in_at'] = clientCheckedInAt
+          .toUtc()
+          .toIso8601String();
     }
     if (otpCode != null && otpCode.isNotEmpty) {
       body['otp_code'] = otpCode;
@@ -326,7 +333,9 @@ class AttendanceService {
 
     if (response.status != 200 && response.status != 201) {
       final data = response.data;
-      final err = data is Map ? data['error'] : 'Offline attendance sync failed';
+      final err = data is Map
+          ? data['error']
+          : 'Offline attendance sync failed';
       throw Exception(err ?? 'Offline attendance sync failed');
     }
     return Map<String, dynamic>.from(response.data as Map);
@@ -335,10 +344,7 @@ class AttendanceService {
   Map<String, dynamic> _buildCaptureIntegrity(SelfieIntegrityResult analysis) {
     final guard = ScreenshotGuardService.instance;
 
-    return {
-      ...guard.integrityPayload(),
-      'analysis_issues': analysis.issues,
-    };
+    return {...guard.integrityPayload(), 'analysis_issues': analysis.issues};
   }
 
   Future<CheckInSubmission> submitCheckIn({
@@ -380,7 +386,9 @@ class AttendanceService {
 
     final online = await hasConnectivity();
     final canSyncNow =
-        online && !AuthService.instance.isOfflineMode && _client.auth.currentSession != null;
+        online &&
+        !AuthService.instance.isOfflineMode &&
+        _client.auth.currentSession != null;
 
     if (canSyncNow) {
       try {

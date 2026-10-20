@@ -223,7 +223,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    const requiresLocation = event.requires_location !== false;
+    const requiresLocation = event.requires_location !== false &&
+      event.venue_name?.trim().toLowerCase() !== "online event";
     if (
       requiresLocation &&
       (!isValidCoordinate(latitude, longitude) ||

@@ -43,9 +43,9 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
 
     try {
       final eventMeta = await _attendance.fetchCheckInMeta(widget.qrToken);
-      final requiresLocation = eventMeta['requires_location'] as bool? ??
-          (eventMeta['venue_name'] as String?)?.trim().toLowerCase() !=
-              'online event';
+      final requiresLocation = AttendanceService.requiresLocationForCheckIn(
+        eventMeta,
+      );
       if (!requiresLocation) {
         if (eventMeta['window_open'] != true) {
           throw Exception(
@@ -81,7 +81,8 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
       if (!granted) {
         if (mounted) {
           setState(() {
-            _error = 'Location is required to verify you are at the event venue.';
+            _error =
+                'Location is required to verify you are at the event venue.';
             _status = null;
           });
         }

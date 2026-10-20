@@ -117,12 +117,14 @@ Deno.serve(async (req) => {
     const canBreakOut = !breakExpired && (myStatus === "checked_in" || myStatus === "late");
     const canBreakIn = !breakExpired && myStatus === "on_break";
     const alreadyCheckedOut = myStatus === "checked_out";
+    const requiresLocation = event.requires_location !== false &&
+      event.venue_name?.trim().toLowerCase() !== "online event";
 
     const base = {
       id: event.id,
       title: event.title,
       requires_otp: event.requires_otp === true,
-      requires_location: event.requires_location !== false,
+      requires_location: requiresLocation,
       venue_name: event.venue_name,
       latitude: event.latitude,
       longitude: event.longitude,
@@ -145,7 +147,7 @@ Deno.serve(async (req) => {
       break_time_expired: breakExpired,
     };
 
-    if (event.requires_location === false) {
+    if (!requiresLocation) {
       return new Response(
         JSON.stringify({
           ...base,

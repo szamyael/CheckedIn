@@ -104,7 +104,9 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
         );
         if (!mounted) return;
         final eventTitle =
-            (result['event'] is Map ? result['event']['title'] : null) as String? ?? title;
+            (result['event'] is Map ? result['event']['title'] : null)
+                as String? ??
+            title;
         setState(() {
           _successTitle = 'Welcome back';
           _successBody = 'You are checked back in to $eventTitle.';
@@ -120,16 +122,25 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
           _formatBreakLimit(meta['break_time_limit_minutes']),
         );
         if (!mounted || action == null) return;
-        loader.show(action == _ExitAction.breakOut ? 'Recording break-out…' : 'Checking out…');
+        loader.show(
+          action == _ExitAction.breakOut
+              ? 'Recording break-out…'
+              : 'Checking out…',
+        );
         if (action == _ExitAction.breakOut) {
           final result = await _attendance.recordBreak(
             qrToken: widget.qrToken,
             returning: false,
           );
           if (!mounted) return;
-          final eventTitle = (result['event'] is Map ? result['event']['title'] : null) as String? ?? title;
+          final eventTitle =
+              (result['event'] is Map ? result['event']['title'] : null)
+                  as String? ??
+              title;
           final deadlineRaw = result['break_deadline_at'] as String?;
-          final deadline = deadlineRaw == null ? null : DateTime.tryParse(deadlineRaw)?.toLocal();
+          final deadline = deadlineRaw == null
+              ? null
+              : DateTime.tryParse(deadlineRaw)?.toLocal();
           final deadlineLabel = deadline == null
               ? null
               : TimeOfDay.fromDateTime(deadline).format(context);
@@ -146,8 +157,9 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
         final result = await _attendance.checkOut(qrToken: widget.qrToken);
         if (!mounted) return;
         final eventTitle =
-            (result['event'] is Map ? result['event']['title'] : null) as String? ??
-                title;
+            (result['event'] is Map ? result['event']['title'] : null)
+                as String? ??
+            title;
         setState(() {
           _successTitle = 'Checked out';
           _successBody =
@@ -156,9 +168,9 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
         return;
       }
 
-      final requiresLocation = meta['requires_location'] as bool? ??
-          (meta['venue_name'] as String?)?.trim().toLowerCase() !=
-              'online event';
+      final requiresLocation = AttendanceService.requiresLocationForCheckIn(
+        meta,
+      );
       if (!requiresLocation) {
         if (meta['window_open'] != true) {
           throw Exception(
@@ -187,11 +199,14 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
       }
 
       if (!mounted) return;
-      context.go('/attendance/location', extra: {
-        'qr_token': widget.qrToken,
-        'scanned_at': widget.scannedAt.toIso8601String(),
-        'device_utc_offset_minutes': widget.deviceUtcOffsetMinutes,
-      });
+      context.go(
+        '/attendance/location',
+        extra: {
+          'qr_token': widget.qrToken,
+          'scanned_at': widget.scannedAt.toIso8601String(),
+          'device_utc_offset_minutes': widget.deviceUtcOffsetMinutes,
+        },
+      );
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -219,23 +234,36 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
     return '$hourLabel $minuteLabel';
   }
 
-  Future<_ExitAction?> _chooseExitAction(String title, String? limitLabel) =>
-      showDialog<_ExitAction>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: Text(title),
-          content: Text(
-            limitLabel != null
-                ? 'Are you taking a temporary break (return within $limitLabel) or leaving the event for the day?'
-                : 'Are you taking a temporary break or leaving the event for the day?',
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('Cancel')),
-            OutlinedButton(onPressed: () => Navigator.of(dialogContext).pop(_ExitAction.breakOut), child: const Text('Break out')),
-            FilledButton(onPressed: () => Navigator.of(dialogContext).pop(_ExitAction.checkOut), child: const Text('Check out')),
-          ],
+  Future<_ExitAction?> _chooseExitAction(
+    String title,
+    String? limitLabel,
+  ) => showDialog<_ExitAction>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(title),
+      content: Text(
+        limitLabel != null
+            ? 'Are you taking a temporary break (return within $limitLabel) or leaving the event for the day?'
+            : 'Are you taking a temporary break or leaving the event for the day?',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(),
+          child: const Text('Cancel'),
         ),
-      );
+        OutlinedButton(
+          onPressed: () =>
+              Navigator.of(dialogContext).pop(_ExitAction.breakOut),
+          child: const Text('Break out'),
+        ),
+        FilledButton(
+          onPressed: () =>
+              Navigator.of(dialogContext).pop(_ExitAction.checkOut),
+          child: const Text('Check out'),
+        ),
+      ],
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -255,10 +283,7 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
               const SizedBox(height: 16),
               StudentErrorBanner(message: _error!),
               const SizedBox(height: 24),
-              FilledButton(
-                onPressed: _resolve,
-                child: const Text('Try again'),
-              ),
+              FilledButton(onPressed: _resolve, child: const Text('Try again')),
               TextButton(
                 onPressed: () => context.go('/attendance/scan'),
                 child: const Text('Scan again'),
@@ -278,10 +303,7 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 8),
-              Text(
-                _successBody ?? '',
-                textAlign: TextAlign.center,
-              ),
+              Text(_successBody ?? '', textAlign: TextAlign.center),
               const SizedBox(height: 24),
               FilledButton(
                 onPressed: () => context.go('/home'),
@@ -295,10 +317,7 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Resolving QR…',
-                textAlign: TextAlign.center,
-              ),
+              const Text('Resolving QR…', textAlign: TextAlign.center),
               const Spacer(),
             ],
           ],
