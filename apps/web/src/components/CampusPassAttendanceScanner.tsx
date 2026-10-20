@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
-import { Calendar, CircleCheck, QrCode, RotateCw } from "@/lib/icons";
+import { Calendar, CircleCheck, QrCode } from "@/lib/icons";
 import {
   getNewCampusPassTokens,
   normalizeCampusPassToken,
@@ -52,7 +52,6 @@ function CampusPassCamera({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [ready, setReady] = useState(false);
   const [nativeScanner, setNativeScanner] = useState(false);
-  const [rotated, setRotated] = useState(true);
   const [qrDetected, setQrDetected] = useState(false);
   const callbacks = useRef({ onToken, onError });
 
@@ -203,26 +202,17 @@ function CampusPassCamera({
     <div className="relative overflow-hidden rounded-2xl bg-black">
       <video
         ref={videoRef}
-        className={`campus-pass-camera__video ${rotated ? "campus-pass-camera__video--rotated" : ""} ${nativeScanner ? "min-h-[280px] w-full object-cover" : "hidden"}`}
+        className={`campus-pass-camera__video campus-pass-camera__video--mirrored ${nativeScanner ? "min-h-[280px] w-full object-cover" : "hidden"}`}
         muted
         playsInline
         aria-label="Camera scanning student campus passes"
       />
       <div
         id="campus-pass-qr-reader"
-        className={`campus-pass-qr-reader ${rotated ? "campus-pass-qr-reader--rotated" : ""} ${nativeScanner ? "hidden" : "min-h-[280px] w-full"}`}
+        className={`campus-pass-qr-reader campus-pass-qr-reader--mirrored ${nativeScanner ? "hidden" : "min-h-[280px] w-full"}`}
       />
       {ready && (
         <>
-          <button
-            type="button"
-            onClick={() => setRotated((current) => !current)}
-            aria-label="Rotate camera preview"
-            title="Rotate camera preview"
-            className="absolute right-3 top-3 z-10 grid h-10 w-10 place-items-center rounded-full bg-black/65 text-white hover:bg-black/80"
-          >
-            <RotateCw size={20} aria-hidden="true" />
-          </button>
           <div className="campus-pass-camera__frame" aria-hidden="true">
             <span className="campus-pass-camera__scan-line" />
           </div>

@@ -538,9 +538,9 @@ select {
 .analytics-chart-card:nth-child(2) { animation-delay: 90ms; }
 .analytics-chart-card:nth-child(3) { animation-delay: 180ms; }
 
-.campus-pass-camera__video--rotated,
-.campus-pass-qr-reader--rotated video {
-  transform: rotate(180deg);
+.campus-pass-camera__video--mirrored,
+.campus-pass-qr-reader--mirrored video {
+  transform: scaleX(-1);
 }
 
 .campus-pass-camera__frame {
