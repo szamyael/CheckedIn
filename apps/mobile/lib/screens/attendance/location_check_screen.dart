@@ -33,29 +33,62 @@ class _LocationCheckScreenState extends State<LocationCheckScreen> {
   String? _distanceHint;
 
   Future<void> _verifyLocation() async {
-    final granted = await PermissionService.instance.ensure(
-      context,
-      AppPermission.location,
-      showRationaleFirst: true,
-    );
-    if (!granted) {
-      if (mounted) {
-        setState(() {
-          _error = 'Location is required to verify you are at the event venue.';
-        });
-      }
-      return;
-    }
-
     setState(() {
       _checking = true;
       _error = null;
       _distanceHint = null;
-      _status = 'Requesting GPS…';
+      _status = 'Checking event requirements…';
     });
     UniversalLoaderController.instance.show('Verifying location…');
 
     try {
+      final eventMeta = await _attendance.fetchCheckInMeta(widget.qrToken);
+      final requiresLocation = eventMeta['requires_location'] as bool? ??
+          (eventMeta['venue_name'] as String?)?.trim().toLowerCase() !=
+              'online event';
+      if (!requiresLocation) {
+        if (eventMeta['window_open'] != true) {
+          throw Exception(
+            eventMeta['error'] as String? ??
+                'Attendance window is not open for this event',
+          );
+        }
+        if (!mounted) return;
+        context.go(
+          '/attendance/otp',
+          extra: {
+            'qr_token': widget.qrToken,
+            'latitude': 0,
+            'longitude': 0,
+            'accuracy_m': 0,
+            'requires_otp': eventMeta['requires_otp'] == true,
+            'event_title': eventMeta['title'] as String? ?? 'Event',
+            'event_id': eventMeta['id'] as String?,
+            'location_verified': true,
+            'requires_location': false,
+            'scanned_at': widget.scannedAt.toIso8601String(),
+            'device_utc_offset_minutes': widget.deviceUtcOffsetMinutes,
+          },
+        );
+        return;
+      }
+
+      final granted = await PermissionService.instance.ensure(
+        context,
+        AppPermission.location,
+        showRationaleFirst: true,
+      );
+      if (!granted) {
+        if (mounted) {
+          setState(() {
+            _error = 'Location is required to verify you are at the event venue.';
+            _status = null;
+          });
+        }
+        return;
+      }
+
+      setState(() => _status = 'Requesting GPS…');
       final position = await _attendance.getCurrentPosition();
       if (!mounted) return;
       if (!position.latitude.isFinite ||

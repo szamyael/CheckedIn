@@ -128,7 +128,10 @@ export default function AttendanceScanPage() {
           return;
         }
 
-        if (meta.requires_location === false) {
+        const requiresLocation =
+          meta.requires_location ??
+          meta.venue_name?.trim().toLowerCase() !== "online event";
+        if (!requiresLocation) {
           if (meta.window_open !== true) {
             throw new Error(meta.error || "Attendance window is not open for this event");
           }
@@ -137,7 +140,7 @@ export default function AttendanceScanPage() {
             eventId: meta.id,
             eventTitle: meta.title,
             requiresOtp: meta.requires_otp === true,
-            requiresLocation: false,
+            requiresLocation,
             locationVerified: true,
           });
           router.push("/student/attendance/otp");

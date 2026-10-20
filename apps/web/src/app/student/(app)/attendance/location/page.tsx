@@ -50,6 +50,11 @@ export default function AttendanceLocationPage() {
       router.replace("/student/attendance/scan");
       return;
     }
+    if (flow.requiresLocation === false) {
+      saveFlow({ ...flow, locationVerified: true });
+      router.push("/student/attendance/otp");
+      return;
+    }
 
     const granted = await ensureBrowserPermission("location");
     if (!granted) {

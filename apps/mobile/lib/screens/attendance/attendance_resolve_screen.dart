@@ -156,7 +156,10 @@ class _AttendanceResolveScreenState extends State<AttendanceResolveScreen> {
         return;
       }
 
-      if (meta['requires_location'] == false) {
+      final requiresLocation = meta['requires_location'] as bool? ??
+          (meta['venue_name'] as String?)?.trim().toLowerCase() !=
+              'online event';
+      if (!requiresLocation) {
         if (meta['window_open'] != true) {
           throw Exception(
             meta['error'] as String? ??

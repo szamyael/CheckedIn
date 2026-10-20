@@ -38,7 +38,13 @@ test("attendance metadata and final check-in enforce GPS only when the event req
 test("web and mobile let online-event check-ins continue without requesting GPS", () => {
   const webScan = read("../src/app/student/(app)/attendance/scan/page.tsx");
   const mobileResolve = read("../../mobile/lib/screens/attendance/attendance_resolve_screen.dart");
+  const webLocation = read("../src/app/student/(app)/attendance/location/page.tsx");
+  const mobileLocation = read("../../mobile/lib/screens/attendance/location_check_screen.dart");
 
-  assert.match(webScan, /requires_location\s*===\s*false/);
-  assert.match(mobileResolve, /requires_location'\]\s*==\s*false/);
+  assert.match(webScan, /meta\.requires_location\s*\?\?/);
+  assert.match(mobileResolve, /meta\['requires_location'\]\s+as bool\?\s*\?\?/);
+  assert.match(webScan, /meta\.venue_name[\s\S]*online event/i);
+  assert.match(mobileResolve, /meta\['venue_name'\][\s\S]*online event/i);
+  assert.match(webLocation, /flow\.requiresLocation\s*===\s*false/);
+  assert.match(mobileLocation, /requires_location[\s\S]*online event/i);
 });
