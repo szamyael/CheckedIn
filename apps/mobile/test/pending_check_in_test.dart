@@ -66,6 +66,13 @@ void main() {
       }),
       isTrue,
     );
+    expect(
+      AttendanceService.requiresLocationForCheckIn({
+        'requires_location': true,
+        'venue_name': 'Online Event - Google Meet',
+      }),
+      isFalse,
+    );
   });
 
   test('treats an HTTP response from Supabase as reachable internet', () {

@@ -4,6 +4,7 @@ import {
   breakDeadlineAt,
   isBreakTimeExpired,
 } from "../_shared/break-time-limit.ts";
+import { requiresEventLocation } from "../_shared/event-location-policy.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -117,8 +118,7 @@ Deno.serve(async (req) => {
     const canBreakOut = !breakExpired && (myStatus === "checked_in" || myStatus === "late");
     const canBreakIn = !breakExpired && myStatus === "on_break";
     const alreadyCheckedOut = myStatus === "checked_out";
-    const requiresLocation = event.requires_location !== false &&
-      event.venue_name?.trim().toLowerCase() !== "online event";
+    const requiresLocation = requiresEventLocation(event);
 
     const base = {
       id: event.id,

@@ -4,6 +4,7 @@ import {
   validateCaptureIntegrity,
 } from "./screenshot_detection.ts";
 import { isOfflineCheckInAttempt } from "./offline-policy.ts";
+import { requiresEventLocation } from "../_shared/event-location-policy.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -223,8 +224,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const requiresLocation = event.requires_location !== false &&
-      event.venue_name?.trim().toLowerCase() !== "online event";
+    const requiresLocation = requiresEventLocation(event);
     if (
       requiresLocation &&
       (!isValidCoordinate(latitude, longitude) ||

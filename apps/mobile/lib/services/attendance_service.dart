@@ -38,7 +38,10 @@ class AttendanceService {
   static bool requiresLocationForCheckIn(Map<String, dynamic> eventMeta) {
     final venueName = eventMeta['venue_name'];
     if (venueName is String &&
-        venueName.trim().toLowerCase() == 'online event') {
+        RegExp(
+          r'\b(online|virtual)\b',
+          caseSensitive: false,
+        ).hasMatch(venueName.trim())) {
       return false;
     }
     return eventMeta['requires_location'] as bool? ?? true;
