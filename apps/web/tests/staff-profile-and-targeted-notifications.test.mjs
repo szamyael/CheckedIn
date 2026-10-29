@@ -133,6 +133,25 @@ test("admins must set a private six-digit code before creating another admin", (
   );
 });
 
+test("manual student profile edits require the admin personal code and are audited", () => {
+  const route = read("../src/app/api/admin/students/[id]/route.ts");
+  const editor = read("../src/components/AdminStudentProfileEditor.tsx");
+
+  assert.match(route, /profile\?\.role !== "admin" \|\| profile\.status !== "active"/);
+  assert.match(route, /verify_admin_personal_code/);
+  assert.ok(
+    route.indexOf("verify_admin_personal_code") < route.indexOf("const admin = createAdminClient"),
+    "the personal code must be verified before using the service-role client",
+  );
+  assert.match(route, /student_profile_updated/);
+  assert.match(route, /p_details: \{ fields:/);
+  assert.match(editor, /SYSTEM CONTROL/);
+  assert.match(editor, /admin_personal_code|verify_admin_personal_code/);
+  assert.match(editor, /Manual student profile edits/);
+  assert.doesNotMatch(editor, /cursor-pointer underline|\[1, 2, 3, 4, 5\]/);
+  assert.match(route, /yearLevel > 4/);
+});
+
 test("student account actions only show valid next steps for each status", async () => {
   const actionsPath = fileURLToPath(new URL("../src/lib/student-account-actions.ts", import.meta.url));
   assert.ok(existsSync(actionsPath), "student account action rules should exist");

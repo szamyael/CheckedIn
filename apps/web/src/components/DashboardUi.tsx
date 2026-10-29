@@ -6,7 +6,7 @@ export function DashboardPageHeader({
   description,
   actions,
 }: {
-  eyebrow?: string;
+  eyebrow?: ReactNode;
   title: string;
   description: string;
   actions?: ReactNode;

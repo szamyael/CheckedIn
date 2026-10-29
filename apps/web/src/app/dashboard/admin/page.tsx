@@ -12,8 +12,9 @@ import { AdminBingoOverview } from "@/components/bingo/AdminBingoOverview";
 import { OrganizationProgramAlignmentPanel } from "@/components/OrganizationProgramAlignmentPanel";
 import { canonicalProgramName, programNameKey } from "@/lib/program-name";
 import { OrganizationModerationPanel } from "@/components/OrganizationModerationPanel";
+import { AdminStudentProfileEditor } from "@/components/AdminStudentProfileEditor";
 import { formatStudentDisplayName } from "@/lib/student/display-name";
-import { DashboardPageHeader, DashboardSection, DashboardStat } from "@/components/DashboardUi";
+import { DashboardSection, DashboardStat } from "@/components/DashboardUi";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +31,9 @@ export default async function AdminPage() {
     .single();
 
   if (profile?.role !== "admin") redirect("/dashboard");
+
+  const { data: hasAdminPersonalCode, error: personalCodeError } = await supabase.rpc("has_admin_personal_code");
+  if (personalCodeError) throw new Error(personalCodeError.message);
 
   const { data: organizations } = await supabase
     .from("organizations")
@@ -125,7 +129,12 @@ export default async function AdminPage() {
 
   return (
     <div className="space-y-8">
-      <DashboardPageHeader eyebrow="SYSTEM CONTROL" title="Administration" description="Manage institutional accounts, approval queues, event governance, and organization access." />
+      <AdminStudentProfileEditor
+        students={studentRows ?? []}
+        hasPersonalCode={hasAdminPersonalCode === true}
+        title="Administration"
+        description="Manage institutional accounts, approval queues, event governance, and organization access."
+      />
 
       <div className="dashboard-stat-grid grid grid-cols-2 gap-3 xl:grid-cols-4">
         <DashboardStat label="Students" value={students.length} detail="Registered student accounts" />

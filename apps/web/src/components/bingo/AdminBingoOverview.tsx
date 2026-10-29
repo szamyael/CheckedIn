@@ -25,7 +25,7 @@ export async function AdminBingoOverview() {
       "id, earned_at, points_awarded, org_badges(name), students(student_id, first_name, last_name)",
     )
     .order("earned_at", { ascending: false })
-    .limit(15);
+    .limit(5);
 
   return (
     <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-6">
