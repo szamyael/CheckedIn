@@ -5,7 +5,11 @@ export function requiresEventLocation(event: {
   const venueName = typeof event.venue_name === "string"
     ? event.venue_name.trim()
     : "";
-  if (/\b(?:online|virtual)\b/i.test(venueName)) {
+  if (
+    /\b(?:online|virtual|zoom|webex|skype|discord|teams)\b|google\s*meet|(?:meet\.google\.com|zoom\.us|teams\.microsoft\.com|webex\.com)/i.test(
+      venueName,
+    )
+  ) {
     return false;
   }
   return event.requires_location !== false;

@@ -39,7 +39,7 @@ class AttendanceService {
     final venueName = eventMeta['venue_name'];
     if (venueName is String &&
         RegExp(
-          r'\b(online|virtual)\b',
+          r'\b(online|virtual|zoom|webex|skype|discord|teams)\b|google\s*meet|(meet\.google\.com|zoom\.us|teams\.microsoft\.com|webex\.com)',
           caseSensitive: false,
         ).hasMatch(venueName.trim())) {
       return false;

@@ -73,6 +73,27 @@ void main() {
       }),
       isFalse,
     );
+    expect(
+      AttendanceService.requiresLocationForCheckIn({
+        'requires_location': true,
+        'venue_name': 'Zoom',
+      }),
+      isFalse,
+    );
+    expect(
+      AttendanceService.requiresLocationForCheckIn({
+        'requires_location': true,
+        'venue_name': 'Microsoft Teams Meeting',
+      }),
+      isFalse,
+    );
+    expect(
+      AttendanceService.requiresLocationForCheckIn({
+        'requires_location': true,
+        'venue_name': 'Teams',
+      }),
+      isFalse,
+    );
   });
 
   test('treats an HTTP response from Supabase as reachable internet', () {

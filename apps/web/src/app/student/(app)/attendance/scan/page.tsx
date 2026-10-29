@@ -128,9 +128,11 @@ export default function AttendanceScanPage() {
           return;
         }
 
-        const requiresLocation =
-          meta.requires_location ??
-          meta.venue_name?.trim().toLowerCase() !== "online event";
+        const isOnlineVenue =
+          /\b(?:online|virtual|zoom|webex|skype|discord|teams)\b|google\s*meet|(?:meet\.google\.com|zoom\.us|teams\.microsoft\.com|webex\.com)/i.test(
+            meta.venue_name?.trim() ?? "",
+          );
+        const requiresLocation = !isOnlineVenue && meta.requires_location !== false;
         if (!requiresLocation) {
           if (meta.window_open !== true) {
             throw new Error(meta.error || "Attendance window is not open for this event");
