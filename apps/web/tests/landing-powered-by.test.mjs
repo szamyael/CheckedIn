@@ -6,6 +6,8 @@ const landingPage = readFileSync(new URL("../src/app/page.tsx", import.meta.url)
 const css = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8");
 
 test("landing page explains the technologies that power CheckedIn", () => {
+  assert.match(landingPage, /import \{ ThemePanelButton \} from "@\/components\/ThemePanelButton"/);
+  assert.match(landingPage, /<ThemePanelButton \/>/);
   assert.match(landingPage, /aria-labelledby="powered-by-heading"/);
   assert.match(landingPage, /id="powered-by-heading"[\s\S]*?>[\s\S]*?The tools behind CheckedIn/);
 

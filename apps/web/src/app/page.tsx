@@ -22,6 +22,7 @@ import {
   IconMap2,
 } from "@tabler/icons-react";
 import { BrandMark } from "@/components/BrandLogo";
+import { ThemePanelButton } from "@/components/ThemePanelButton";
 import { PhoneStudentRedirect } from "@/components/student/PhoneStudentRedirect";
 
 const features = [
@@ -76,6 +77,7 @@ export default function HomePage() {
           </span>
         </Link>
         <nav className="flex items-center gap-1 sm:gap-3" aria-label="Portal navigation">
+          <ThemePanelButton />
           <Link
             href="/student/login"
             className="hidden min-h-11 items-center rounded-xl px-4 text-sm font-semibold text-[var(--foreground)] transition hover:bg-[var(--surface-muted)] sm:inline-flex"

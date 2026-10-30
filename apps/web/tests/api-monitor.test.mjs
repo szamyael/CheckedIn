@@ -74,6 +74,7 @@ describe("admin API monitor", () => {
     assert.match(monitor, /logs=\{\(data\?\.logs \?\? \[\]\)\.slice\(0, 20\)\}/);
     assert.match(monitor, /View more \(20\)/);
     assert.match(monitor, /role="dialog"\s+aria-modal="true"/);
+    assert.match(monitor, /createPortal\([\s\S]*document\.body/);
     assert.match(monitor, /Showing the 20 most recent calls\./);
     assert.match(monitor, /className="overflow-auto p-4"/);
     assert.match(monitor, /event\.key === "Escape"/);

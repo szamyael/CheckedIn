@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface ApiLog {
   id: number;
@@ -279,7 +280,7 @@ export function AdminApiMonitor() {
         )}
       </div>
 
-      {showMore && (
+      {showMore && createPortal(
         <div
           className="fixed inset-0 z-[10000] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-[2px]"
           onMouseDown={(event) => {
@@ -317,7 +318,8 @@ export function AdminApiMonitor() {
               />
             </div>
           </section>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
