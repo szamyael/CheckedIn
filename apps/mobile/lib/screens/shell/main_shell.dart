@@ -286,10 +286,10 @@ class _MainShellState extends State<MainShell> {
           Expanded(
             child: AnimatedSwitcher(
               duration: reduceMotion
-                  ? const Duration(milliseconds: 140)
+                  ? Duration.zero
                   : const Duration(milliseconds: 260),
               reverseDuration: reduceMotion
-                  ? const Duration(milliseconds: 120)
+                  ? Duration.zero
                   : const Duration(milliseconds: 180),
               switchInCurve: Curves.easeOutCubic,
               switchOutCurve: Curves.easeInCubic,
@@ -299,7 +299,7 @@ class _MainShellState extends State<MainShell> {
                   curve: Curves.easeOutCubic,
                 );
                 if (reduceMotion) {
-                  return FadeTransition(opacity: fade, child: child);
+                  return child;
                 }
                 return FadeTransition(
                   opacity: fade,
@@ -317,13 +317,20 @@ class _MainShellState extends State<MainShell> {
           ),
         ],
       ),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: NavigationBar(
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          border: Border(
+            top: BorderSide(
+              color: Theme.of(context).colorScheme.outline.withValues(
+                alpha: 0.45,
+              ),
+            ),
+          ),
+        ),
+        child: SafeArea(
+          top: false,
+          child: NavigationBar(
               labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
               selectedIndex: _index < 2 ? _index : _index + 1,
               onDestinationSelected: (index) {
@@ -357,7 +364,8 @@ class _MainShellState extends State<MainShell> {
                   label: 'Events',
                 ),
                 NavigationDestination(
-                  icon: Icon(TablerIcons.scan),
+                  icon: const _ScanActionIcon(),
+                  selectedIcon: const _ScanActionIcon(),
                   label: 'Scan',
                 ),
                 NavigationDestination(
@@ -372,7 +380,6 @@ class _MainShellState extends State<MainShell> {
                 ),
               ],
             ),
-          ),
         ),
       ),
     );
@@ -381,5 +388,34 @@ class _MainShellState extends State<MainShell> {
   Future<void> _signInOnline() async {
     await _auth.signOut();
     if (mounted) context.go('/login');
+  }
+}
+
+class _ScanActionIcon extends StatelessWidget {
+  const _ScanActionIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: 'Scan an event QR code to check in',
+      child: Container(
+        width: 52,
+        height: 52,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: colors.primary,
+          border: Border.all(color: colors.surface, width: 3),
+          boxShadow: [
+            BoxShadow(
+              color: colors.primary.withValues(alpha: 0.18),
+              offset: const Offset(0, 2),
+              blurRadius: 8,
+            ),
+          ],
+        ),
+        child: Icon(TablerIcons.scan, color: colors.onPrimary, size: 23),
+      ),
+    );
   }
 }

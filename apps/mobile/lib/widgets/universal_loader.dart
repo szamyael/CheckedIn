@@ -90,7 +90,7 @@ class UniversalLoaderScope extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: Theme.of(context).colorScheme.surface,
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(20),
                             border: Border.all(
                               color: Theme.of(context).colorScheme.outline,
                             ),

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { isStudentOnboardingComplete } from "@/lib/student/onboarding";
 import { isStudentTermsAccepted } from "@/lib/student/terms";
 import { StudentShell } from "@/components/student/StudentShell";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 import { playNotificationSound } from "@/lib/notification-sound";
 import type { NotificationPopupItem } from "@/components/NotificationPopup";
 
@@ -119,8 +120,12 @@ export function StudentAppLayout({ children }: { children: React.ReactNode }) {
 
   if (error) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-[var(--background)] p-6 text-center text-[var(--error)]">
-        {error}
+      <div className="min-h-dvh bg-[var(--background)]">
+        <UserErrorDialog
+          message={error}
+          closeLabel="Back to sign in"
+          onClose={() => router.replace("/student/login")}
+        />
       </div>
     );
   }

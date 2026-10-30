@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { NotificationPopup, type NotificationPopupItem } from "@/components/NotificationPopup";
 import { NotificationSoundToggle } from "@/components/NotificationSoundToggle";
 import { NotificationSender } from "@/components/NotificationSender";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 import { playNotificationSound } from "@/lib/notification-sound";
 import {
   getUpdatedNotificationIds,
@@ -168,11 +169,7 @@ export function NotificationBell() {
                 )}
               </div>
             </div>
-            {readError && (
-              <p role="alert" className="border-b border-red-100 bg-red-50 px-4 py-2 text-xs text-red-700">
-                {readError}
-              </p>
-            )}
+            <UserErrorDialog message={readError} />
             <div className="max-h-96 overflow-y-auto">
               {loading && (
                 <p className="px-4 py-6 text-center text-sm text-slate-700">
@@ -188,12 +185,11 @@ export function NotificationBell() {
                 <button
                   key={n.id}
                   type="button"
+                  data-unread={!n.read_at}
                   onClick={() => {
                     if (!n.read_at) markRead(n.id);
                   }}
-                  className={`block w-full border-b border-slate-50 px-4 py-3 text-left hover:bg-slate-50 ${
-                    n.read_at ? "opacity-70" : "bg-blue-50/40"
-                  }`}
+                  className="notification-item block w-full border-b border-[var(--border)] px-4 py-3 text-left transition-colors"
                 >
                   <NotificationSender
                     name={n.sender_name}

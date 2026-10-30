@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { withApiLogging } from "@/lib/api-monitor";
 
-export async function PATCH(
+async function updateUser(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -114,7 +115,7 @@ export async function PATCH(
   return NextResponse.json({ success: true });
 }
 
-export async function DELETE(
+async function deleteUser(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -155,3 +156,14 @@ export async function DELETE(
 
   return NextResponse.json({ success: true });
 }
+
+export const PATCH = withApiLogging(
+  "PATCH",
+  "/api/admin/users/[id]",
+  updateUser,
+);
+export const DELETE = withApiLogging(
+  "DELETE",
+  "/api/admin/users/[id]",
+  deleteUser,
+);

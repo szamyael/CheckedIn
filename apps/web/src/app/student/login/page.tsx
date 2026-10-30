@@ -181,7 +181,6 @@ export default function StudentLoginPage() {
     <main className="auth-theme min-h-dvh bg-[var(--background)] text-[var(--foreground)] lg:grid lg:grid-cols-[minmax(390px,43%)_1fr]">
       <StudentAccountDecisionDialog decision={accountDecision} onClose={() => setAccountDecision(null)} />
       <section className="relative hidden overflow-hidden bg-[var(--action-background)] px-10 py-10 text-[var(--action-foreground)] lg:flex lg:flex-col xl:px-16">
-        <div className="absolute -bottom-24 -right-20 h-80 w-80 rounded-full border border-white/10" />
         <div className="relative flex items-center gap-3"><BrandMark size={42} className="rounded-lg bg-white p-1" /><span className="text-lg font-semibold tracking-tight">CheckedIn</span></div>
         <div className="relative my-auto max-w-md py-16">
           <p className="inline-flex items-center gap-2 border border-[color-mix(in_srgb,var(--action-foreground)_20%,transparent)] bg-[color-mix(in_srgb,var(--action-foreground)_6%,transparent)] px-3 py-1.5 text-xs font-semibold tracking-[0.12em] text-[var(--action-foreground)]/85"><ShieldCheck size={15} aria-hidden="true" />STUDENT PORTAL</p>

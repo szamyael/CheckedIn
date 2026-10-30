@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 interface StudentOption {
   id: string;
@@ -22,14 +23,16 @@ export function ManualAttendancePanel({
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function markPresent() {
     if (!studentId || !reason.trim()) {
-      setMessage("Select a student and enter a reason.");
+      setError("Select a student and enter a reason before saving.");
       return;
     }
     setBusy(true);
     setMessage(null);
+    setError(null);
     const supabase = createClient();
     const { error } = await supabase.rpc("staff_manual_mark_attendance", {
       p_event_id: eventId,
@@ -39,7 +42,7 @@ export function ManualAttendancePanel({
     });
     setBusy(false);
     if (error) {
-      setMessage(error.message);
+      setError("We couldn't record attendance. Check your connection and try again.");
       return;
     }
     setMessage("Attendance recorded.");
@@ -55,7 +58,10 @@ export function ManualAttendancePanel({
 
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      setError("Your session ended. Sign in again, then retry.");
+      return;
+    }
 
     const { error } = await supabase.from("attendance_correction_requests").insert({
       event_id: eventId,
@@ -64,14 +70,15 @@ export function ManualAttendancePanel({
       reason: correctionReason.trim(),
     });
 
-    if (error) alert(error.message);
-    else alert("Correction request submitted for admin review.");
+    if (error) setError("We couldn't submit the correction request. Try again.");
+    else setMessage("Correction request submitted for admin review.");
   }
 
   if (!eventId) return null;
 
   return (
     <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
+      <UserErrorDialog message={error} onClose={() => setError(null)} />
       <h3 className="font-semibold text-slate-900">Manual attendance</h3>
       <p className="text-sm text-slate-600">
         Mark absent students present or submit a correction request for admin approval.

@@ -186,15 +186,9 @@ class CheckedInPageTransitionsBuilder extends PageTransitionsBuilder {
     Widget child,
   ) {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    final progress = CurvedAnimation(
-      parent: animation,
-      curve: reduceMotion
-          ? const Interval(0, 0.4, curve: Curves.easeOutCubic)
-          : Curves.easeOutCubic,
-    );
+    if (reduceMotion) return child;
+    final progress = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
     final content = FadeTransition(opacity: progress, child: child);
-
-    if (reduceMotion) return content;
 
     return SlideTransition(
       position: Tween<Offset>(
@@ -207,15 +201,38 @@ class CheckedInPageTransitionsBuilder extends PageTransitionsBuilder {
 }
 
 class AppTheme {
-  static ThemeData build(AppColorTheme selected, Brightness brightness) {
+  static ThemeData build(AppColorTheme _, Brightness brightness) {
     final dark = brightness == Brightness.dark;
-    final background = dark ? selected.backgroundDark : selected.background;
-    final surface = dark ? selected.surfaceDark : const Color(0xFFFFFFFF);
-    final border = dark ? selected.borderDark : selected.border;
-    final text = dark ? const Color(0xFFE6EDF7) : const Color(0xFF172033);
-    final secondary = dark ? const Color(0xFFC4D0E0) : const Color(0xFF40516A);
-    final muted = dark ? const Color(0xFFA7B5C8) : const Color(0xFF5F6E82);
-    final primary = dark ? selected.primaryDark : selected.primary;
+    final background = dark ? const Color(0xFF202722) : const Color(0xFFF7F8F7);
+    final surface = dark ? const Color(0xFF29312C) : const Color(0xFFFFFFFF);
+    final surfaceMuted = dark
+        ? const Color(0xFF343D37)
+        : const Color(0xFFF1F3F1);
+    final border = dark ? const Color(0xFF4A554D) : const Color(0xFFDCE3DD);
+    final controlBorder = dark
+        ? const Color(0xFF7B8A80)
+        : const Color(0xFF7F8C85);
+    final text = dark ? const Color(0xFFF0F3F0) : const Color(0xFF242927);
+    final secondary = dark ? const Color(0xFFB9C3BC) : const Color(0xFF6B736E);
+    final muted = secondary;
+    final action = const Color(0xFF42675B);
+    final primary = dark ? const Color(0xFFA8C6B9) : const Color(0xFF587D70);
+    final statusSuccess = dark
+        ? const Color(0xFF8AC7A5)
+        : const Color(0xFF3F765F);
+    final statusWarning = dark
+        ? const Color(0xFFD7B876)
+        : const Color(0xFF8C672C);
+    final statusError = dark
+        ? const Color(0xFFF09084)
+        : const Color(0xFFA2443D);
+    final primarySoft = dark
+        ? const Color(0xFF344B42)
+        : const Color(0xFFE5EEEA);
+    final tertiarySoft = dark
+        ? const Color(0xFF4A4030)
+        : const Color(0xFFF1E8D6);
+    final inset = dark ? const Color(0xFF252D28) : const Color(0xFFF1F3F1);
     final scheme =
         ColorScheme.fromSeed(
           seedColor: primary,
@@ -223,29 +240,30 @@ class AppTheme {
         ).copyWith(
           primary: primary,
           onPrimary: dark ? background : Colors.white,
-          primaryContainer: dark
-              ? selected.primarySoftDark
-              : selected.primarySoft,
-          onPrimaryContainer: dark ? Colors.white : selected.primaryStrong,
-          secondary: selected.accent,
+          primaryContainer: primarySoft,
+          onPrimaryContainer: dark ? text : const Color(0xFF2F4D43),
+          secondary: statusSuccess,
           onSecondary: dark ? background : Colors.white,
+          secondaryContainer: primarySoft,
+          onSecondaryContainer: dark ? text : const Color(0xFF2F4D43),
           surface: surface,
           onSurface: text,
-          surfaceContainerHighest: dark
-              ? selected.surfaceMutedDark
-              : selected.surfaceMuted,
+          surfaceContainerHighest: surfaceMuted,
           onSurfaceVariant: muted,
           outline: border,
           outlineVariant: border,
-          tertiary: dark ? const Color(0xFFF1C67B) : const Color(0xFFA46618),
-          onTertiary: dark ? const Color(0xFF3B2B11) : Colors.white,
-          tertiaryContainer: dark
-              ? const Color(0xFF44351D)
-              : const Color(0xFFFFF7E7),
-          onTertiaryContainer: dark
-              ? const Color(0xFFF9E2B8)
-              : const Color(0xFF79530F),
-          error: const Color(0xFFAE4146),
+          tertiary: statusWarning,
+          onTertiary: dark ? background : Colors.white,
+          tertiaryContainer: tertiarySoft,
+          onTertiaryContainer: dark ? text : const Color(0xFF654C23),
+          error: statusError,
+          onError: dark ? background : Colors.white,
+          errorContainer: dark
+              ? const Color(0xFF56332F)
+              : const Color(0xFFF6E7E4),
+          onErrorContainer: dark
+              ? const Color(0xFFFFDAD4)
+              : const Color(0xFF6D2823),
         );
 
     return ThemeData(
@@ -264,7 +282,7 @@ class AppTheme {
         },
       ),
       visualDensity: VisualDensity.standard,
-      splashFactory: InkSparkle.splashFactory,
+      splashFactory: InkRipple.splashFactory,
       textTheme: TextTheme(
         displaySmall: TextStyle(
           color: text,
@@ -306,7 +324,11 @@ class AppTheme {
       dividerTheme: DividerThemeData(color: border, thickness: 1),
       dialogTheme: DialogThemeData(
         backgroundColor: surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: border.withValues(alpha: 0.45)),
+        ),
         titleTextStyle: TextStyle(
           color: text,
           fontSize: 20,
@@ -316,11 +338,12 @@ class AppTheme {
       ),
       appBarTheme: AppBarTheme(
         centerTitle: false,
-        backgroundColor: surface,
+        backgroundColor: background,
         foregroundColor: text,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
+        toolbarHeight: 60,
         titleTextStyle: TextStyle(
           color: text,
           fontSize: 18,
@@ -330,80 +353,94 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: surface,
         elevation: 1,
-        shadowColor: Colors.black26,
+        shadowColor: dark
+            ? const Color(0x26000000)
+            : const Color(0x102D4036),
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: border),
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: border.withValues(alpha: 0.45)),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         labelStyle: TextStyle(color: secondary, fontWeight: FontWeight.w500),
         hintStyle: TextStyle(color: muted),
         filled: true,
-        fillColor: surface,
+        fillColor: inset,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: border),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: controlBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: border),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: controlBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: primary, width: 1.6),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: scheme.error),
         ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: scheme.error, width: 2),
+        ),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 16,
+          horizontal: 12,
+          vertical: 12,
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        height: 74,
+        height: 78,
         backgroundColor: surface,
-        indicatorColor: dark ? selected.primarySoftDark : selected.primarySoft,
+        indicatorColor: primarySoft,
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w600,
-            color: states.contains(WidgetState.selected)
-                ? (dark ? text : selected.primaryStrong)
-                : muted,
+            color: states.contains(WidgetState.selected) ? text : muted,
           ),
         ),
         iconTheme: WidgetStateProperty.resolveWith(
           (states) => IconThemeData(
-            color: states.contains(WidgetState.selected)
-                ? (dark ? text : selected.primaryStrong)
-                : muted,
+            color: states.contains(WidgetState.selected) ? primary : muted,
           ),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          backgroundColor: dark
-              ? selected.actionBackgroundDark
-              : selected.actionBackground,
-          foregroundColor: Colors.white,
-          minimumSize: const Size.fromHeight(52),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+        style: ButtonStyle(
+          backgroundColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.disabled)
+                ? surfaceMuted
+                : states.contains(WidgetState.pressed)
+                ? const Color(0xFF2F4D43)
+                : action,
           ),
-          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+          foregroundColor: WidgetStateProperty.resolveWith(
+            (states) =>
+                states.contains(WidgetState.disabled) ? muted : Colors.white,
+          ),
+          minimumSize: const WidgetStatePropertyAll(Size.fromHeight(44)),
+          elevation: const WidgetStatePropertyAll(0),
+          shape: const WidgetStatePropertyAll(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+            ),
+          ),
+          textStyle: const WidgetStatePropertyAll(
+            TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: dark ? text : selected.primaryStrong,
-          side: BorderSide(color: border),
-          minimumSize: const Size.fromHeight(48),
+          foregroundColor: primary,
+          side: BorderSide(color: border.withValues(alpha: 0.65)),
+          minimumSize: const Size.fromHeight(40),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
           ),
           textStyle: const TextStyle(fontWeight: FontWeight.w600),
         ),
@@ -419,17 +456,55 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: dark
-            ? selected.actionBackgroundDark
-            : selected.actionBackground,
-        contentTextStyle: const TextStyle(color: Colors.white),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: surface,
+        contentTextStyle: TextStyle(color: text),
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: border.withValues(alpha: 0.4)),
+        ),
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
         color: primary,
-        linearTrackColor: dark
-            ? selected.primarySoftDark
-            : selected.primarySoft,
+        linearTrackColor: inset,
+      ),
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected) ? primary : inset,
+        ),
+        checkColor: WidgetStatePropertyAll(dark ? background : Colors.white),
+        side: BorderSide(color: border, width: 1.5),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+      ),
+      radioTheme: RadioThemeData(
+        fillColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected) ? primary : muted,
+        ),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) =>
+              states.contains(WidgetState.selected) ? Colors.white : surface,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected) ? primary : inset,
+        ),
+      ),
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: surface,
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: dark
+                  ? const Color(0x33000000)
+                  : const Color(0x142D4036),
+              offset: const Offset(0, 2),
+              blurRadius: 8,
+            ),
+          ],
+        ),
+        textStyle: TextStyle(color: text, fontSize: 12),
       ),
     );
   }

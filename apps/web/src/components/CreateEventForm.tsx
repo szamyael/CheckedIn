@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { formPlaceholders } from "@/lib/form-placeholders";
 import { useAsyncAction } from "@/lib/useAsyncAction";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 import {
   EventLocationPicker,
   type EventLocation,
@@ -303,7 +304,7 @@ export function CreateEventForm({
         )}
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      <UserErrorDialog message={error} />
 
       <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs text-slate-500">{requiresLocation ? "A venue name, location, and valid schedule are required." : "A valid schedule is required; no venue location is collected."}</p>

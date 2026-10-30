@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Award, Check, Sparkles } from "@/lib/icons";
 import { createClient } from "@/lib/supabase/client";
 import { studentInputClass } from "@/components/student/StudentUi";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 type Cell = {
   id: string;
@@ -243,9 +244,7 @@ export default function StudentBingoPage() {
       )}
 
       {boardError ? (
-        <p role="alert" className="border border-[color-mix(in_srgb,var(--error)_35%,var(--border))] bg-[color-mix(in_srgb,var(--error)_12%,var(--surface))] p-4 text-sm text-[var(--error)]">
-          {boardError}
-        </p>
+        <UserErrorDialog message={boardError} />
       ) : (
         <>
           <div className="grid grid-cols-2 border border-[var(--border)] bg-[var(--surface)] text-center">
@@ -315,9 +314,7 @@ export default function StudentBingoPage() {
         <div className="mb-3 flex items-center gap-2"><Award size={18} className="text-[var(--warning)]" /><h2 className="text-base font-semibold text-[var(--primary-strong)]">Recognition earned</h2></div>
         {awards.length === 0 ? (
           awardsError ? (
-            <p role="alert" className="text-sm text-[var(--error)]">
-              Unable to load Bingo recognition: {awardsError}
-            </p>
+            <UserErrorDialog message={`Unable to load Bingo recognition: ${awardsError}`} />
           ) : (
             <p className="text-sm text-[var(--muted)]">
               Complete a line or streak on this card to earn badges.

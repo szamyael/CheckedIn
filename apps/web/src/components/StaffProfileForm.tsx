@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Camera, LoaderCircle } from "@/lib/icons";
 import { PasswordRequirements, passwordRules } from "@/components/PasswordRequirements";
 import { createClient } from "@/lib/supabase/client";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 type ProfileFields = {
   first_name: string;
@@ -257,11 +258,7 @@ export function StaffProfileForm({
   }
 
   if (!profile) {
-    return (
-      <p role="alert" className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-        A staff profile could not be found for this account. Contact an administrator to restore the profile before editing it.
-      </p>
-    );
+    return <UserErrorDialog message="We couldn't find your staff profile. Contact your administrator for help." />;
   }
 
   const initials = `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase();
@@ -299,7 +296,6 @@ export function StaffProfileForm({
               {savingAvatar ? "Uploading…" : "Change avatar"}
             </button>
             <p className="mt-1 text-xs text-[var(--muted)]">JPG, PNG, or WebP, up to 5 MB.</p>
-            {avatarError && <p role="alert" className="mt-1 text-xs text-red-700">{avatarError}</p>}
           </div>
         </div>
 
@@ -316,7 +312,6 @@ export function StaffProfileForm({
             Last name
             <input value={lastName} onChange={(event) => setLastName(event.target.value)} required maxLength={100} className="mt-1.5 min-h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm" />
           </label>
-          {profileError && <p role="alert" className="text-sm text-red-700">{profileError}</p>}
           {profileMessage && <p role="status" className="text-sm text-emerald-700">{profileMessage}</p>}
           <button type="submit" disabled={savingProfile} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[var(--primary)] px-5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60">
             {savingProfile && <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />}
@@ -381,7 +376,6 @@ export function StaffProfileForm({
           </form>
         </div>
         {credentialMessage && <p role="status" className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">{credentialMessage}</p>}
-        {credentialError && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-800">{credentialError}</p>}
       </section>
 
       {isAdmin && (
@@ -423,7 +417,6 @@ export function StaffProfileForm({
                 className="mt-1.5 min-h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
               />
             </label>
-            {adminCodeError && <p role="alert" className="text-sm text-red-700">{adminCodeError}</p>}
             {adminCodeMessage && <p role="status" className="text-sm text-emerald-700">{adminCodeMessage}</p>}
             <button type="submit" disabled={savingAdminCode} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[var(--primary)] px-5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60">
               {savingAdminCode && <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />}
@@ -432,6 +425,7 @@ export function StaffProfileForm({
           </form>
         </section>
       )}
+      <UserErrorDialog message={avatarError ?? profileError ?? credentialError ?? adminCodeError} />
     </div>
   );
 }

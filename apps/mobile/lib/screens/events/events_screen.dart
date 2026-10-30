@@ -46,7 +46,9 @@ class _EventsScreenState extends State<EventsScreen> {
               children: [
                 const _EventsHeader(),
                 const SizedBox(height: 16),
-                StudentErrorBanner(message: '${snapshot.error}'),
+                const StudentErrorBanner(
+                  message: "We couldn't load events. Pull down to try again.",
+                ),
               ],
             );
           }
@@ -80,11 +82,14 @@ class _EventsScreenState extends State<EventsScreen> {
                   onSelectionChanged: (s) => setState(() => _calendarView = s.first),
                 ),
                 const SizedBox(height: 12),
-                _MonthCalendar(
-                  month: _month,
-                  events: events,
-                  onMonthChanged: (m) => setState(() => _month = m),
-                  onEventTap: () => context.push('/attendance/scan'),
+                StudentCard(
+                  padding: const EdgeInsets.all(8),
+                  child: _MonthCalendar(
+                    month: _month,
+                    events: events,
+                    onMonthChanged: (m) => setState(() => _month = m),
+                    onEventTap: () => context.push('/attendance/scan'),
+                  ),
                 ),
               ],
             );
@@ -147,7 +152,7 @@ class _EventTile extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
               color: colors.primaryContainer,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               TablerIcons.calendarEvent,
@@ -278,10 +283,50 @@ class _MonthCalendar extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            IconButton(onPressed: () => onMonthChanged(DateTime(month.year, month.month - 1)), icon: const Icon(TablerIcons.chevronLeft)),
-            Text(DateFormat('MMMM yyyy').format(month), style: Theme.of(context).textTheme.titleMedium),
-            IconButton(onPressed: () => onMonthChanged(DateTime(month.year, month.month + 1)), icon: const Icon(TablerIcons.chevronRight)),
+            IconButton(
+              tooltip: 'Previous month',
+              onPressed: () =>
+                  onMonthChanged(DateTime(month.year, month.month - 1)),
+              icon: const Icon(TablerIcons.chevronLeft),
+            ),
+            Text(
+              DateFormat('MMMM yyyy').format(month),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            IconButton(
+              tooltip: 'Next month',
+              onPressed: () =>
+                  onMonthChanged(DateTime(month.year, month.month + 1)),
+              icon: const Icon(TablerIcons.chevronRight),
+            ),
           ],
+        ),
+        Row(
+          children: const [
+            ('Sun', 'Sunday'),
+            ('Mon', 'Monday'),
+            ('Tue', 'Tuesday'),
+            ('Wed', 'Wednesday'),
+            ('Thu', 'Thursday'),
+            ('Fri', 'Friday'),
+            ('Sat', 'Saturday'),
+          ]
+              .map(
+                (day) => Expanded(
+                  child: Semantics(
+                    label: day.$2,
+                    child: ExcludeSemantics(
+                      child: Center(
+                        child: Text(
+                          day.$1,
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              )
+              .toList(),
         ),
         GridView.builder(
           shrinkWrap: true,
@@ -296,11 +341,19 @@ class _MonthCalendar extends StatelessWidget {
             final dayEvents = eventsByDay[dayNum] ?? [];
             final isToday = dayNum == DateTime.now().day && month.year == DateTime.now().year && month.month == DateTime.now().month;
 
-            return InkWell(
+            final dayLabel = DateFormat(
+              'EEEE, MMMM d',
+            ).format(DateTime(month.year, month.month, dayNum));
+            final dayContent = InkWell(
               onTap: dayEvents.isNotEmpty ? onEventTap : null,
+              borderRadius: BorderRadius.circular(8),
               child: Container(
+                constraints: const BoxConstraints(minHeight: 44),
                 margin: const EdgeInsets.all(2),
                 decoration: BoxDecoration(
+                  color: isToday
+                      ? Theme.of(context).colorScheme.primaryContainer
+                      : null,
                   border: Border.all(
                     color: isToday
                         ? Theme.of(context).colorScheme.primary
@@ -312,19 +365,37 @@ class _MonthCalendar extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('$dayNum', style: TextStyle(fontWeight: isToday ? FontWeight.bold : FontWeight.normal, fontSize: 12)),
+                    Text(
+                      '$dayNum',
+                      style: TextStyle(
+                        fontWeight: isToday
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        fontSize: 12,
+                      ),
+                    ),
                     if (dayEvents.isNotEmpty)
                       Expanded(
                         child: Text(
                           dayEvents.first.title,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 9, color: Theme.of(context).colorScheme.primary),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                         ),
                       ),
                   ],
                 ),
               ),
+            );
+            return Semantics(
+              button: dayEvents.isNotEmpty,
+              label: dayEvents.isEmpty
+                  ? dayLabel
+                  : '$dayLabel, ${dayEvents.length} event${dayEvents.length == 1 ? '' : 's'}',
+              child: dayContent,
             );
           },
         ),

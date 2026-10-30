@@ -161,12 +161,25 @@ class StudentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final radius = BorderRadius.circular(16);
     final card = Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Theme.of(context).colorScheme.outline),
+        color: theme.colorScheme.surface,
+        borderRadius: radius,
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.45),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.brightness == Brightness.dark
+                ? const Color(0x26000000)
+                : const Color(0x102D4036),
+            offset: const Offset(0, 2),
+            blurRadius: 10,
+          ),
+        ],
       ),
       child: Padding(padding: padding, child: child),
     );
@@ -174,11 +187,7 @@ class StudentCard extends StatelessWidget {
     if (onTap == null) return card;
     return Material(
       color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: card,
-      ),
+      child: InkWell(onTap: onTap, borderRadius: radius, child: card),
     );
   }
 }
@@ -226,7 +235,7 @@ class StudentErrorBanner extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: colors.errorContainer,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: colors.error.withValues(alpha: 0.35)),
       ),
       child: Text(
@@ -266,7 +275,7 @@ class StudentInfoBanner extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: border),
       ),
       child: Row(
@@ -322,11 +331,11 @@ class StudentTealCallout extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(12),
         child: Ink(
           decoration: BoxDecoration(
             color: colors.primaryContainer,
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(color: colors.outline),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

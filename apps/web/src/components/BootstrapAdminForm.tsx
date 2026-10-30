@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { formPlaceholders } from "@/lib/form-placeholders";
 import { useAsyncAction } from "@/lib/useAsyncAction";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 export function BootstrapAdminForm() {
   const run = useAsyncAction();
@@ -115,7 +116,7 @@ export function BootstrapAdminForm() {
         />
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      <UserErrorDialog message={error} />
 
       <button
         type="submit"

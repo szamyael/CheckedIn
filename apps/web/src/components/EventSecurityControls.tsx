@@ -5,6 +5,7 @@ import { KeyRound, LoaderCircle, RotateCw } from "@/lib/icons";
 import { createClient } from "@/lib/supabase/client";
 import { EventQrCode } from "@/components/EventQrCode";
 import type { Event } from "@/lib/types";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 interface EventSecurityControlsProps {
   event: Event;
@@ -269,11 +270,7 @@ export function EventSecurityControls({
           )}
         </div>
       </div>
-      {error && (
-        <p role="alert" className={`rounded-xl border px-4 py-3 text-sm ${stream ? "border-[color-mix(in_srgb,var(--error)_30%,transparent)] bg-[var(--surface-muted)] text-[var(--error)]" : "border-red-200 bg-red-50 text-red-800"}`}>
-          {error}
-        </p>
-      )}
+      <UserErrorDialog message={error} />
     </div>
   );
 }

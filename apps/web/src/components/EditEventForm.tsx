@@ -14,6 +14,7 @@ import { DEFAULT_MAP_CENTER } from "@/lib/campus-locations";
 import { AllowedYearLevelsInput } from "@/components/AllowedYearLevelsInput";
 import { formPlaceholders } from "@/lib/form-placeholders";
 import { useAsyncAction } from "@/lib/useAsyncAction";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 import {
   scheduleFieldsToIso,
   toLocalDatetimeInputValue,
@@ -208,7 +209,7 @@ export function EditEventForm({ event, restrictionsOnly = false }: { event: Even
         <option value="completed">Completed</option>
       </select></>}
       <AllowedYearLevelsInput value={allowedYearLevels} onChange={setAllowedYearLevels} compact />
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      <UserErrorDialog message={error} />
       <div className="flex gap-2">
         <button
           type="submit"

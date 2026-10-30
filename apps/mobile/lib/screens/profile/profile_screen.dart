@@ -235,10 +235,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: studentUi.actionBackground,
+                  color: theme.colorScheme.surface,
                   border: Border.all(
-                    color: studentUi.actionBackground,
+                    color: theme.colorScheme.outline.withValues(alpha: 0.45),
                   ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.brightness == Brightness.dark
+                          ? const Color(0x26000000)
+                          : const Color(0x102D4036),
+                      offset: const Offset(0, 2),
+                      blurRadius: 10,
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -308,7 +318,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   )
                                 : 'Student',
                             style: theme.textTheme.titleLarge?.copyWith(
-                              color: studentUi.actionForeground,
+                              color: theme.colorScheme.onSurface,
                             ),
                           ),
                         ),
@@ -318,45 +328,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 12),
                       Text(
                         'ID: ${student['student_id']}',
-                        style: TextStyle(color: studentUi.actionForeground),
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       Text(
                         'Program: ${student['program']}',
-                        style: TextStyle(color: studentUi.actionForeground),
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       if (student['year_level'] != null)
                         Text(
                           'Year Level: ${student['year_level']}',
-                          style: TextStyle(color: studentUi.actionForeground),
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       if (student['section'] != null)
                         Text(
                           'Section: ${student['section']}',
-                          style: TextStyle(color: studentUi.actionForeground),
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       if (student['reward_points'] != null)
                         Text(
                           '${student['reward_points']} reward points',
                           style: TextStyle(
-                            color: studentUi.actionForeground,
+                            color: theme.colorScheme.primary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       const SizedBox(height: 8),
                       Text(
                         '${data.attendanceCount} events attended',
-                        style: TextStyle(color: studentUi.actionForeground),
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       OutlinedButton(
                         onPressed: _editProfile,
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: studentUi.actionForeground,
-                          side: BorderSide(
-                            color: studentUi.actionForeground.withValues(
-                              alpha: 0.65,
-                            ),
-                          ),
+                          foregroundColor: theme.colorScheme.primary,
+                          side: BorderSide(color: theme.colorScheme.outline),
                         ),
                         child: const Text('Edit profile'),
                       ),
@@ -398,7 +414,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           border: Border.all(
                             color: StudentUi.of(context).border,
                           ),
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(20),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -619,7 +635,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             subtitle: Text(
                               h.isPending
                                   ? 'Pending sync • ${fmt.format(h.checkedInAt.toLocal())}'
-                                  : fmt.format(h.checkedInAt.toLocal()),
+                                  : 'Recorded • ${fmt.format(h.checkedInAt.toLocal())}',
                             ),
                             trailing: h.syncError != null
                                 ? Icon(

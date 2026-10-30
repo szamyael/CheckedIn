@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { Bell, CalendarDays, Home, LayoutGrid, QrCode, UserRound } from "@/lib/icons";
-import { BrandMark } from "@/components/BrandLogo";
+import { BrandLogo, BrandMark } from "@/components/BrandLogo";
 import { ThemePanelButton } from "@/components/ThemePanelButton";
 import { NotificationPopup, type NotificationPopupItem } from "@/components/NotificationPopup";
 import { NotificationSoundToggle } from "@/components/NotificationSoundToggle";
@@ -63,11 +63,13 @@ export function StudentShell({
         />
         <aside className="student-sidebar sticky top-0 hidden h-dvh w-[17rem] shrink-0 flex-col border-r lg:flex">
           <div className="border-b px-7 py-7">
-            <BrandMark size={42} />
-            <p className="mt-8 font-serif text-2xl tracking-tight text-[var(--text-strong)]">
-              On campus
+            <BrandLogo className="h-10 w-auto max-w-[190px]" priority />
+            <p className="mt-7 text-xl font-semibold tracking-tight text-[var(--text-strong)]">
+              Student portal
             </p>
-            <p className="mt-1 text-xs text-[var(--muted)]">Your day, in one place.</p>
+            <p className="mt-1 text-xs text-[var(--muted)]">
+              Attendance, events, and your profile.
+            </p>
           </div>
           <nav className="flex-1 space-y-1 px-4 py-6" aria-label="Student navigation">
             {tabs.map(({ href, label, icon: Icon, exact }) => {
@@ -104,8 +106,8 @@ export function StudentShell({
             <div className="flex items-center gap-3">
               <span className="lg:hidden"><BrandMark size={36} /></span>
               <div className="hidden sm:block">
-                <p className="font-serif text-lg leading-none tracking-tight text-[var(--primary-strong)]">CheckedIn</p>
-                <p className="mt-1 text-[11px] text-[var(--muted)]">Campus, in motion.</p>
+                <p className="text-lg font-semibold leading-none tracking-tight text-[var(--primary-strong)]">CheckedIn</p>
+                <p className="mt-1 text-[11px] text-[var(--muted)]">Student portal</p>
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-1 sm:gap-2">

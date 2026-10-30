@@ -6,6 +6,7 @@ import { CircleCheck, CircleX, Search } from "@/lib/icons";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import { filterMembershipReport } from "@/lib/org-membership";
 import { ExportReportButtons } from "@/components/ExportReportButtons";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 type StudentMembership = {
   id: string;
@@ -150,8 +151,7 @@ export function OrganizationMembershipPanel({
         <button type="button" disabled={pending || unpaidIds.length === 0} onClick={() => void update("mark_paid", unpaidIds)} aria-label={`Mark all as paid (${unpaidIds.length})`} title="Mark all as paid" className="inline-flex min-h-10 items-center justify-center rounded-xl border border-green-600 px-3 text-green-800 hover:bg-green-50 disabled:cursor-not-allowed disabled:opacity-50"><CircleCheck size={20} aria-hidden="true" /></button>
         <button type="button" disabled={pending || paidIds.length === 0} onClick={() => void update("mark_unpaid", paidIds)} aria-label={`Mark all as unpaid (${paidIds.length})`} title="Mark all as unpaid" className="inline-flex min-h-10 items-center justify-center rounded-xl border border-amber-600 px-3 text-amber-800 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-50"><CircleX size={20} aria-hidden="true" /></button>
       </div>
-      {loadError && <p role="alert" className="text-sm text-red-700">{loadError}</p>}
-      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
+      <UserErrorDialog message={loadError ?? error} />
       <div className="table-scroll overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-[var(--border)] bg-[var(--surface-muted)]"><tr>{["Student", "Program/Course", "Year", "Section", "Paid", "Account"].map((heading) => <th key={heading} className="px-4 py-3 font-semibold">{heading}</th>)}</tr></thead>

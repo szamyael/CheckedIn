@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAsyncAction } from "@/lib/useAsyncAction";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 interface Settings {
   otp_expiry_seconds: number;
@@ -17,6 +18,7 @@ export function SystemSettingsForm() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -32,6 +34,7 @@ export function SystemSettingsForm() {
     e.preventDefault();
     if (!settings) return;
     setMessage(null);
+    setError(null);
 
     try {
       await run("Saving settings…", async () => {
@@ -52,12 +55,12 @@ export function SystemSettingsForm() {
         setMessage("Settings saved.");
       });
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : "Failed to save settings");
+      setError(err instanceof Error ? err.message : "Could not save settings. Try again.");
     }
   }
 
   if (loading) return <p className="text-sm text-slate-600">Loading settings…</p>;
-  if (!settings) return <p className="text-sm text-red-600">Could not load settings.</p>;
+  if (!settings) return <UserErrorDialog message="We couldn't load system settings. Refresh the page and try again." />;
 
   return (
     <form onSubmit={save} className="max-w-xl space-y-4 rounded-xl border border-slate-200 bg-white p-6">
@@ -123,7 +126,8 @@ export function SystemSettingsForm() {
         Require OTP for new events by default
       </label>
 
-      {message && <p className="text-sm text-slate-700">{message}</p>}
+      {message && <p role="status" className="text-sm text-slate-700">{message}</p>}
+      <UserErrorDialog message={error} onClose={() => setError(null)} />
 
       <button
         type="submit"

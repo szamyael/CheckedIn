@@ -12,10 +12,10 @@ export function DashboardPageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <header className="dashboard-page-header relative flex flex-col justify-between gap-5 overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-soft)] sm:flex-row sm:items-end sm:p-7 lg:p-8">
-      <div className="relative z-10 min-w-0 max-w-[68%]">
-        <p className="text-[10px] font-bold tracking-[0.18em] text-[var(--primary)]">{eyebrow}</p>
-        <h1 className="mt-2 break-words text-2xl font-semibold tracking-[-0.035em] text-[var(--primary-strong)] sm:text-3xl">{title}</h1>
+    <header className="dashboard-page-header flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+      <div className="min-w-0">
+        <p className="text-xs font-semibold tracking-[0.08em] text-[var(--primary)]">{eyebrow}</p>
+        <h1 className="mt-2 break-words text-2xl font-semibold tracking-tight text-[var(--foreground)] sm:text-[26px]">{title}</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">{description}</p>
       </div>
       {actions && <div className="relative z-10 w-full shrink-0 sm:w-auto">{actions}</div>}
@@ -25,9 +25,9 @@ export function DashboardPageHeader({
 
 export function DashboardStat({ label, value, detail }: { label: string; value: string | number; detail: string }) {
   return (
-    <section className="dashboard-stat-card min-w-0 border border-[var(--border)] bg-[var(--surface)] p-4 transition-shadow hover:shadow-[var(--shadow-soft)] sm:p-5">
-      <p className="text-[10px] font-bold tracking-[0.12em] text-[var(--muted)] sm:text-[11px]">{label.toUpperCase()}</p>
-      <p className="mt-3 break-words text-3xl font-semibold tracking-tight text-[var(--primary-strong)] sm:text-4xl">{value}</p>
+    <section className="dashboard-stat-card min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 transition-shadow sm:p-5">
+      <p className="text-xs font-medium text-[var(--muted)]">{label}</p>
+      <p className="mt-3 break-words text-3xl font-semibold tabular-nums tracking-tight text-[var(--foreground)]">{value}</p>
       <p className="mt-2 text-xs text-[var(--muted)]">{detail}</p>
     </section>
   );
@@ -37,7 +37,7 @@ export function DashboardSection({ title, description, children }: { title: stri
   return (
     <section className="dashboard-section min-w-0 space-y-4">
       <div className="space-y-1">
-        <h2 className="text-lg font-semibold text-[var(--primary-strong)]">{title}</h2>
+        <h2 className="text-lg font-semibold text-[var(--foreground)]">{title}</h2>
         {description && <p className="mt-1 text-sm text-[var(--muted)]">{description}</p>}
       </div>
       {children}

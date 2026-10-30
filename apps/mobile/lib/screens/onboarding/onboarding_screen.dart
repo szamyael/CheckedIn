@@ -152,7 +152,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final lastPageIndex = _pages.length + 1;
     if (_page < lastPageIndex) {
       _pageController.nextPage(
-        duration: const Duration(milliseconds: 280),
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 280),
         curve: Curves.easeOut,
       );
       return;
@@ -165,6 +167,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final totalPages = _pages.length + 2;
     final isPermissionPage = _page == _pages.length;
     final isTermsPage = _page == _pages.length + 1;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
 
     return Scaffold(
       body: SafeArea(
@@ -210,7 +213,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 borderRadius: BorderRadius.circular(99),
                 child: TweenAnimationBuilder<double>(
                   tween: Tween(begin: 0, end: (_page + 1) / totalPages),
-                  duration: const Duration(milliseconds: 260),
+                  duration: reduceMotion
+                      ? Duration.zero
+                      : const Duration(milliseconds: 260),
                   curve: Curves.easeOutCubic,
                   builder: (context, value, _) => LinearProgressIndicator(
                     value: value,
@@ -276,7 +281,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     children: List.generate(
                       totalPages,
                       (i) => AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
+                        duration: reduceMotion
+                            ? Duration.zero
+                            : const Duration(milliseconds: 200),
                         margin: const EdgeInsets.symmetric(horizontal: 4),
                         width: i == _page ? 22 : 8,
                         height: 8,
@@ -327,7 +334,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     TextButton(
                       onPressed: () {
                         _pageController.previousPage(
-                          duration: const Duration(milliseconds: 280),
+                          duration: reduceMotion
+                              ? Duration.zero
+                              : const Duration(milliseconds: 280),
                           curve: Curves.easeOut,
                         );
                       },
@@ -365,6 +374,7 @@ class _WalkthroughPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
       child: Column(
@@ -372,8 +382,10 @@ class _WalkthroughPage extends StatelessWidget {
         children: [
           TweenAnimationBuilder<double>(
             tween: Tween(begin: 0.88, end: 1),
-            duration: const Duration(milliseconds: 420),
-            curve: Curves.easeOutBack,
+            duration: reduceMotion
+                ? Duration.zero
+                : const Duration(milliseconds: 420),
+            curve: reduceMotion ? Curves.linear : Curves.easeOutCubic,
             builder: (context, value, child) =>
                 Transform.scale(scale: value, child: child),
             child: Container(

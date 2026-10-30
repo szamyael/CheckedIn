@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { withApiLogging } from "@/lib/api-monitor";
 
-export async function PATCH(request: Request) {
+async function moderateOrganization(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -30,3 +31,9 @@ export async function PATCH(request: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ success: true });
 }
+
+export const PATCH = withApiLogging(
+  "PATCH",
+  "/api/admin/organizations/moderation",
+  moderateOrganization,
+);

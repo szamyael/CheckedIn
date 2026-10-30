@@ -15,6 +15,7 @@ import {
   type OrgBadgeAwardRule,
 } from "@/lib/org-badges";
 import { createClient } from "@/lib/supabase/client";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 type BadgeFilter = "all" | OrgBadgeStatus;
 
@@ -317,9 +318,7 @@ export function OrgBadgesPanel({
         ))}
       </div>
 
-      {error && (
-        <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
-      )}
+      <UserErrorDialog message={error} />
 
       {creating && (
         <div className="space-y-4 rounded-2xl border border-[var(--primary)]/25 bg-[var(--primary-soft)]/45 p-4 sm:p-5">
@@ -574,7 +573,7 @@ export function OrgBadgesPanel({
                         <div className="mt-3 flex justify-end"><button type="button" onClick={() => void rewardBadge(badge)} disabled={!rewardStudentId} className="rounded-lg bg-teal-600 px-3 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50">Reward selected student</button></div>
                       </div>
                     )}
-                    {studentsLoadError && <p className="basis-full text-xs text-red-600">Could not load eligible students: {studentsLoadError}</p>}
+                    <UserErrorDialog message={studentsLoadError ? `Could not load eligible students: ${studentsLoadError}` : null} />
                   </div>
                 )}
               </li>

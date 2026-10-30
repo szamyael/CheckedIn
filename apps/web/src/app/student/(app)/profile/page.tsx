@@ -6,6 +6,7 @@ import { Award, CalendarDays, Camera, ChevronRight, Pencil } from "@/lib/icons";
 import { format, parseISO } from "date-fns";
 import { formatStudentDisplayName } from "@/lib/student/display-name";
 import { createClient } from "@/lib/supabase/client";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 import {
   StudentEmptyState,
 } from "@/components/student/StudentUi";
@@ -199,7 +200,7 @@ export default function StudentProfilePage() {
   }
 
   if (loadError) {
-    return <p role="alert" className="text-sm text-[var(--error)]">Could not load profile: {loadError}</p>;
+    return <UserErrorDialog message={`Could not load profile: ${loadError}`} />;
   }
 
   if (!profile) {
@@ -261,7 +262,7 @@ export default function StudentProfilePage() {
             {profile.reward_points} points
           </span>
         </div>
-        {borderError && <p role="alert" className="mt-3 text-sm text-[var(--error)]">{borderError}</p>}
+        <UserErrorDialog message={borderError} />
         <ul className="mt-4 grid gap-3 sm:grid-cols-2">
           {PROFILE_BORDERS.map((border) => {
             const owned = ownedBorders.includes(border.id);

@@ -140,7 +140,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ),
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(11),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -182,11 +182,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               key: const Key('forgot-password-camera-preview'),
               aspectRatio: 3 / 4,
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(20),
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    const ColoredBox(color: Color(0xFF14283E)),
+                    ColoredBox(
+                      color: StudentUi.of(context).actionBackground,
+                    ),
                     if (_cameraReady && _controller != null)
                       _idCardImage != null
                           ? Image.file(_idCardImage!, fit: BoxFit.contain)
@@ -227,7 +229,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                     color: Colors.white.withValues(alpha: 0.9),
                                     width: 2,
                                   ),
-                                  borderRadius: BorderRadius.circular(14),
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
                               ),
                             ),
@@ -346,7 +348,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.62),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(11),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

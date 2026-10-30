@@ -31,7 +31,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Future<void> _markAllRead() async {
     await _service.markAllRead();
-    setState(() => _future = _service.fetchNotifications());
+    if (mounted) setState(() => _future = _service.fetchNotifications());
   }
 
   @override
@@ -56,6 +56,24 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         child: FutureBuilder<List<AppNotification>>(
           future: _future,
           builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
+                  const StudentErrorBanner(
+                    message:
+                        "We couldn't load notifications. Pull down to try again.",
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () =>
+                        setState(() => _future = _service.fetchNotifications()),
+                    icon: const Icon(TablerIcons.refresh),
+                    label: const Text('Try again'),
+                  ),
+                ],
+              );
+            }
             if (!snapshot.hasData) {
               return const Center(child: CircularProgressIndicator());
             }
@@ -79,7 +97,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               itemBuilder: (context, index) {
                 final n = items[index];
                 return StudentCard(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   onTap: () async {
                     if (n.isUnread) {
                       await _service.markRead(n.id);
@@ -155,6 +176,34 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                               style: TextStyle(
                                 fontWeight:
                                     n.isUnread ? FontWeight.w600 : FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Semantics(
+                            label: n.isUnread
+                                ? 'Unread notification'
+                                : 'Read notification',
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: n.isUnread
+                                    ? StudentUi.of(context).accentSoft
+                                    : StudentUi.of(context).neutralBackground,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                n.isUnread ? 'New' : 'Read',
+                                style: TextStyle(
+                                  color: n.isUnread
+                                      ? StudentUi.of(context).accentText
+                                      : StudentUi.of(context).muted,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ),

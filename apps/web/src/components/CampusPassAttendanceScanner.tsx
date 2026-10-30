@@ -10,6 +10,7 @@ import {
   parseCampusPassScanResult,
 } from "@/lib/campus-pass.mjs";
 import { createClient } from "@/lib/supabase/client";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 type CheckInEvent = {
   id: string;
@@ -348,7 +349,7 @@ export function CampusPassAttendanceScanner({ events }: { events: CheckInEvent[]
           </div>
         </div>
 
-        {error && <p role="alert" className="mt-5 border border-[var(--error)]/30 bg-[var(--error)]/5 p-3 text-sm text-[var(--error)]">{error}</p>}
+        <UserErrorDialog message={error} />
         {scanResults.map((result, index) => (
           <div key={`${result.student.student_id}-${result.scannedAt}-${index}`} className="mt-5 space-y-2 border-t border-[var(--border)] pt-4 text-sm">
             <div className="flex flex-wrap items-start justify-between gap-2">

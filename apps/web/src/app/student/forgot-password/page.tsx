@@ -13,6 +13,7 @@ import {
   normalizeStudentId,
 } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 async function fileToBase64(file: File): Promise<string> {
   const buffer = await file.arrayBuffer();
@@ -112,7 +113,7 @@ function ForgotPasswordForm() {
             </p>
           )}
         </div>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        <UserErrorDialog message={error} />
         <button
           type="submit"
           className="w-full rounded-xl bg-teal-600 py-3 text-sm font-semibold text-white"

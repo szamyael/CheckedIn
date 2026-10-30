@@ -6,6 +6,7 @@ import { formPlaceholders } from "@/lib/form-placeholders";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import { createClient } from "@/lib/supabase/client";
 import { PasswordRequirements, passwordRules } from "@/components/PasswordRequirements";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -83,11 +84,7 @@ export default function ResetPasswordPage() {
             />
           </div>
 
-          {error && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
-              {error}
-            </p>
-          )}
+          <UserErrorDialog message={error} />
 
           <button
             type="submit"

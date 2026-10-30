@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BrandMark } from "@/components/BrandLogo";
@@ -28,12 +28,16 @@ import { formPlaceholders } from "@/lib/form-placeholders";
 import { isStudentTermsAccepted } from "@/lib/student/terms";
 import { canonicalProgramName } from "@/lib/program-name";
 import { PasswordRequirements, passwordRules } from "@/components/PasswordRequirements";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
+
+const ADD_NEW_PROGRAM = "__add_new_program__";
 
 export default function StudentRegisterPage() {
   const router = useRouter();
   const { showLoader, hideLoader } = useLoader();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [submitting, setSubmitting] = useState(false);
+  const [registrationComplete, setRegistrationComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState<RegistrationDraft>(emptyRegistrationDraft);
   const [password, setPassword] = useState("");
@@ -42,9 +46,38 @@ export default function StudentRegisterPage() {
   const [decisionReason, setDecisionReason] = useState<string | null>(null);
   const [scanningId, setScanningId] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [programOptions, setProgramOptions] = useState<string[]>([]);
+  const [programOptionsError, setProgramOptionsError] = useState(false);
+  const [addingNewProgram, setAddingNewProgram] = useState(false);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
-  const errorRef = useRef<HTMLParagraphElement>(null);
+
+  const availablePrograms = useMemo(() => {
+    const currentProgram = draft.program.trim();
+    if (!currentProgram || programOptions.includes(currentProgram)) return programOptions;
+    return [...programOptions, currentProgram].sort((a, b) => a.localeCompare(b));
+  }, [draft.program, programOptions]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetch("/api/student-programs", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Could not load course/program options.");
+        return response.json() as Promise<{ programs?: unknown }>;
+      })
+      .then((result) => {
+        if (cancelled) return;
+        setProgramOptions(Array.isArray(result.programs)
+          ? result.programs.filter((program): program is string => typeof program === "string")
+          : []);
+      })
+      .catch(() => {
+        if (!cancelled) setProgramOptionsError(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const saved = loadRegistrationDraft();
@@ -141,12 +174,6 @@ export default function StudentRegisterPage() {
     saveRegistrationDraft(draft, step);
   }, [draft, step, hydrated]);
 
-  useEffect(() => {
-    if (error) {
-      errorRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }
-  }, [error]);
-
   async function onIdFile(file: File | null) {
     if (!file) return;
     setError(null);
@@ -208,6 +235,7 @@ export default function StudentRegisterPage() {
         idCardVerified: true,
       };
       setDraft(nextDraft);
+      setAddingNewProgram(false);
       saveRegistrationDraft(nextDraft, 2);
       setStep(2);
     } catch (err) {
@@ -324,9 +352,7 @@ export default function StudentRegisterPage() {
         }
 
         clearRegistrationDraft();
-        router.replace(
-          `/student/verify-email?email=${encodeURIComponent(email)}`,
-        );
+        setRegistrationComplete(true);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
@@ -338,14 +364,15 @@ export default function StudentRegisterPage() {
 
   if (!hydrated) {
     return (
-      <div className="auth-theme flex min-h-dvh items-center justify-center bg-white">
-        <div className="h-9 w-9 animate-spin rounded-full border-[3px] border-teal-500/30 border-t-teal-500" />
-      </div>
+      <main className="auth-theme flex min-h-dvh items-center justify-center bg-[var(--background)]">
+        <div className="h-9 w-9 animate-spin rounded-full border-[3px] border-[var(--primary-soft)] border-t-[var(--primary)]" />
+      </main>
     );
   }
 
   return (
-    <div className="auth-theme mx-auto flex min-h-dvh w-full max-w-md flex-col bg-white px-6 py-8">
+    <main className="auth-theme min-h-dvh bg-[var(--background)] px-4 py-8 text-[var(--foreground)] sm:px-6 sm:py-12">
+      <div className="mx-auto flex w-full max-w-md flex-col rounded-3xl border border-[var(--border)] bg-[var(--surface)] px-5 py-7 shadow-[var(--shadow-card)] sm:px-8 sm:py-8">
       <div className="mb-6 flex justify-center">
         <BrandMark size={72} />
       </div>
@@ -506,13 +533,40 @@ export default function StudentRegisterPage() {
             onChange={(v) => setDraft((d) => ({ ...d, nameExtension: v }))}
             placeholder={formPlaceholders.nameExtension}
           />
-          <Field
-            label="Program"
-            value={draft.program}
-            onChange={(v) => setDraft((d) => ({ ...d, program: v }))}
-            required
-            placeholder={formPlaceholders.program}
-          />
+          <div>
+            <label htmlFor="student-program" className="mb-1 block text-sm font-medium">Course/program</label>
+            <select
+              id="student-program"
+              required={!addingNewProgram}
+              value={addingNewProgram ? ADD_NEW_PROGRAM : draft.program}
+              onChange={(event) => {
+                if (event.target.value === ADD_NEW_PROGRAM) {
+                  setAddingNewProgram(true);
+                  setDraft((current) => ({ ...current, program: "" }));
+                  return;
+                }
+                setAddingNewProgram(false);
+                setDraft((current) => ({ ...current, program: event.target.value }));
+              }}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm"
+            >
+              <option value="" disabled>Select a course/program</option>
+              {availablePrograms.map((program) => <option key={program} value={program}>{program}</option>)}
+              <option value={ADD_NEW_PROGRAM}>Add a new course/program...</option>
+            </select>
+            {addingNewProgram && (
+              <div className="mt-3">
+                <Field
+                  label="New course/program"
+                  value={draft.program}
+                  onChange={(value) => setDraft((current) => ({ ...current, program: value }))}
+                  required
+                  placeholder={formPlaceholders.program}
+                />
+              </div>
+            )}
+            {programOptionsError && <p className="mt-1 text-xs text-amber-700">Existing options could not be loaded. You can still use the scanned value or add a new course/program.</p>}
+          </div>
           {draft.program.trim() &&
             canonicalProgramName(draft.program) !== draft.program.trim() && (
               <p className="-mt-2 text-xs text-slate-500">
@@ -614,13 +668,47 @@ export default function StudentRegisterPage() {
         </form>
       )}
 
-      {error && (
-        <p
-          ref={errorRef}
-          className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600"
+      <UserErrorDialog message={error} />
+
+      {registrationComplete && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="registration-complete-title"
+          aria-describedby="registration-complete-description"
+          className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/60 p-4"
         >
-          {error}
-        </p>
+          <section className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 text-[var(--foreground)] shadow-2xl">
+            <p className="text-xs font-semibold tracking-[0.14em] text-[var(--primary)]">
+              REGISTRATION SUBMITTED
+            </p>
+            <h2
+              id="registration-complete-title"
+              className="mt-2 text-xl font-semibold text-[var(--text-strong)]"
+            >
+              Registration complete
+            </h2>
+            <p
+              id="registration-complete-description"
+              className="mt-3 text-sm leading-6 text-[var(--foreground)]"
+            >
+              Your account is under review. Verify your email to finish setting
+              up your account.
+            </p>
+            <button
+              type="button"
+              autoFocus
+              onClick={() =>
+                router.replace(
+                  `/student/verify-email?email=${encodeURIComponent(draft.email.trim().toLowerCase())}`,
+                )
+              }
+              className="mt-5 min-h-11 w-full rounded-lg bg-[var(--action-background)] px-4 py-2.5 text-sm font-semibold text-[var(--action-foreground)] hover:brightness-95"
+            >
+              Continue to email verification
+            </button>
+          </section>
+        </div>
       )}
 
       <Link
@@ -629,7 +717,8 @@ export default function StudentRegisterPage() {
       >
         Already have an account? Sign in
       </Link>
-    </div>
+      </div>
+    </main>
   );
 }
 

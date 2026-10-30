@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { withApiLogging } from "@/lib/api-monitor";
 
 type NominatimHit = {
   lat: string;
@@ -13,7 +14,7 @@ type NominatimHit = {
  * Nominatim often blocks browser requests (CORS / missing User-Agent);
  * this route searches from the Next.js server with a proper identity.
  */
-export async function GET(request: Request) {
+async function searchPlaces(request: Request) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.trim() ?? "";
   const limit = Math.min(Number(searchParams.get("limit") ?? "8") || 8, 12);
@@ -92,3 +93,5 @@ export async function GET(request: Request) {
     );
   }
 }
+
+export const GET = withApiLogging("GET", "/api/places/search", searchPlaces);

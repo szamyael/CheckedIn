@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { format } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { formatDeviceCaptureTimestamp } from "@/lib/device-capture-timestamp";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 type ReviewStatus = "checked_in" | "late";
 
@@ -38,6 +39,7 @@ export function OfflineAttendanceReviewPanel({ eventId }: { eventId: string }) {
   const [items, setItems] = useState<ViewSubmission[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [schemaUnavailable, setSchemaUnavailable] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [draft, setDraft] = useState<ReviewDraft | null>(null);
@@ -56,11 +58,7 @@ export function OfflineAttendanceReviewPanel({ eventId }: { eventId: string }) {
       const missingTable = error.message.includes("offline_attendance_submissions") &&
         (error.message.includes("schema cache") || error.code === "PGRST205");
       setSchemaUnavailable(missingTable);
-      setMessage(
-        missingTable
-          ? "Offline attendance review is not set up in this Supabase project. Apply migration 038_offline_attendance_review.sql, then refresh this page."
-          : error.message,
-      );
+      setMessage(null);
       return;
     }
     setLoadError(false);
@@ -106,13 +104,14 @@ export function OfflineAttendanceReviewPanel({ eventId }: { eventId: string }) {
     const { item, approve, note, markLate } = draft;
     const trimmedNote = note.trim();
     if (!approve && !trimmedNote) {
-      setMessage("A reason is required when disapproving offline attendance.");
+      setActionError("Enter a reason before disapproving offline attendance.");
       return;
     }
     const status: ReviewStatus = item.action === "check_in" && markLate ? "late" : "checked_in";
 
     setBusyId(item.id);
     setMessage(null);
+    setActionError(null);
     const supabase = createClient();
     const { error } = await supabase.rpc("review_offline_attendance_submission", {
       p_submission_id: item.id,
@@ -122,7 +121,7 @@ export function OfflineAttendanceReviewPanel({ eventId }: { eventId: string }) {
     });
     setBusyId(null);
     if (error) {
-      setMessage(error.message);
+      setActionError("We couldn't update the offline attendance review. Try again.");
       return;
     }
     setMessage(approve ? "Offline attendance approved." : "Offline attendance disapproved.");
@@ -156,15 +155,9 @@ export function OfflineAttendanceReviewPanel({ eventId }: { eventId: string }) {
       {message && <p className="mt-3 text-sm text-slate-700" role="status">{message}</p>}
 
       {schemaUnavailable ? (
-        <div className="mt-4 border border-amber-300 bg-white p-4 text-sm text-slate-700" role="alert">
-          <p className="font-semibold text-slate-900">Offline review needs a database update</p>
-          <p className="mt-1">Run <code className="font-mono text-xs">cd backend &amp;&amp; supabase db push</code> against the linked project to create the review table.</p>
-        </div>
+        <UserErrorDialog message="Offline attendance review isn't available yet. Contact your system administrator." />
       ) : loadError ? (
-        <div className="mt-4 border border-rose-200 bg-white p-4 text-sm text-slate-700" role="alert">
-          <p className="font-semibold text-slate-900">Offline review could not be loaded</p>
-          <p className="mt-1">Refresh the page to retry. If the issue remains, verify staff access to the offline attendance review table.</p>
-        </div>
+        <UserErrorDialog message="Offline attendance could not be loaded. Refresh the page and try again." />
       ) : items.length === 0 ? (
         <p className="mt-4 text-sm text-slate-600">No offline attendance is awaiting review.</p>
       ) : (
@@ -205,6 +198,8 @@ export function OfflineAttendanceReviewPanel({ eventId }: { eventId: string }) {
           ))}
         </div>
       )}
+
+      <UserErrorDialog message={actionError} onClose={() => setActionError(null)} />
 
       {selfieToView?.selfieSignedUrl && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 p-4" role="dialog" aria-modal="true" aria-labelledby="offline-selfie-title" onClick={() => setSelfieToView(null)}>

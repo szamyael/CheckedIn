@@ -20,6 +20,7 @@ import {
 import { fetchBingoCardEvents, type BingoCardEvent } from "@/lib/org-events";
 import type { OrgBadgeRow } from "@/lib/org-badges";
 import { createClient } from "@/lib/supabase/client";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 type BingoCell = {
   id: string;
@@ -562,9 +563,7 @@ export function OrgBingoManager({ organizationId }: { organizationId: string }) 
         ))}
       </div>
 
-      {error && (
-        <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
-      )}
+      <UserErrorDialog message={error} />
 
       <div className="grid items-start gap-5 2xl:grid-cols-[minmax(260px,0.78fr)_minmax(0,1.65fr)]">
         <section className="min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-soft)] sm:p-6">

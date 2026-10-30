@@ -5,6 +5,7 @@ import Link from "next/link";
 import { formPlaceholders } from "@/lib/form-placeholders";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import { createClient } from "@/lib/supabase/client";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 export default function ForgotPasswordPage() {
   const run = useAsyncAction();
@@ -62,11 +63,7 @@ export default function ForgotPasswordPage() {
             />
           </div>
 
-          {error && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
-              {error}
-            </p>
-          )}
+          <UserErrorDialog message={error} />
           {message && (
             <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">
               {message}

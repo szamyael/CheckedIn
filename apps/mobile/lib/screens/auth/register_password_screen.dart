@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../models/registration_draft.dart';
 import '../../services/auth_service.dart';
+import '../../widgets/student_account_status_dialog.dart';
 import '../../widgets/student_ui.dart';
 import '../../widgets/universal_loader.dart';
 import '../../widgets/password_requirements.dart';
@@ -42,16 +43,18 @@ class _RegisterPasswordScreenState extends State<RegisterPasswordScreen> {
     if (!widget.draft.isResubmission &&
         !_passwordMeetsRequirements(_passwordController.text)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password must be at least 8 characters.')),
+        const SnackBar(
+          content: Text('Password must be at least 8 characters.'),
+        ),
       );
       return;
     }
 
     if (!widget.draft.isResubmission &&
         _passwordController.text != _confirmController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Passwords do not match.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Passwords do not match.')));
       return;
     }
 
@@ -59,7 +62,9 @@ class _RegisterPasswordScreenState extends State<RegisterPasswordScreen> {
     if (idPath == null || idPath.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('ID card photo missing. Restart registration and scan again.'),
+          content: Text(
+            'ID card photo missing. Restart registration and scan again.',
+          ),
         ),
       );
       return;
@@ -67,7 +72,9 @@ class _RegisterPasswordScreenState extends State<RegisterPasswordScreen> {
 
     setState(() => _loading = true);
     UniversalLoaderController.instance.show(
-      widget.draft.isResubmission ? 'Submitting registration…' : 'Creating account…',
+      widget.draft.isResubmission
+          ? 'Submitting registration…'
+          : 'Creating account…',
     );
 
     try {
@@ -92,17 +99,24 @@ class _RegisterPasswordScreenState extends State<RegisterPasswordScreen> {
         context.go('/login');
         return;
       }
-      context.go('/verify-email', extra: {
-        'email': email,
-        'password': _passwordController.text,
-        'masked_email': AuthService.maskEmail(email),
-      });
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => StudentRegistrationCompleteDialog(
+          onContinue: () => context.go(
+            '/verify-email',
+            extra: {
+              'email': email,
+              'password': _passwordController.text,
+              'masked_email': AuthService.maskEmail(email),
+            },
+          ),
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-        ),
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
       );
     } finally {
       UniversalLoaderController.instance.hide();
@@ -139,7 +153,9 @@ class _RegisterPasswordScreenState extends State<RegisterPasswordScreen> {
               const SizedBox(height: 16),
               TextField(
                 controller: _confirmController,
-                decoration: const InputDecoration(labelText: 'Confirm Password'),
+                decoration: const InputDecoration(
+                  labelText: 'Confirm Password',
+                ),
                 obscureText: true,
               ),
             ],
@@ -149,11 +165,11 @@ class _RegisterPasswordScreenState extends State<RegisterPasswordScreen> {
               child: Text(
                 _loading
                     ? widget.draft.isResubmission
-                        ? 'Submitting…'
-                        : 'Creating account…'
+                          ? 'Submitting…'
+                          : 'Creating account…'
                     : widget.draft.isResubmission
-                        ? 'Submit registration again'
-                        : 'Create account',
+                    ? 'Submit registration again'
+                    : 'Create account',
               ),
             ),
           ],

@@ -65,6 +65,7 @@ class _CheckedInAppState extends State<CheckedInApp> {
 
   @override
   Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return AnimatedBuilder(
       animation: AppearanceService.instance,
       builder: (context, _) => SessionActivityWrapper(
@@ -72,6 +73,7 @@ class _CheckedInAppState extends State<CheckedInApp> {
           controller: UniversalLoaderController.instance,
           child: MaterialApp.router(
             title: 'CheckedIn',
+            builder: (context, child) => child ?? const SizedBox.shrink(),
             theme: AppTheme.build(
               AppearanceService.instance.colorTheme,
               Brightness.light,
@@ -81,7 +83,9 @@ class _CheckedInAppState extends State<CheckedInApp> {
               Brightness.dark,
             ),
             themeMode: AppearanceService.instance.themeMode,
-            themeAnimationDuration: const Duration(milliseconds: 320),
+            themeAnimationDuration: reduceMotion
+                ? Duration.zero
+                : const Duration(milliseconds: 320),
             themeAnimationCurve: Curves.easeInOutCubic,
             routerConfig: widget.router,
           ),

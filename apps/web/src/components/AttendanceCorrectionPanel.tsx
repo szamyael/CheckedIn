@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 interface CorrectionRow {
   id: string;
@@ -22,6 +23,7 @@ export function AttendanceCorrectionPanel({ isAdmin }: { isAdmin: boolean }) {
   const [rows, setRows] = useState<CorrectionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const supabase = createClient();
@@ -52,6 +54,7 @@ export function AttendanceCorrectionPanel({ isAdmin }: { isAdmin: boolean }) {
 
   async function review(id: string, approve: boolean) {
     setBusy(id);
+    setError(null);
     const supabase = createClient();
     const { error } = await supabase.rpc("review_attendance_correction", {
       p_request_id: id,
@@ -60,7 +63,7 @@ export function AttendanceCorrectionPanel({ isAdmin }: { isAdmin: boolean }) {
     });
     setBusy(null);
     if (error) {
-      alert(error.message);
+      setError("We couldn't update the correction request. Try again.");
       return;
     }
     setRows(await load());
@@ -72,6 +75,7 @@ export function AttendanceCorrectionPanel({ isAdmin }: { isAdmin: boolean }) {
 
   return (
     <div className="table-scroll rounded-xl border border-slate-200 bg-white">
+      <UserErrorDialog message={error} onClose={() => setError(null)} />
       <table className="w-full text-sm">
         <thead className="border-b bg-slate-50 text-left">
           <tr>

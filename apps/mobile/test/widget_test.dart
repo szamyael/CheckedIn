@@ -6,6 +6,7 @@ import 'package:checkedin_mobile/services/appearance_service.dart';
 import 'package:checkedin_mobile/services/bingo_service.dart';
 import 'package:checkedin_mobile/services/notification_service.dart';
 import 'package:checkedin_mobile/screens/home/home_screen.dart';
+import 'package:checkedin_mobile/screens/onboarding/swipe_animated_page.dart';
 import 'package:checkedin_mobile/widgets/app_logo.dart';
 import 'package:checkedin_mobile/widgets/appearance_sheet.dart';
 import 'package:checkedin_mobile/widgets/password_requirements.dart';
@@ -33,86 +34,76 @@ void main() {
     );
   });
 
-  test(
-    'all palettes share web-equivalent surface, border, and action colors',
-    () {
-      const lightMuted = {
-        AppColorTheme.navy: Color(0xFFEEF2F7),
-        AppColorTheme.violet: Color(0xFFF1EBF5),
-        AppColorTheme.orange: Color(0xFFF5EEE8),
-        AppColorTheme.maroon: Color(0xFFF4EAEE),
-        AppColorTheme.armyGreen: Color(0xFFEEF0E9),
-        AppColorTheme.black: Color(0xFFEFEFEF),
-        AppColorTheme.grey: Color(0xFFEDF0F4),
-      };
-      const lightBorders = {
-        AppColorTheme.navy: Color(0xFFD9E1EC),
-        AppColorTheme.violet: Color(0xFFE5DCED),
-        AppColorTheme.orange: Color(0xFFEEDFD2),
-        AppColorTheme.maroon: Color(0xFFEADDE2),
-        AppColorTheme.armyGreen: Color(0xFFDFE3D8),
-        AppColorTheme.black: Color(0xFFE2E2E2),
-        AppColorTheme.grey: Color(0xFFDFE4EA),
-      };
-      const darkMuted = {
-        AppColorTheme.navy: Color(0xFF223452),
-        AppColorTheme.violet: Color(0xFF352941),
-        AppColorTheme.orange: Color(0xFF3B2D22),
-        AppColorTheme.maroon: Color(0xFF38262E),
-        AppColorTheme.armyGreen: Color(0xFF2C3625),
-        AppColorTheme.black: Color(0xFF2B2B2B),
-        AppColorTheme.grey: Color(0xFF2C3744),
-      };
-      const darkBorders = {
-        AppColorTheme.navy: Color(0xFF354A6A),
-        AppColorTheme.violet: Color(0xFF554563),
-        AppColorTheme.orange: Color(0xFF5B4332),
-        AppColorTheme.maroon: Color(0xFF5A3B48),
-        AppColorTheme.armyGreen: Color(0xFF46533B),
-        AppColorTheme.black: Color(0xFF484848),
-        AppColorTheme.grey: Color(0xFF465464),
-      };
-      const lightActions = {
-        AppColorTheme.navy: Color(0xFF1E3A8A),
-        AppColorTheme.violet: Color(0xFF68428C),
-        AppColorTheme.orange: Color(0xFF9A4E18),
-        AppColorTheme.maroon: Color(0xFF7B3047),
-        AppColorTheme.armyGreen: Color(0xFF4B6339),
-        AppColorTheme.black: Color(0xFF303030),
-        AppColorTheme.grey: Color(0xFF526276),
-      };
-      const darkActions = {
-        AppColorTheme.navy: Color(0xFF2F5D9F),
-        AppColorTheme.violet: Color(0xFF68428C),
-        AppColorTheme.orange: Color(0xFF9A4E18),
-        AppColorTheme.maroon: Color(0xFF7B3047),
-        AppColorTheme.armyGreen: Color(0xFF4B6339),
-        AppColorTheme.black: Color(0xFF484848),
-        AppColorTheme.grey: Color(0xFF526276),
-      };
+  test('all palettes share the warm-neutral sage CheckedIn identity', () {
+    for (final palette in AppColorTheme.values) {
+      final light = AppTheme.build(palette, Brightness.light);
+      final dark = AppTheme.build(palette, Brightness.dark);
+      final lightButton = light.filledButtonTheme.style!;
+      final darkButton = dark.filledButtonTheme.style!;
 
-      for (final entry in lightMuted.entries) {
-        final light = AppTheme.build(entry.key, Brightness.light);
-        final dark = AppTheme.build(entry.key, Brightness.dark);
-        final lightButton = light.filledButtonTheme.style!;
-        final darkButton = dark.filledButtonTheme.style!;
+      expect(light.scaffoldBackgroundColor, const Color(0xFFF7F8F7));
+      expect(light.colorScheme.surface, const Color(0xFFFFFFFF));
+      expect(
+        light.colorScheme.surfaceContainerHighest,
+        const Color(0xFFF1F3F1),
+      );
+      expect(light.colorScheme.outline, const Color(0xFFDCE3DD));
+      expect(light.colorScheme.onSurfaceVariant, const Color(0xFF6B736E));
+      expect(light.colorScheme.secondary, const Color(0xFF3F765F));
+      expect(light.colorScheme.tertiary, const Color(0xFF8C672C));
+      expect(light.colorScheme.error, const Color(0xFFA2443D));
+      expect(light.textTheme.bodySmall?.color, const Color(0xFF6B736E));
+      expect(lightButton.backgroundColor?.resolve({}), const Color(0xFF42675B));
+      expect(lightButton.foregroundColor?.resolve({}), Colors.white);
+      expect(light.colorScheme.primary, const Color(0xFF587D70));
+      expect(dark.scaffoldBackgroundColor, const Color(0xFF202722));
+      expect(dark.colorScheme.surface, const Color(0xFF29312C));
+      expect(dark.colorScheme.surfaceContainerHighest, const Color(0xFF343D37));
+      expect(dark.colorScheme.outline, const Color(0xFF4A554D));
+      expect(dark.colorScheme.onSurfaceVariant, const Color(0xFFB9C3BC));
+      expect(dark.colorScheme.primary, const Color(0xFFA8C6B9));
+      expect(dark.colorScheme.onPrimary, const Color(0xFF202722));
+      expect(dark.colorScheme.secondary, const Color(0xFF8AC7A5));
+      expect(dark.colorScheme.onSecondary, const Color(0xFF202722));
+      expect(dark.colorScheme.tertiary, const Color(0xFFD7B876));
+      expect(dark.colorScheme.onTertiary, const Color(0xFF202722));
+      expect(dark.colorScheme.error, const Color(0xFFF09084));
+      expect(dark.textTheme.bodySmall?.color, const Color(0xFFB9C3BC));
+      expect(darkButton.backgroundColor?.resolve({}), const Color(0xFF42675B));
+      expect(darkButton.foregroundColor?.resolve({}), Colors.white);
+    }
+  });
 
-        expect(light.colorScheme.surfaceContainerHighest, entry.value);
-        expect(light.colorScheme.outline, lightBorders[entry.key]);
-        expect(light.colorScheme.outlineVariant, lightBorders[entry.key]);
-        expect(
-          lightButton.backgroundColor?.resolve({}),
-          lightActions[entry.key],
-        );
-        expect(lightButton.foregroundColor?.resolve({}), Colors.white);
-        expect(dark.colorScheme.surfaceContainerHighest, darkMuted[entry.key]);
-        expect(dark.colorScheme.outline, darkBorders[entry.key]);
-        expect(dark.colorScheme.outlineVariant, darkBorders[entry.key]);
-        expect(darkButton.backgroundColor?.resolve({}), darkActions[entry.key]);
-        expect(darkButton.foregroundColor?.resolve({}), Colors.white);
-      }
-    },
-  );
+  test('shared cards use restrained borders and accessible controls', () {
+    final theme = AppTheme.build(AppColorTheme.navy, Brightness.light);
+    final cardShape = theme.cardTheme.shape! as RoundedRectangleBorder;
+
+    expect(cardShape.borderRadius, BorderRadius.circular(16));
+    expect(
+      cardShape.side.color,
+      const Color(0xFFDCE3DD).withValues(alpha: 0.45),
+    );
+    expect(theme.filledButtonTheme.style?.minimumSize?.resolve({})?.height, 44);
+    expect(theme.inputDecorationTheme.fillColor, const Color(0xFFF1F3F1));
+  });
+
+  test('form fields use consistent 12px corners and visible borders', () {
+    for (final brightness in [Brightness.light, Brightness.dark]) {
+      final theme = AppTheme.build(AppColorTheme.navy, brightness);
+      final input = theme.inputDecorationTheme;
+      final enabled = input.enabledBorder! as OutlineInputBorder;
+      final focused = input.focusedBorder! as OutlineInputBorder;
+
+      expect(enabled.borderRadius, BorderRadius.circular(12));
+      expect(focused.borderRadius, BorderRadius.circular(12));
+      expect(
+        enabled.borderSide.color,
+        brightness == Brightness.dark
+            ? const Color(0xFF7B8A80)
+            : const Color(0xFF7F8C85),
+      );
+    }
+  });
 
   test('large headings do not force a serif font against the web theme', () {
     final theme = AppTheme.build(AppColorTheme.navy, Brightness.light);
@@ -153,8 +144,34 @@ void main() {
       ),
     );
 
-    expect(studentUi.actionBackground, const Color(0xFF9A4E18));
+    expect(studentUi.actionBackground, const Color(0xFF42675B));
     expect(studentUi.actionForeground, Colors.white);
+  });
+
+  testWidgets('student cards and tooltips do not use white glow shadows', (
+    tester,
+  ) async {
+    for (final brightness in [Brightness.light, Brightness.dark]) {
+      final theme = AppTheme.build(AppColorTheme.navy, brightness);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: theme,
+          home: const Scaffold(body: StudentCard(child: Text('Card'))),
+        ),
+      );
+
+      final card = tester
+          .widgetList<Container>(find.byType(Container))
+          .map((container) => container.decoration)
+          .whereType<BoxDecoration>()
+          .singleWhere(
+            (decoration) => decoration.boxShadow?.isNotEmpty == true,
+          );
+      expect(card.boxShadow, hasLength(1));
+
+      final tooltip = theme.tooltipTheme.decoration! as BoxDecoration;
+      expect(tooltip.boxShadow, hasLength(1));
+    }
   });
 
   testWidgets('password requirement success chips use dark semantic colors', (
@@ -179,7 +196,7 @@ void main() {
     }
   });
 
-  testWidgets('reduced-motion page transitions keep a fade without sliding', (
+  testWidgets('reduced-motion page transitions skip movement and fading', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -205,10 +222,42 @@ void main() {
     );
 
     await tester.tap(find.text('Open'));
-    await tester.pump(const Duration(milliseconds: 80));
+    await tester.pumpAndSettle();
 
-    expect(find.byType(FadeTransition), findsWidgets);
+    expect(find.text('Next page'), findsOneWidget);
+    expect(find.byType(FadeTransition), findsNothing);
     expect(find.byType(SlideTransition), findsNothing);
+  });
+
+  testWidgets('reduced motion disables onboarding parallax', (tester) async {
+    final controller = PageController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(disableAnimations: true),
+          child: child!,
+        ),
+        home: Scaffold(
+          body: SwipeAnimatedPage(
+            controller: controller,
+            index: 0,
+            child: const Text('Onboarding page'),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Onboarding page'), findsOneWidget);
+    final onboardingPage = find.byType(SwipeAnimatedPage);
+    expect(
+      find.descendant(of: onboardingPage, matching: find.byType(Opacity)),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: onboardingPage, matching: find.byType(Transform)),
+      findsNothing,
+    );
   });
 
   testWidgets('attendance steps are centered evenly like the web portal', (
@@ -468,7 +517,9 @@ void main() {
     );
   });
 
-  testWidgets('appearance sheet offers every color palette', (tester) async {
+  testWidgets('appearance sheet keeps display and sound settings', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.build(AppColorTheme.navy, Brightness.light),
@@ -488,17 +539,11 @@ void main() {
     await tester.tap(find.text('Appearance'));
     await tester.pumpAndSettle();
 
-    for (final label in [
-      'CheckedIn',
-      'Violet',
-      'Orange',
-      'Maroon',
-      'Army Green',
-      'Black',
-      'Grey',
-    ]) {
-      expect(find.text(label), findsOneWidget);
-    }
+    expect(find.text('Light'), findsOneWidget);
+    expect(find.text('Dark'), findsOneWidget);
+    expect(find.text('System'), findsNWidgets(2));
+    expect(find.text('NOTIFICATION SOUND'), findsOneWidget);
+    expect(find.text('COLOR THEME'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 }

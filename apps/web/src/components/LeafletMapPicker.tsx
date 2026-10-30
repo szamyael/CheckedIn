@@ -12,6 +12,7 @@ import {
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { DashboardSearchInput } from "@/components/DashboardSearchInput";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 const markerIcon = L.icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -288,7 +289,7 @@ export function LeafletMapPicker({
         )}
       </div>
 
-      {searchError && <p className="text-sm text-red-600">{searchError}</p>}
+      <UserErrorDialog message={searchError} />
 
       <p className="text-xs text-slate-700">
         Search for a place, then pick a result below. You can also click the map

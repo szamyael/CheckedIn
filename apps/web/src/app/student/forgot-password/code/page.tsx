@@ -9,6 +9,7 @@ import { formPlaceholders } from "@/lib/form-placeholders";
 import { EMAIL_OTP_LENGTH } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
 import { PasswordRequirements, passwordRules } from "@/components/PasswordRequirements";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 function ResetCodeForm() {
   const router = useRouter();
@@ -92,7 +93,7 @@ function ResetCodeForm() {
           className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm"
           required
         />
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        <UserErrorDialog message={error} />
         <button
           type="submit"
           className="w-full rounded-xl bg-teal-600 py-3 text-sm font-semibold text-white"

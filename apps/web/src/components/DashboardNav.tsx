@@ -56,7 +56,7 @@ export function DashboardNav({ items }: { items: DashboardNavItem[] }) {
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           aria-expanded={!collapsed}
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="grid h-9 w-9 place-items-center text-[var(--muted)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)]"
+          className="grid h-11 w-11 place-items-center rounded-lg text-[var(--muted)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)]"
         >
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </button>
@@ -72,7 +72,7 @@ export function DashboardNav({ items }: { items: DashboardNavItem[] }) {
               aria-label={label}
               title={label}
               aria-current={active ? "page" : undefined}
-              className={`dashboard-nav-item flex min-h-10 shrink-0 items-center gap-3 px-3 text-xs font-medium text-[var(--muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)] sm:text-sm lg:min-h-10 lg:px-3 ${
+              className={`dashboard-nav-item flex min-h-11 shrink-0 items-center gap-3 rounded-xl px-3 text-xs font-medium text-[var(--muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)] sm:text-sm lg:min-h-11 lg:px-3 ${
                 active ? "bg-[var(--primary-soft)] text-[var(--primary-strong)]" : ""
               }`}
             >

@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { withApiLogging } from "@/lib/api-monitor";
 
-export async function PATCH(
+async function updateStudent(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -94,3 +95,9 @@ export async function PATCH(
 
   return NextResponse.json({ success: true });
 }
+
+export const PATCH = withApiLogging(
+  "PATCH",
+  "/api/admin/students/[id]",
+  updateStudent,
+);

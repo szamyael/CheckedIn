@@ -6,6 +6,7 @@ import { Bell, Check, LoaderCircle, Search, UserRound, UsersRound } from "@/lib/
 import { createClient } from "@/lib/supabase/client";
 import { formPlaceholders } from "@/lib/form-placeholders";
 import { useAsyncAction } from "@/lib/useAsyncAction";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 type Target = "all_students" | "all_staff" | "one_student" | "mapped_students";
 type Audience = "admin" | "organization";
@@ -294,7 +295,7 @@ export function BroadcastNotificationForm({ audience = "admin" }: { audience?: A
                   />
                 </label>
                 {searchLoading && <p role="status" className="flex items-center gap-2 text-xs text-[var(--muted)]"><LoaderCircle className="h-4 w-4 animate-spin" /> Searching active students…</p>}
-                {searchError && <p role="alert" className="text-sm text-red-700">{searchError}</p>}
+                <UserErrorDialog message={searchError} />
                 {!searchLoading && !searchError && studentSearch.trim().length > 0 && studentSearch.trim().length < 2 && (
                   <p className="text-xs text-[var(--muted)]">Enter at least two characters to search.</p>
                 )}
@@ -343,11 +344,8 @@ export function BroadcastNotificationForm({ audience = "admin" }: { audience?: A
         </label>
       </section>
 
-      {message && (
-        <p role={message.startsWith("Sent to") ? "status" : "alert"} className={`rounded-xl p-3 text-sm ${message.startsWith("Sent to") ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-800"}`}>
-          {message}
-        </p>
-      )}
+      {message?.startsWith("Sent to") && <p role="status" className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">{message}</p>}
+      <UserErrorDialog message={message && !message.startsWith("Sent to") ? message : null} onClose={() => setMessage(null)} />
 
       <div className="flex flex-col gap-3 border-t border-[var(--border)] pt-5 sm:flex-row sm:items-center sm:justify-between">
         <p className="flex items-center gap-2 text-xs text-[var(--muted)]">

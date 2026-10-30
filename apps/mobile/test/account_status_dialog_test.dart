@@ -37,4 +37,45 @@ void main() {
       );
     },
   );
+
+  testWidgets(
+    'registration completion dialog explains approval and continues',
+    (tester) async {
+      var continued = false;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () => showDialog<void>(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (_) => StudentRegistrationCompleteDialog(
+                    onContinue: () => continued = true,
+                  ),
+                ),
+                child: const Text('Register'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Register'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Registration complete'), findsOneWidget);
+      expect(
+        find.text(
+          'Your account is under review and waiting for approval. '
+          'Verify your email to finish setting up your account.',
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Continue to email verification'));
+      await tester.pumpAndSettle();
+      expect(continued, isTrue);
+      expect(find.byType(StudentRegistrationCompleteDialog), findsNothing);
+    },
+  );
 }

@@ -219,17 +219,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           color: theme.colorScheme.surface,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: StudentUi.of(context).border,
+                            color: Theme.of(context).colorScheme.outline,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: theme.colorScheme.shadow.withValues(
-                                alpha: 0.12,
-                              ),
-                              blurRadius: 20,
-                              offset: Offset(0, 8),
+                              color: theme.colorScheme.brightness == Brightness.dark
+                                  ? const Color(0x26000000)
+                                  : const Color(0x102D4036),
+                              blurRadius: 10,
+                              offset: const Offset(0, 2),
                             ),
                           ],
                         ),

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formPlaceholders } from "@/lib/form-placeholders";
 import { useAsyncAction } from "@/lib/useAsyncAction";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 export function CreateOrganizationForm() {
   const router = useRouter();
@@ -72,7 +73,7 @@ export function CreateOrganizationForm() {
         />
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      <UserErrorDialog message={error} />
       {success && (
         <p className="text-sm text-green-600">Organization created.</p>
       )}

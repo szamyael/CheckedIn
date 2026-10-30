@@ -6,8 +6,9 @@ import {
   normalizeProgram,
   type MembershipAction,
 } from "@/lib/org-membership";
+import { withApiLogging } from "@/lib/api-monitor";
 
-export async function POST(request: Request) {
+async function updateMemberships(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -107,3 +108,9 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ success: true, updated: updatedUsers.length });
 }
+
+export const POST = withApiLogging(
+  "POST",
+  "/api/org/memberships",
+  updateMemberships,
+);

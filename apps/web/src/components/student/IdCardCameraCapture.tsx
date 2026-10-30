@@ -134,7 +134,7 @@ export function IdCardCameraCapture({
         type="button"
         disabled={disabled || cameraBlocked || !ready}
         onClick={capture}
-        className="min-h-11 w-full rounded-xl bg-[var(--action-background)] py-3 text-sm font-semibold text-[var(--action-foreground)] disabled:opacity-60"
+        className="min-h-11 w-full rounded-xl bg-[var(--action-background)] py-3 text-sm font-semibold text-[var(--action-foreground)]"
       >
         Capture ID
       </button>

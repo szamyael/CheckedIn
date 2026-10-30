@@ -9,6 +9,7 @@ import {
 } from "@/lib/notification-read";
 import { StudentNotificationsReadContext } from "@/components/student/StudentAppLayout";
 import { NotificationSender } from "@/components/NotificationSender";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 import {
   StudentEmptyState,
   StudentPageTitle,
@@ -125,11 +126,7 @@ export default function StudentNotificationsPage() {
           Mark all read
         </button>
       </div>
-      {readError && (
-        <p role="alert" className="text-sm text-[var(--error)]">
-          {readError}
-        </p>
-      )}
+      <UserErrorDialog message={readError} />
       {items.length === 0 ? (
         <StudentEmptyState message="No notifications." />
       ) : (

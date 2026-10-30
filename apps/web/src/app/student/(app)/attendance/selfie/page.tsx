@@ -14,6 +14,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { Check } from "@/lib/icons";
 import { StudentStepIndicator, studentPrimaryButtonClass } from "@/components/student/StudentUi";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 export default function AttendanceSelfiePage() {
   const router = useRouter();
@@ -233,11 +234,7 @@ export default function AttendanceSelfiePage() {
           </div>
         )}
       </div>
-      {error && !cameraBlocked && (
-        <p role="alert" className="rounded-xl border border-[color-mix(in_srgb,var(--error)_35%,var(--border))] bg-[color-mix(in_srgb,var(--error)_12%,var(--surface))] px-3 py-2 text-sm text-[var(--error)]">
-          {error}
-        </p>
-      )}
+      <UserErrorDialog message={cameraBlocked ? null : error} />
       <button
         type="button"
         disabled={cameraBlocked}

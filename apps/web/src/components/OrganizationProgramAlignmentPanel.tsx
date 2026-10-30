@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import { canonicalProgramName, programNameKey } from "@/lib/program-name";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 interface Organization {
   id: string;
@@ -214,7 +215,7 @@ export function OrganizationProgramAlignmentPanel({
         </div>
       </form>
 
-      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+      <UserErrorDialog message={error} />
       {success && <p className="mb-4 text-sm text-green-600">{success}</p>}
 
       <div className="space-y-4">

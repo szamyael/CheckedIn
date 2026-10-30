@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { withApiLogging } from "@/lib/api-monitor";
 
-export async function POST(request: Request) {
+async function createOrganization(request: Request) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -58,3 +59,9 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ success: true, organization: data });
 }
+
+export const POST = withApiLogging(
+  "POST",
+  "/api/admin/create-organization",
+  createOrganization,
+);

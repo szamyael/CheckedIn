@@ -150,7 +150,7 @@ class _RegisterIdScanScreenState extends State<RegisterIdScanScreen> {
                         AspectRatio(
                           aspectRatio: 3 / 4,
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(20),
                             child: _buildPortraitPreview(),
                           ),
                         ),
@@ -160,7 +160,7 @@ class _RegisterIdScanScreenState extends State<RegisterIdScanScreen> {
                               padding: const EdgeInsets.all(20),
                               child: DecoratedBox(
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
                                     color: Colors.white.withValues(alpha: 0.85),
                                     width: 2,

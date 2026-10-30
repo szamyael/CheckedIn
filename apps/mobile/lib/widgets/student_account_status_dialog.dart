@@ -17,19 +17,19 @@ class StudentAccountStatusDialog extends StatelessWidget {
 
   String get _title {
     if (status == 'needs_reregistration') return 'Registration needs changes';
-    final label = _statusLabel;
-    return 'Account ${label[0].toUpperCase()}${label.substring(1)}';
+    return 'Account $_statusLabel';
   }
 
   @override
   Widget build(BuildContext context) {
     final requiresReregistration = status == 'needs_reregistration';
+    final colors = Theme.of(context).colorScheme;
     return AlertDialog(
       icon: Icon(
         requiresReregistration ? TablerIcons.alertTriangle : TablerIcons.ban,
         color: requiresReregistration
-            ? Colors.orange.shade800
-            : Colors.red.shade700,
+            ? colors.tertiary
+            : colors.error,
       ),
       title: Text(_title),
       content: SingleChildScrollView(
@@ -70,6 +70,36 @@ class StudentAccountStatusDialog extends StatelessWidget {
             onPressed: onRegisterAgain,
             child: const Text('Register again'),
           ),
+      ],
+    );
+  }
+}
+
+class StudentRegistrationCompleteDialog extends StatelessWidget {
+  const StudentRegistrationCompleteDialog({
+    super.key,
+    required this.onContinue,
+  });
+
+  final VoidCallback onContinue;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      icon: const Icon(TablerIcons.circleCheck),
+      title: const Text('Registration complete'),
+      content: const Text(
+        'Your account is under review and waiting for approval. '
+        'Verify your email to finish setting up your account.',
+      ),
+      actions: [
+        FilledButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+            onContinue();
+          },
+          child: const Text('Continue to email verification'),
+        ),
       ],
     );
   }

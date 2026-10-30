@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { withApiLogging } from "@/lib/api-monitor";
 
 type NominatimReverseHit = {
   display_name?: string;
@@ -6,7 +7,7 @@ type NominatimReverseHit = {
 };
 
 /** Resolves a map pin to a readable address before an event is saved. */
-export async function GET(request: Request) {
+async function reverseGeocode(request: Request) {
   const { searchParams } = new URL(request.url);
   const lat = Number(searchParams.get("lat"));
   const lon = Number(searchParams.get("lon"));
@@ -44,3 +45,5 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Could not fetch an address. Check your connection." }, { status: 500 });
   }
 }
+
+export const GET = withApiLogging("GET", "/api/places/reverse", reverseGeocode);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   Area,
   Bar,
@@ -43,19 +43,25 @@ export function AnalyticsCharts({
   yearLevelRankings: RankingItem[];
   attendanceTrend: AttendanceTrendItem[];
 }) {
+  const [revealed, setRevealed] = useState(false);
   const reducedMotion = useSyncExternalStore(
     subscribeToReducedMotion,
     getReducedMotion,
     getServerReducedMotion,
   );
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => setRevealed(true), 80);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   return (
     <div className="grid gap-5 lg:grid-cols-2">
-      <TrendChart data={attendanceTrend} reducedMotion={reducedMotion} />
-      <ChartCard title="Most Attended Events" data={eventRankings} color="var(--primary)" reducedMotion={reducedMotion} />
-      <ChartCard title="Attendance by Program" data={programRankings} color="var(--accent)" reducedMotion={reducedMotion} />
+      <TrendChart data={attendanceTrend} revealed={revealed} reducedMotion={reducedMotion} />
+      <ChartCard title="Most Attended Events" data={eventRankings} color="var(--primary)" revealed={revealed} reducedMotion={reducedMotion} />
+      <ChartCard title="Attendance by Program" data={programRankings} color="var(--accent)" revealed={revealed} reducedMotion={reducedMotion} />
       <div className="lg:col-span-2">
-        <ChartCard title="Attendance by Year Level" data={yearLevelRankings} color="var(--primary-strong)" reducedMotion={reducedMotion} />
+        <ChartCard title="Attendance by Year Level" data={yearLevelRankings} color="var(--primary-strong)" revealed={revealed} reducedMotion={reducedMotion} />
       </div>
     </div>
   );
@@ -63,9 +69,11 @@ export function AnalyticsCharts({
 
 function TrendChart({
   data,
+  revealed,
   reducedMotion,
 }: {
   data: AttendanceTrendItem[];
+  revealed: boolean;
   reducedMotion: boolean;
 }) {
   const total = data.reduce((sum, point) => sum + point.value, 0);
@@ -92,7 +100,11 @@ function TrendChart({
       </div>
       <div className="h-64 min-w-0 sm:h-72" role="img" aria-label={`Line chart showing weekly check-ins for the last 12 weeks. ${data.map((point) => `${point.label}: ${point.value}`).join("; ")}`}>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 10, right: 12, left: -14, bottom: 0 }}>
+          <LineChart
+            key={revealed ? "attendance-data" : "attendance-flat"}
+            data={data.map((point) => ({ ...point, value: revealed ? point.value : 0 }))}
+            margin={{ top: 10, right: 12, left: -14, bottom: 0 }}
+          >
             <defs>
               <linearGradient id="attendance-fill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.2} />
@@ -101,7 +113,7 @@ function TrendChart({
             </defs>
             <CartesianGrid stroke="var(--border)" strokeDasharray="4 6" vertical={false} />
             <XAxis dataKey="label" tick={{ fontSize: 11, fill: "var(--muted)" }} tickLine={false} axisLine={false} minTickGap={18} />
-            <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "var(--muted)" }} tickLine={false} axisLine={false} width={38} />
+            <YAxis domain={[0, Math.max(1, peak)]} allowDecimals={false} tick={{ fontSize: 11, fill: "var(--muted)" }} tickLine={false} axisLine={false} width={38} />
             <Tooltip
               cursor={{ stroke: "var(--primary)", strokeDasharray: "4 4", strokeOpacity: 0.45 }}
               contentStyle={{ borderRadius: 12, borderColor: "var(--border)", backgroundColor: "var(--surface)", color: "var(--foreground)", boxShadow: "var(--shadow-soft)" }}
@@ -119,7 +131,7 @@ function TrendChart({
               dot={{ r: 3, fill: "var(--surface)", stroke: "var(--primary)", strokeWidth: 2 }}
               activeDot={{ r: 6, fill: "var(--primary)", stroke: "var(--surface)", strokeWidth: 2 }}
               isAnimationActive={!reducedMotion}
-              animationBegin={120}
+              animationBegin={0}
               animationDuration={1100}
               animationEasing="ease-out"
             />
@@ -139,11 +151,13 @@ function ChartCard({
   title,
   data,
   color,
+  revealed,
   reducedMotion,
 }: {
   title: string;
   data: RankingItem[];
   color: string;
+  revealed: boolean;
   reducedMotion: boolean;
 }) {
   if (data.length === 0) {
@@ -155,10 +169,11 @@ function ChartCard({
     );
   }
 
+  const maxValue = Math.max(1, ...data.map((d) => d.value));
   const chartData = data.map((d) => ({
     name: d.label.length > 18 ? `${d.label.slice(0, 18)}…` : d.label,
     fullName: d.label,
-    count: d.value,
+    count: revealed ? d.value : 0,
   }));
 
   return (
@@ -172,6 +187,7 @@ function ChartCard({
       <div className="h-64 sm:h-72">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
+            key={revealed ? `${title}-data` : `${title}-flat`}
             data={chartData}
             margin={{ top: 8, right: 8, left: -12, bottom: chartData.length > 4 ? 30 : 12 }}
             barCategoryGap="24%"
@@ -187,7 +203,7 @@ function ChartCard({
               tickLine={false}
               axisLine={false}
             />
-            <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "var(--muted)" }} tickLine={false} axisLine={false} width={32} />
+            <YAxis domain={[0, maxValue]} allowDecimals={false} tick={{ fontSize: 11, fill: "var(--muted)" }} tickLine={false} axisLine={false} width={32} />
             <Tooltip
               cursor={{ fill: "var(--surface-muted)", opacity: 0.7 }}
               contentStyle={{ borderRadius: 12, borderColor: "var(--border)", backgroundColor: "var(--surface)", color: "var(--foreground)", boxShadow: "var(--shadow-soft)" }}

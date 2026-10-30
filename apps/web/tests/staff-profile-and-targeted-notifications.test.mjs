@@ -77,6 +77,17 @@ test("broadcast notifications store and show the sender identity and avatar", ()
   assert.match(mobileScreen, /senderAvatarUrl/);
 });
 
+test("staff notifications use theme-aware unread and hover surfaces", () => {
+  const bell = read("../src/components/NotificationBell.tsx");
+  const css = read("../src/app/globals.css");
+
+  assert.match(bell, /data-unread=\{!n\.read_at\}/);
+  assert.match(bell, /className="notification-item/);
+  assert.doesNotMatch(bell, /bg-blue-50\/40|opacity-70/);
+  assert.match(css, /\.dashboard-workspace \.notification-item\[data-unread="true"\] \{\s*background:\s*var\(--primary-soft\);/);
+  assert.match(css, /\.dashboard-workspace \.notification-item:hover \{\s*background:\s*var\(--surface-muted\);/);
+});
+
 test("organization workspace exposes only organization-scoped broadcast delivery", () => {
   const page = read("../src/app/dashboard/org/page.tsx");
   const migrationPath = fileURLToPath(new URL("../../../backend/supabase/migrations/080_broadcast_senders_and_org_broadcasts.sql", import.meta.url));

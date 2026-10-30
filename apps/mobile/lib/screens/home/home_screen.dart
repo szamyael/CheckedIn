@@ -44,6 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _profile.fetchDashboardStats(),
       _profile.fetchStudentProfile(),
       _notifications.fetchNotifications(limit: 12),
+      _profile.fetchAttendanceHistory(),
     ]);
     final stats = results[0] as Map<String, dynamic>;
     final student = results[1] as Map<String, dynamic>?;
@@ -51,6 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
         .where((notification) => notification.type == 'general')
         .take(3)
         .toList();
+    final history = results[3] as List<AttendanceHistoryItem>;
     final passDetails = await Future.wait<String?>([
       _profile.createStudentAvatarUrl(student?['profile_photo_url'] as String?),
       _profile.fetchCampusPassToken(),
@@ -70,6 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
       campusPassToken: passDetails[1],
       stats: stats,
       announcements: announcements,
+      history: history,
     );
   }
 
@@ -85,19 +88,60 @@ class _HomeScreenState extends State<HomeScreen> {
       child: FutureBuilder<_HomeData>(
         future: _future,
         builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            if (snapshot.hasError) {
+              return ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
+                  const StudentErrorBanner(
+                    message:
+                        "We couldn't load your dashboard. Pull down to try again.",
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () => setState(() => _future = _load()),
+                    icon: const Icon(TablerIcons.refresh),
+                    label: const Text('Try again'),
+                  ),
+                ],
+              );
+            }
+            return ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                SizedBox(
+                  height: MediaQuery.sizeOf(context).height * 0.45,
+                  child: const Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 12),
+                        Text('Loading your attendance…'),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
+          }
+
           final colors = Theme.of(context).colorScheme;
-          final data = snapshot.data;
-          final stats = data?.stats ?? <String, dynamic>{};
-          final firstName = data?.firstName ?? '…';
+          final data = snapshot.data!;
+          final stats = data.stats;
+          final firstName = data.firstName;
+          final now = DateTime.now();
+          final greeting = switch (now.hour) {
+            < 12 => 'Good morning',
+            < 17 => 'Good afternoon',
+            _ => 'Good evening',
+          };
 
           return ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 32),
             children: [
-              Text(
-                'YOUR CAMPUS, IN SYNC',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
+              Text(greeting, style: Theme.of(context).textTheme.bodyMedium),
               const SizedBox(height: 3),
               Text(
                 '$firstName.',
@@ -108,17 +152,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   letterSpacing: -0.4,
                 ),
               ),
+              const SizedBox(height: 3),
+              Text(
+                DateFormat('EEEE, MMM d').format(now),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
               const SizedBox(height: 20),
               CampusPassCard(
-                name: data?.fullName.isNotEmpty == true
-                    ? data!.fullName
-                    : firstName,
-                studentId: data?.studentId ?? '—',
-                program: data?.program ?? 'Program not set',
-                yearLevel: data?.yearLevel,
-                section: data?.section,
-                avatarUrl: data?.avatarUrl,
-                campusPassToken: data?.campusPassToken,
+                name: data.fullName.isNotEmpty ? data.fullName : firstName,
+                studentId: data.studentId,
+                program: data.program,
+                yearLevel: data.yearLevel,
+                section: data.section,
+                avatarUrl: data.avatarUrl,
+                campusPassToken: data.campusPassToken,
                 onScan: widget.onScan,
               ),
               const SizedBox(height: 14),
@@ -129,6 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       label: 'Attended',
                       value: '${stats['attendance_count'] ?? 0}',
                       icon: TablerIcons.calendarCheck,
+                      background: colors.primaryContainer,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -138,18 +186,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       value: '${stats['reward_points'] ?? 0}',
                       icon: TablerIcons.stars,
                       accent: colors.tertiary,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _StatTile(
-                      label: 'Badges',
-                      value: '${stats['badge_count'] ?? 0}',
-                      icon: TablerIcons.award,
+                      background: colors.tertiaryContainer,
                     ),
                   ),
                 ],
               ),
+              const SizedBox(height: 24),
+              const _SectionLabel(label: 'RECENT ATTENDANCE'),
+              const SizedBox(height: 10),
+              _RecentAttendance(history: data.history),
               const SizedBox(height: 26),
               const _SectionLabel(label: 'NEXT STEPS'),
               const SizedBox(height: 10),
@@ -165,7 +210,7 @@ class _HomeScreenState extends State<HomeScreen> {
               _SectionLabel(label: 'BULLETIN BOARD'),
               const SizedBox(height: 10),
               _BulletinBoard(
-                announcements: data?.announcements ?? const [],
+                announcements: data.announcements,
                 onViewAll: widget.onOpenNotifications,
               ),
               const SizedBox(height: 22),
@@ -271,6 +316,9 @@ class _CampusPassCardState extends State<CampusPassCard>
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Theme.of(dialogContext).colorScheme.outline,
+                ),
               ),
               child: QrImageView(
                 data: token,
@@ -308,8 +356,6 @@ class _CampusPassCardState extends State<CampusPassCard>
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final primary = colors.primary;
-    final foreground = colors.onPrimary;
     return Semantics(
       button: true,
       toggled: _flipped,
@@ -326,7 +372,7 @@ class _CampusPassCardState extends State<CampusPassCard>
             _flipController.reverse();
           }
         },
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(20),
         child: AnimatedBuilder(
           animation: _flipAnimation,
           builder: (context, child) {
@@ -337,11 +383,14 @@ class _CampusPassCardState extends State<CampusPassCard>
                 ..setEntry(3, 2, 0.001)
                 ..rotateY(math.pi * progress),
               child: progress < 0.5
-                  ? _passFront(primary, foreground)
+                  ? _passFront(
+                      colors.primaryContainer,
+                      colors.onPrimaryContainer,
+                    )
                   : Transform(
                       alignment: Alignment.center,
                       transform: Matrix4.rotationY(math.pi),
-                      child: _studentCard(primary),
+                      child: _studentCard(),
                     ),
             );
           },
@@ -350,26 +399,15 @@ class _CampusPassCardState extends State<CampusPassCard>
     );
   }
 
-  Widget _passFront(Color primary, Color foreground) => Container(
+  Widget _passFront(Color background, Color foreground) => Container(
     key: const ValueKey('campus-pass-front'),
     width: double.infinity,
     height: 260,
     padding: const EdgeInsets.all(20),
     decoration: BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [primary, Color.lerp(primary, Colors.black, 0.24)!],
-      ),
-      borderRadius: BorderRadius.circular(28),
-      border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
-      boxShadow: [
-        BoxShadow(
-          color: primary.withValues(alpha: 0.16),
-          blurRadius: 28,
-          offset: const Offset(0, 14),
-        ),
-      ],
+      color: background,
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: Theme.of(context).colorScheme.outline),
     ),
     child: Stack(
       children: [
@@ -448,13 +486,15 @@ class _CampusPassCardState extends State<CampusPassCard>
             child: TextButton(
               onPressed: widget.onScan,
               style: TextButton.styleFrom(
-                foregroundColor: foreground,
                 padding: const EdgeInsets.all(8),
-                backgroundColor: Colors.white.withValues(alpha: 0.12),
+                backgroundColor: Theme.of(context).colorScheme.surface,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  side: BorderSide(color: foreground.withValues(alpha: 0.3)),
+                  borderRadius: BorderRadius.circular(11),
+                  side: BorderSide(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
                 ),
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
               ),
               child: const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -471,22 +511,15 @@ class _CampusPassCardState extends State<CampusPassCard>
     ),
   );
 
-  Widget _studentCard(Color primary) => Container(
+  Widget _studentCard() => Container(
     key: const ValueKey('campus-pass-qr'),
     width: double.infinity,
     height: 260,
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
       color: Theme.of(context).colorScheme.surface,
-      borderRadius: BorderRadius.circular(28),
+      borderRadius: BorderRadius.circular(20),
       border: Border.all(color: Theme.of(context).colorScheme.outline),
-      boxShadow: [
-        BoxShadow(
-          color: primary.withValues(alpha: 0.12),
-          blurRadius: 24,
-          offset: const Offset(0, 10),
-        ),
-      ],
     ),
     child: Row(
       children: [
@@ -559,14 +592,14 @@ class _CampusPassCardState extends State<CampusPassCard>
         const SizedBox(width: 10),
         InkWell(
           onTap: widget.campusPassToken == null ? null : _showFullScreenQr,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(11),
           child: Container(
             width: 138,
             height: 138,
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(11),
             ),
             child: widget.campusPassToken == null
                 ? const Center(
@@ -594,12 +627,14 @@ class _StatTile extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color? accent;
+  final Color? background;
 
   const _StatTile({
     required this.label,
     required this.value,
     required this.icon,
     this.accent,
+    this.background,
   });
 
   @override
@@ -607,9 +642,9 @@ class _StatTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 13),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: background ?? Theme.of(context).colorScheme.surface,
         border: Border.all(color: Theme.of(context).colorScheme.outline),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -699,7 +734,7 @@ class _ActionRow extends StatelessWidget {
                 height: 42,
                 decoration: BoxDecoration(
                   color: rowAccent.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(11),
                 ),
                 child: Icon(icon, color: rowAccent, size: 21),
               ),
@@ -813,6 +848,70 @@ class _BulletinBoard extends StatelessWidget {
   }
 }
 
+class _RecentAttendance extends StatelessWidget {
+  final List<AttendanceHistoryItem> history;
+
+  const _RecentAttendance({required this.history});
+
+  @override
+  Widget build(BuildContext context) {
+    if (history.isEmpty) {
+      return const StudentCard(
+        child: Row(
+          children: [
+            Icon(TablerIcons.history),
+            SizedBox(width: 12),
+            Expanded(child: Text('No attendance records yet.')),
+          ],
+        ),
+      );
+    }
+
+    return StudentCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          for (var index = 0; index < history.length && index < 2; index++) ...[
+            ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 4,
+              ),
+              leading: Icon(
+                history[index].isPending
+                    ? TablerIcons.cloudUpload
+                    : TablerIcons.circleCheck,
+                color: history[index].isPending
+                    ? Theme.of(context).colorScheme.tertiary
+                    : Theme.of(context).colorScheme.primary,
+              ),
+              title: Text(
+                history[index].eventTitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Text(
+                '${history[index].isPending ? 'Pending sync' : 'Recorded'} · '
+                '${DateFormat('EEE, MMM d, h:mm a').format(history[index].checkedInAt.toLocal())}',
+              ),
+              trailing: history[index].syncError == null
+                  ? null
+                  : Semantics(
+                      label: 'Attendance needs sync attention',
+                      child: Icon(
+                        TablerIcons.alertCircle,
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+            ),
+            if (index == 0 && history.length > 1) const Divider(height: 1),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class _HomeData {
   final String firstName;
   final String fullName;
@@ -824,6 +923,7 @@ class _HomeData {
   final String? campusPassToken;
   final Map<String, dynamic> stats;
   final List<AppNotification> announcements;
+  final List<AttendanceHistoryItem> history;
 
   _HomeData({
     required this.firstName,
@@ -836,5 +936,6 @@ class _HomeData {
     required this.campusPassToken,
     required this.stats,
     required this.announcements,
+    required this.history,
   });
 }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AlertTriangle, Trash2 } from "@/lib/icons";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 type DataCategory =
   | "events"
@@ -139,7 +140,7 @@ export function AdminDataFlushPanel() {
         ))}
       </fieldset>
 
-      {error && <p role="alert" className="mt-4 text-sm text-red-700">{error}</p>}
+      <UserErrorDialog message={error} />
       {message && <p role="status" className="mt-4 text-sm font-medium text-green-700">{message}</p>}
 
       {!preview ? (

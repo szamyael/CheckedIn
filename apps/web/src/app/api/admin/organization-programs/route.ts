@@ -2,8 +2,11 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { canonicalProgramName } from "@/lib/program-name";
+import { withApiLogging } from "@/lib/api-monitor";
 
-async function ensureAdmin(request: Request) {
+async function ensureAdmin(): Promise<
+  { error: NextResponse } | { userId: string }
+> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -26,8 +29,8 @@ async function ensureAdmin(request: Request) {
   return { userId: user.id };
 }
 
-export async function POST(request: Request) {
-  const auth = await ensureAdmin(request);
+async function createProgramMapping(request: Request): Promise<NextResponse> {
+  const auth = await ensureAdmin();
   if ("error" in auth) return auth.error;
 
   const body = await request.json();
@@ -64,8 +67,8 @@ export async function POST(request: Request) {
   return NextResponse.json({ success: true, mapping: data });
 }
 
-export async function PATCH(request: Request) {
-  const auth = await ensureAdmin(request);
+async function updateProgramMapping(request: Request): Promise<NextResponse> {
+  const auth = await ensureAdmin();
   if ("error" in auth) return auth.error;
 
   const body = await request.json();
@@ -103,8 +106,8 @@ export async function PATCH(request: Request) {
   return NextResponse.json({ success: true, mapping: data });
 }
 
-export async function DELETE(request: Request) {
-  const auth = await ensureAdmin(request);
+async function deleteProgramMapping(request: Request): Promise<NextResponse> {
+  const auth = await ensureAdmin();
   if ("error" in auth) return auth.error;
 
   const body = await request.json();
@@ -135,3 +138,19 @@ export async function DELETE(request: Request) {
 
   return NextResponse.json({ success: true });
 }
+
+export const POST = withApiLogging(
+  "POST",
+  "/api/admin/organization-programs",
+  createProgramMapping,
+);
+export const PATCH = withApiLogging(
+  "PATCH",
+  "/api/admin/organization-programs",
+  updateProgramMapping,
+);
+export const DELETE = withApiLogging(
+  "DELETE",
+  "/api/admin/organization-programs",
+  deleteProgramMapping,
+);

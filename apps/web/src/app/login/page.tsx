@@ -10,6 +10,7 @@ import { PhoneStudentRedirect } from "@/components/student/PhoneStudentRedirect"
 import { formPlaceholders } from "@/lib/form-placeholders";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import { createClient } from "@/lib/supabase/client";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 import {
   StudentAccountDecisionDialog,
   type StudentAccountDecision,
@@ -82,7 +83,7 @@ export default function LoginPage() {
       <StudentAccountDecisionDialog decision={accountDecision} onClose={() => setAccountDecision(null)} />
       <PhoneStudentRedirect />
 
-      <section className="relative hidden overflow-hidden bg-[var(--action-background)] px-10 py-10 text-[var(--action-foreground)] lg:flex lg:flex-col xl:px-16">
+      <section className="staff-login-hero relative hidden overflow-hidden bg-[var(--action-background)] px-10 py-10 text-[var(--action-foreground)] lg:flex lg:flex-col xl:px-16">
         <div className="absolute -bottom-28 -right-28 h-96 w-96 rounded-full border border-white/10" />
         <div className="absolute bottom-16 right-16 h-36 w-36 rounded-full border border-white/10" />
         <div className="relative flex items-center gap-3">
@@ -129,7 +130,7 @@ export default function LoginPage() {
                 <button type="button" onClick={() => setShowPassword((current) => !current)} className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-[var(--muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)]" aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}</button>
               </div>
             </div>
-            {error && <div role="alert" className="rounded-lg border border-[color-mix(in_srgb,var(--error)_35%,var(--border))] bg-[color-mix(in_srgb,var(--error)_12%,var(--surface))] px-4 py-3 text-sm leading-5 text-[var(--error)]">{error}</div>}
+            <UserErrorDialog message={error} />
             <button type="submit" className="group flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-[var(--action-background)] px-4 py-3 text-sm font-semibold text-[var(--action-foreground)] shadow-sm hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60">Sign in to staff portal <ArrowRight size={17} className="transition-transform group-hover:translate-x-0.5" aria-hidden="true" /></button>
           </form>
 

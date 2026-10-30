@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { withApiLogging } from "@/lib/api-monitor";
 
 type BatchAction = "approve";
 
@@ -11,7 +12,7 @@ type BatchAction = "approve";
  * Body: { action: "approve" | "deny", ids?: string[] }
  * If ids omitted, applies to all pending students.
  */
-export async function POST(request: Request) {
+async function updateUserBatch(request: Request) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -104,3 +105,9 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ success: true, updated: targetIds.length });
 }
+
+export const POST = withApiLogging(
+  "POST",
+  "/api/admin/users/batch",
+  updateUserBatch,
+);

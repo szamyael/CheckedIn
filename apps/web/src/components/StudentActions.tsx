@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import { studentAccountActions } from "@/lib/student-account-actions";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 type DecisionStatus = "suspended" | "needs_reregistration";
 
@@ -105,7 +106,6 @@ export function StudentActions({ student }: { student: StudentRow }) {
           Lift ban
         </button>
       )}
-      {error && !decision && <p role="alert" className="basis-full text-xs text-red-700">{error}</p>}
       {decision && (
         <div
           role="dialog"
@@ -141,7 +141,6 @@ export function StudentActions({ student }: { student: StudentRow }) {
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20"
               />
             </label>
-            {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
             <div className="flex justify-end gap-2">
               <button
                 type="button"
@@ -163,6 +162,7 @@ export function StudentActions({ student }: { student: StudentRow }) {
           </form>
         </div>
       )}
+      <UserErrorDialog message={error} />
     </div>
   );
 }

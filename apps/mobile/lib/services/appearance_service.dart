@@ -10,8 +10,6 @@ class AppearanceService extends ChangeNotifier {
   static final AppearanceService instance = AppearanceService._();
   static const _cacheKey = 'appearance_settings';
   AppColorTheme _colorTheme = AppColorTheme.navy;
-  // Light is intentional: following the device is opt-in through the System
-  // choice in Appearance.
   ThemeMode _themeMode = ThemeMode.light;
   NotificationSoundPreference _notificationSoundPreference =
       NotificationSoundPreference.system;

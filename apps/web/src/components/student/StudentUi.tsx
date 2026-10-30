@@ -1,14 +1,15 @@
 import type { ReactNode } from "react";
 import { Camera, Check, MapPin, QrCode, ShieldCheck } from "@/lib/icons";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 export const studentInputClass =
-  "w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm text-[var(--foreground)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--accent)]/25";
+  "w-full rounded-[3px] border border-[var(--control-border)] bg-[var(--surface)] px-3 py-2.5 text-sm text-[var(--foreground)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--retro-border)] focus:ring-2 focus:ring-[var(--accent)]/20";
 
 export const studentPrimaryButtonClass =
-  "min-h-11 w-full rounded-lg bg-[var(--action-background)] py-3 text-sm font-semibold text-[var(--action-foreground)] hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:opacity-60";
+  "min-h-11 w-full rounded-[3px] border border-[var(--retro-border)] bg-[var(--action-background)] py-2.5 text-sm font-bold text-[var(--action-foreground)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40 focus-visible:ring-offset-2 disabled:opacity-60";
 
 export const studentSecondaryButtonClass =
-  "block min-h-11 w-full rounded-lg border border-[var(--border)] py-2.5 text-center text-sm font-medium text-[var(--foreground)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2";
+  "block min-h-11 w-full rounded-[3px] border border-[var(--retro-border)] bg-[var(--surface)] py-2.5 text-center text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40 focus-visible:ring-offset-2";
 
 const attendanceSteps = [
   { label: "Scan", icon: QrCode },
@@ -80,7 +81,7 @@ export function StudentCard({
   onClick?: () => void;
 }) {
   const base =
-    "rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-soft)] " + className;
+    "student-card rounded-[3px] border border-[var(--retro-border)] bg-[var(--surface)] p-4 " + className;
   if (onClick) {
     return (
       <button type="button" onClick={onClick} className={`${base} text-left`}>
@@ -92,11 +93,7 @@ export function StudentCard({
 }
 
 export function StudentErrorBanner({ message }: { message: string }) {
-  return (
-    <p role="alert" className="rounded-lg border border-[color-mix(in_srgb,var(--error)_35%,var(--border))] bg-[color-mix(in_srgb,var(--error)_12%,var(--surface))] px-3 py-2 text-sm text-[var(--error)]">
-      {message}
-    </p>
-  );
+  return <UserErrorDialog message={message} />;
 }
 
 export function StudentInfoBanner({

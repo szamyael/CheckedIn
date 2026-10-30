@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DashboardPageHeader, DashboardSection } from "@/components/DashboardUi";
 import { createClient } from "@/lib/supabase/client";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 type Student = {
   id: string;
@@ -213,7 +214,6 @@ export function AdminStudentProfileEditor({
                 Set your personal code in <a href="/dashboard/profile" className="font-semibold underline">Account profile</a> before unlocking this section.
               </p>
             )}
-            {pinError && <p role="alert" className="text-sm text-red-700">{pinError}</p>}
             <div className="flex justify-end gap-2">
               <button type="button" onClick={() => setPinDialogOpen(false)} className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Cancel</button>
               {hasPersonalCode && <button type="submit" disabled={pin.length !== 6} className="rounded-lg bg-teal-800 px-3 py-2 text-sm font-semibold text-white hover:bg-teal-900 disabled:opacity-50">Unlock</button>}
@@ -251,7 +251,6 @@ export function AdminStudentProfileEditor({
                 </select>
               </label>
             </div>
-            {saveError && <p role="alert" className="text-sm text-red-700">{saveError}</p>}
             <div className="flex justify-end gap-2">
               <button type="button" onClick={() => setEditingStudent(null)} disabled={saving} className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Cancel</button>
               <button type="submit" disabled={saving} className="rounded-lg bg-teal-800 px-3 py-2 text-sm font-semibold text-white hover:bg-teal-900 disabled:opacity-50">{saving ? "Saving…" : "Save profile"}</button>
@@ -259,6 +258,8 @@ export function AdminStudentProfileEditor({
           </form>
         </div>
       )}
+
+      <UserErrorDialog message={pinError ?? saveError} />
     </>
   );
 }

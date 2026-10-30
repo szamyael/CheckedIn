@@ -158,7 +158,7 @@ test("web and mobile campus passes flip to a QR student business card with event
   assert.match(webCard, /duration-700/);
   assert.match(webCard, /summary\.studentId/);
   assert.match(webFront, /summary\.name[\s\S]*STUDENT ID[\s\S]*\{summary\.studentId\}/);
-  assert.match(webFront, /text-xl font-bold tracking-\[0\.06em\] text-white sm:text-2xl/);
+  assert.match(webFront, /text-xl font-bold tracking-\[0\.06em\] text-\[var\(--foreground\)\] sm:text-2xl/);
   assert.match(webCard, /STUDENT IDENTIFICATION[\s\S]*\{summary\.studentId\}/);
   assert.match(mobileHome, /QrImageView/);
   assert.match(mobileHome, /fetchCampusPassToken/);

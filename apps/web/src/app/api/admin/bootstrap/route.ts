@@ -4,6 +4,7 @@ import {
   isBootstrapSecretConfigured,
   isBootstrapSecretValid,
 } from "@/lib/admin/bootstrap-secret";
+import { withApiLogging } from "@/lib/api-monitor";
 
 function getAdmin() {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -17,7 +18,7 @@ function getAdmin() {
   );
 }
 
-export async function GET() {
+async function getBootstrapStatus() {
   try {
     const admin = getAdmin();
     const { count, error } = await admin
@@ -43,7 +44,7 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+async function createFirstAdmin(request: Request) {
   try {
     const body = await request.json();
     const {
@@ -144,3 +145,14 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export const GET = withApiLogging(
+  "GET",
+  "/api/admin/bootstrap",
+  getBootstrapStatus,
+);
+export const POST = withApiLogging(
+  "POST",
+  "/api/admin/bootstrap",
+  createFirstAdmin,
+);

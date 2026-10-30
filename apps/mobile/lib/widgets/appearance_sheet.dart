@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:tabler_icons_plus/tabler_icons_plus.dart';
-
-import '../core/theme.dart';
 import '../services/appearance_service.dart';
 
 Future<void> showAppearanceSheet(BuildContext context) =>
@@ -79,44 +76,6 @@ class _AppearanceSheet extends StatelessWidget {
                       groupValue: appearance.notificationSoundPreference,
                       onChanged: (_) =>
                           appearance.setNotificationSoundPreference(preference),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const _SectionLabel('COLOR THEME'),
-                  const SizedBox(height: 10),
-                  ...AppColorTheme.values.map(
-                    (theme) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(
-                            color: appearance.colorTheme == theme
-                                ? theme.primary
-                                : Theme.of(context).colorScheme.outline,
-                          ),
-                        ),
-                        selected: appearance.colorTheme == theme,
-                        selectedTileColor:
-                            Theme.of(context).brightness == Brightness.dark
-                            ? theme.primarySoftDark
-                            : theme.primarySoft,
-                        leading: CircleAvatar(
-                          backgroundColor: theme.primary,
-                          child: appearance.colorTheme == theme
-                              ? const Icon(
-                                  TablerIcons.check,
-                                  color: Colors.white,
-                                )
-                              : null,
-                        ),
-                        title: Text(theme.label),
-                        subtitle: Text(theme.description),
-                        onTap: () => appearance.setColorTheme(theme),
-                      ),
                     ),
                   ),
                 ],

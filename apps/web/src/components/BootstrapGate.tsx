@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { BootstrapAdminForm } from "./BootstrapAdminForm";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 export function BootstrapGate() {
   const [state, setState] = useState<
@@ -34,19 +35,10 @@ export function BootstrapGate() {
 
   if (state === "required") return <BootstrapAdminForm />;
   if (state === "configure-secret") {
-    return (
-      <p role="alert" className="mt-6 text-sm text-amber-900">
-        First-admin setup is disabled. Configure a strong
-        INITIAL_ADMIN_BOOTSTRAP_SECRET on the web server before continuing.
-      </p>
-    );
+    return <UserErrorDialog message="First-admin setup isn't available. Contact your system administrator." />;
   }
   if (state === "failed") {
-    return (
-      <p role="alert" className="mt-6 text-sm text-red-700">
-        Could not verify first-admin setup status. Try again later.
-      </p>
-    );
+    return <UserErrorDialog message="We couldn't check first-admin setup. Try again later." />;
   }
 
   return null;

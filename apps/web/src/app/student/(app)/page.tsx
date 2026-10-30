@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Award, CalendarDays, ChevronRight, Megaphone, QrCode, Sparkles, TicketCheck } from "@/lib/icons";
 import { QRCodeSVG } from "qrcode.react";
 import { createClient } from "@/lib/supabase/client";
+import { UserErrorDialog } from "@/components/UserErrorDialog";
 
 type StudentSummary = {
   name: string;
@@ -88,13 +89,14 @@ export default function StudentHomePage() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-7">
-      <header className="flex items-end justify-between gap-4">
+    <div className="student-dashboard mx-auto grid max-w-6xl gap-4 lg:grid-cols-3">
+      <UserErrorDialog message={campusPassError} />
+      <header className="col-span-full flex items-end justify-between gap-4">
         <div><p className="text-sm text-[var(--muted)]">Good morning,</p><h1 className="mt-1 text-3xl font-semibold tracking-tight text-[var(--text-strong)]">{summary.name}.</h1></div>
         <Link href="/student/events" className="hidden min-h-11 items-center gap-1 rounded-xl px-3 text-sm font-semibold text-[var(--primary-strong)] transition hover:bg-[var(--primary-soft)] sm:inline-flex">View events <ChevronRight size={16} aria-hidden="true" /></Link>
       </header>
 
-      <section className="space-y-3">
+      <section className="space-y-3 lg:col-span-2">
         <div className="relative h-[300px] w-full [perspective:1000px] sm:h-[320px]">
           <div
             className="relative h-full w-full transition-transform duration-700 [transform-style:preserve-3d] motion-reduce:transition-none"
@@ -107,29 +109,27 @@ export default function StudentHomePage() {
               aria-hidden={passFlipped}
               disabled={passFlipped}
               onClick={() => setPassFlipped(true)}
-              className={`absolute inset-0 flex w-full flex-col justify-between overflow-hidden rounded-[1.75rem] border border-[var(--action-background)] bg-[var(--action-background)] p-6 text-left text-white shadow-[0_18px_42px_rgba(12,34,56,0.16)] [backface-visibility:hidden] sm:p-8 ${reducedMotion && passFlipped ? "pointer-events-none opacity-0" : ""}`}
+              className={`absolute inset-0 flex w-full flex-col justify-between overflow-hidden rounded-[3px] border border-[var(--retro-border)] bg-[var(--retro-pink)] p-6 text-left text-[var(--foreground)] [backface-visibility:hidden] sm:p-8 ${reducedMotion && passFlipped ? "pointer-events-none opacity-0" : ""}`}
             >
-              <span className="absolute -right-12 -top-14 h-48 w-48 rounded-full border border-white/10" />
-              <span className="absolute -bottom-20 right-20 h-40 w-40 rounded-full border border-white/10" />
               <span className="relative max-w-[calc(100%-7rem)] sm:max-w-[calc(100%-9rem)]">
-                <span className="block text-xs font-semibold tracking-[0.14em] text-slate-300">YOUR CAMPUS PASS</span>
+                <span className="block font-mono text-xs font-semibold tracking-[0.14em] text-[var(--muted)]">YOUR CAMPUS PASS</span>
                 <span className="mt-2 block text-2xl font-semibold tracking-tight sm:text-3xl">{summary.name}</span>
-                <span className="mt-2 block text-xs font-semibold tracking-[0.1em] text-white/70">STUDENT ID</span>
-                <span className="mt-1 block font-mono text-xl font-bold tracking-[0.06em] text-white sm:text-2xl">{summary.studentId}</span>
+                <span className="mt-2 block font-mono text-xs font-semibold tracking-[0.1em] text-[var(--muted)]">STUDENT ID</span>
+                <span className="mt-1 block font-mono text-xl font-bold tracking-[0.06em] text-[var(--foreground)] sm:text-2xl">{summary.studentId}</span>
               </span>
-              <span className="relative flex flex-col gap-2 pr-28 text-sm text-slate-300 sm:pr-36">
+              <span className="relative flex flex-col gap-2 pr-28 text-sm text-[var(--muted)] sm:pr-36">
                 <span>
                   <span className="block">{summary.program}{summary.yearLevel ? ` · ${summary.yearLevel}${summary.yearLevel === 1 ? "st" : summary.yearLevel === 2 ? "nd" : summary.yearLevel === 3 ? "rd" : "th"} Year` : ""}</span>
                   {summary.section && <span className="mt-1 block">Section · {summary.section}</span>}
-                  <span className="mt-3 block text-xs font-semibold tracking-wide text-white">TAP CARD TO VIEW STUDENT ID</span>
+                  <span className="mt-3 block font-mono text-xs font-semibold tracking-wide text-[var(--foreground)]">TAP CARD TO VIEW STUDENT ID</span>
                 </span>
               </span>
             </button>
             <div
               aria-hidden={!passFlipped}
-              className={`absolute inset-0 overflow-hidden rounded-[1.75rem] border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--foreground)] shadow-[0_18px_42px_rgba(12,34,56,0.16)] ${reducedMotion ? "transform-none" : "[transform:rotateY(180deg)]"} [backface-visibility:hidden] transition-opacity duration-150 motion-reduce:transition-none sm:p-8 ${reducedMotion && !passFlipped ? "pointer-events-none opacity-0" : ""}`}
+              className={`absolute inset-0 overflow-hidden rounded-[3px] border border-[var(--retro-border)] bg-[var(--surface)] p-5 text-[var(--foreground)] ${reducedMotion ? "transform-none" : "[transform:rotateY(180deg)]"} [backface-visibility:hidden] transition-opacity duration-150 motion-reduce:transition-none sm:p-8 ${reducedMotion && !passFlipped ? "pointer-events-none opacity-0" : ""}`}
             >
-              <button type="button" aria-label="Show campus pass front" disabled={!passFlipped} onClick={() => setPassFlipped(false)} className="absolute inset-0 z-0 cursor-pointer rounded-[1.75rem] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-5px] focus-visible:outline-[var(--primary)]" />
+              <button type="button" aria-label="Show campus pass front" disabled={!passFlipped} onClick={() => setPassFlipped(false)} className="absolute inset-0 z-0 cursor-pointer rounded-[3px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-5px] focus-visible:outline-[var(--primary)]" />
               <div aria-hidden="true" className="pointer-events-none absolute right-5 top-5 z-[1] text-[var(--primary)]/10 sm:right-8 sm:top-7">
                 <QrCode size={100} strokeWidth={1} />
               </div>
@@ -153,15 +153,15 @@ export default function StudentHomePage() {
                 aria-label="Enlarge student QR code"
                 disabled={!passFlipped || !summary.campusPassToken}
                 onClick={() => setQrExpanded(true)}
-                className="absolute right-5 top-1/2 z-10 grid h-28 w-28 -translate-y-1/2 place-items-center rounded-xl bg-white p-2 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] disabled:cursor-default sm:right-8 sm:h-32 sm:w-32"
+                className="absolute right-5 top-1/2 z-10 grid h-28 w-28 -translate-y-1/2 place-items-center rounded-[3px] border border-[var(--retro-border)] bg-white p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] disabled:cursor-default sm:right-8 sm:h-32 sm:w-32"
               >
                 {summary.campusPassToken
                   ? <QRCodeSVG value={summary.campusPassToken} size={112} level="M" aria-label={`Student QR code for ${summary.name}`} className="h-full w-full" />
-                  : <span className="px-2 text-center text-xs text-[var(--muted)]">{campusPassError ?? "Student QR is not available."}</span>}
+                  : <span className="px-2 text-center text-xs text-[var(--muted)]">Student QR is not available.</span>}
               </button>
             </div>
             {!passFlipped && (
-              <Link href="/student/attendance/scan" aria-label="Scan event QR" className="absolute right-5 top-1/2 z-10 grid h-28 w-28 -translate-y-1/2 place-items-center rounded-xl border border-white/25 bg-white/10 p-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:right-8 sm:h-32 sm:w-32">
+              <Link href="/student/attendance/scan" aria-label="Scan event QR" className="absolute right-5 top-1/2 z-10 grid h-28 w-28 -translate-y-1/2 place-items-center rounded-[3px] border border-[var(--retro-border)] bg-white p-3 text-center text-sm font-semibold text-[var(--foreground)] transition hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:right-8 sm:h-32 sm:w-32">
                 <span className="flex flex-col items-center gap-2"><QrCode size={40} aria-hidden="true" /><span>Scan event QR</span></span>
               </Link>
             )}
@@ -170,7 +170,7 @@ export default function StudentHomePage() {
         {qrExpanded && summary.campusPassToken && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-6" role="dialog" aria-modal="true" aria-label={`Student QR code for ${summary.name}`} onClick={() => setQrExpanded(false)}>
             <button type="button" aria-label="Close full-screen QR code" onClick={() => setQrExpanded(false)} className="absolute right-5 top-5 grid h-11 w-11 place-items-center rounded-full bg-white/15 text-3xl leading-none text-white hover:bg-white/25">×</button>
-            <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+            <div className="w-full max-w-md border border-[var(--retro-border)] bg-white p-5" onClick={(event) => event.stopPropagation()}>
               <QRCodeSVG value={summary.campusPassToken} size={360} level="M" aria-hidden="true" className="h-auto w-full" />
               <p className="mt-3 text-center text-sm font-medium text-slate-700">{summary.name} · {summary.studentId}</p>
             </div>
@@ -178,26 +178,32 @@ export default function StudentHomePage() {
         )}
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-3">
+      <section className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 lg:col-span-1">
         {[
           { label: "Events attended", value: summary.attended, icon: TicketCheck },
           { label: "Reward points", value: summary.points, icon: Sparkles },
           { label: "Achievements", value: summary.badges, icon: Award },
-        ].map(({ label, value, icon: Icon }) => <div key={label} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-soft)]"><Icon size={18} className="text-[var(--primary)]" aria-hidden="true" /><p className="mt-5 text-2xl font-semibold tracking-tight text-[var(--text-strong)]">{value}</p><p className="mt-1 text-xs font-medium text-[var(--muted)]">{label}</p></div>)}
+        ].map(({ label, value, icon: Icon }) => (
+          <div key={label} className="student-card student-stat-card border p-4">
+            <Icon size={18} className="text-[var(--primary)]" aria-hidden="true" />
+            <p className="mt-5 text-2xl font-semibold tracking-tight text-[var(--text-strong)]">{value}</p>
+            <p className="mt-1 text-xs font-medium text-[var(--muted)]">{label}</p>
+          </div>
+        ))}
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-[1.15fr_.85fr]">
-        <Link href="/student/attendance/scan" className="group rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5 hover:border-[var(--primary)] hover:shadow-[var(--shadow-card)]">
+      <section className="grid gap-4 sm:grid-cols-[1.15fr_.85fr] lg:col-span-2">
+        <Link href="/student/attendance/scan" className="student-card student-action-card group border p-5 transition hover:shadow-[var(--shadow-card)]">
           <div className="flex items-start justify-between"><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-[var(--primary-strong)]"><QrCode size={21} aria-hidden="true" /></div><ChevronRight size={19} className="text-[var(--muted)] transition-transform group-hover:translate-x-0.5" aria-hidden="true" /></div>
           <p className="mt-7 text-xs font-semibold tracking-[0.12em] text-[var(--muted)]">ATTENDANCE</p><h2 className="mt-2 text-lg font-semibold text-[var(--text-strong)]">Scan event QR</h2><p className="mt-2 text-sm leading-6 text-[var(--muted)]">Check in to an event with a secure QR scan and transparent verification.</p>
         </Link>
-        <Link href="/student/bingo" className="group rounded-2xl border border-[var(--accent)]/40 bg-[var(--surface)] p-5 shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[var(--shadow-card)]">
+        <Link href="/student/bingo" className="student-card student-action-card group border bg-[var(--retro-lavender)] p-5 transition hover:shadow-[var(--shadow-card)]">
           <div className="flex items-start justify-between"><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--warning)_16%,var(--surface))] text-[var(--warning)]"><Sparkles size={20} aria-hidden="true" /></div><ChevronRight size={19} className="text-[var(--muted)] transition-transform group-hover:translate-x-0.5" aria-hidden="true" /></div>
           <p className="mt-7 text-xs font-semibold tracking-[0.12em] text-[var(--muted)]">ENGAGEMENT</p><h2 className="mt-2 text-lg font-semibold text-[var(--text-strong)]">Your Bingo progress</h2><p className="mt-2 text-sm leading-6 text-[var(--muted)]">Check your published cards and see what participation can unlock next.</p>
         </Link>
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-soft)]">
+      <section className="student-card student-bulletin-card overflow-hidden border lg:col-span-1">
         <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-4">
           <div className="flex items-center gap-2 text-[var(--text-strong)]"><Megaphone size={19} className="text-[var(--primary)]" aria-hidden="true" /><h2 className="font-semibold">Bulletin board</h2></div>
           <Link href="/student/notifications" className="min-h-11 rounded-lg px-3 py-3 text-sm font-semibold text-[var(--primary)] hover:bg-[var(--primary-soft)]">View all</Link>
@@ -216,7 +222,7 @@ export default function StudentHomePage() {
         )}
       </section>
 
-      <Link href="/student/events" className="flex min-h-14 items-center justify-between rounded-xl border-t border-[var(--border)] px-2 py-4 text-sm transition hover:bg-[var(--primary-soft)]"><span className="flex items-center gap-2 font-semibold text-[var(--primary-strong)]"><CalendarDays size={18} aria-hidden="true" />Find your next event</span><ChevronRight size={18} className="text-[var(--muted)]" aria-hidden="true" /></Link>
+      <Link href="/student/events" className="flex min-h-14 items-center justify-between border border-[var(--retro-border)] bg-[var(--retro-mint)] px-4 py-4 text-sm transition hover:shadow-[var(--shadow-card)] lg:col-span-3"><span className="flex items-center gap-2 font-semibold text-[var(--foreground)]"><CalendarDays size={18} aria-hidden="true" />Find your next event</span><ChevronRight size={18} className="text-[var(--muted)]" aria-hidden="true" /></Link>
     </div>
   );
 }

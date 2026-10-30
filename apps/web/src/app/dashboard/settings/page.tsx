@@ -4,6 +4,7 @@ import { SystemSettingsForm } from "@/components/SystemSettingsForm";
 import { BroadcastNotificationForm } from "@/components/BroadcastNotificationForm";
 import { AttendanceCorrectionPanel } from "@/components/AttendanceCorrectionPanel";
 import { AdminDataFlushPanel } from "@/components/AdminDataFlushPanel";
+import { AdminApiMonitor } from "@/components/AdminApiMonitor";
 import { DashboardPageHeader, DashboardSection } from "@/components/DashboardUi";
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -30,6 +31,10 @@ export default async function SettingsPage() {
         <SystemSettingsForm />
         <BroadcastNotificationForm />
       </div>
+
+      <DashboardSection title="API monitor" description="Recent web API traffic and the live database heartbeat.">
+        <AdminApiMonitor />
+      </DashboardSection>
 
       <DashboardSection title="Audit trail" description="Recent administrative actions across CheckedIn.">
       <section className="rounded-xl border border-slate-200 bg-white p-6">
